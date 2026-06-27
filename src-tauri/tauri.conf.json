@@ -28,6 +28,8 @@
     "windows": {
       "nsis": {
         "installerIcon": "icons/icon.ico",
+        "headerImage": "icons/header.bmp",
+        "sidebarImage": "icons/sidebar.bmp",
         "installMode": "both",
         "displayLanguageSelector": true,
         "languages": ["Polish", "English"]
