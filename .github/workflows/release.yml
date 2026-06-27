@@ -69,7 +69,7 @@ jobs:
       - name: Build Custom Installer
         run: |
           cd installer-app
-          cargo tauri build
+          tauri build
         shell: pwsh
 
       - name: Create Release and Upload
