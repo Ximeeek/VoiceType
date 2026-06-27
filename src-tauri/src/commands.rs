@@ -17,6 +17,10 @@ pub async fn save_config(state: State<'_, Arc<AppState>>, config: Config) -> Res
     crate::config::save_config(&config).map_err(|e| e.to_string())?;
     *state.config.lock().await = config.clone();
     
+    if let Ok(exe_path) = std::env::current_exe() {
+        let _ = crate::platform::windows::set_autostart(config.general.autostart, &exe_path.to_string_lossy());
+    }
+
     state.control_tx.send(ControlCommand::SetTriggerWords(config.trigger.words)).await.ok();
     state.control_tx.send(ControlCommand::SetStopWords(config.dictation.stop_words)).await.ok();
     state.control_tx.send(ControlCommand::SetSilenceTimeout(config.dictation.silence_timeout_ms)).await.ok();
@@ -386,3 +390,9 @@ pub fn delete_installed_model(engine: String, model: Option<String>) -> Result<(
 pub fn cleanup_model_tmp_files(engine: String, model: String) -> Result<(), String> {
     crate::downloader::model_registry::cleanup_model_tmp_files(&engine, &model).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn get_session_stats(state: State<'_, Arc<AppState>>) -> Result<crate::SessionStats, String> {
+    Ok(state.session_stats.lock().await.clone())
+}
+

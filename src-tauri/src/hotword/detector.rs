@@ -5,15 +5,25 @@ pub struct VoiceDetector {
     stop_words: Vec<String>,
     silence_timeout_ms: u64,
     last_speech_at: Instant,
+    fuzzy_match: bool,
+    fuzzy_threshold: u32,
 }
 
 impl VoiceDetector {
-    pub fn new(trigger_words: Vec<String>, stop_words: Vec<String>, silence_timeout_ms: u64) -> Self {
+    pub fn new(
+        trigger_words: Vec<String>, 
+        stop_words: Vec<String>, 
+        silence_timeout_ms: u64,
+        fuzzy_match: bool,
+        fuzzy_threshold: u32,
+    ) -> Self {
         Self {
             trigger_words: trigger_words.into_iter().map(|w| Self::normalize(&w)).collect(),
             stop_words: stop_words.into_iter().map(|w| Self::normalize(&w)).collect(),
             silence_timeout_ms,
             last_speech_at: Instant::now(),
+            fuzzy_match,
+            fuzzy_threshold,
         }
     }
 
@@ -36,6 +46,26 @@ impl VoiceDetector {
                 return Some(remaining);
             }
         }
+
+        if self.fuzzy_match {
+            for word in &self.trigger_words {
+                let mut char_offset = 0;
+                for spoken_word in text.split_whitespace() {
+                    let norm_spoken = Self::normalize(spoken_word);
+                    if !norm_spoken.is_empty() && strsim::levenshtein(&norm_spoken, word) <= self.fuzzy_threshold as usize {
+                        if let Some(pos) = text[char_offset..].find(spoken_word) {
+                            let actual_idx = char_offset + pos + spoken_word.len();
+                            let remaining = text[actual_idx..].trim().to_string();
+                            return Some(remaining);
+                        }
+                    }
+                    if let Some(pos) = text[char_offset..].find(spoken_word) {
+                        char_offset += pos + spoken_word.len();
+                    }
+                }
+            }
+        }
+
         None
     }
 
@@ -61,9 +91,18 @@ impl VoiceDetector {
         self.last_speech_at.elapsed().as_millis() as u64 >= self.silence_timeout_ms
     }
 
-    pub fn update_config(&mut self, trigger_words: Vec<String>, stop_words: Vec<String>, silence_timeout_ms: u64) {
+    pub fn update_config(
+        &mut self, 
+        trigger_words: Vec<String>, 
+        stop_words: Vec<String>, 
+        silence_timeout_ms: u64,
+        fuzzy_match: bool,
+        fuzzy_threshold: u32,
+    ) {
         self.trigger_words = trigger_words.into_iter().map(|w| Self::normalize(&w)).collect();
         self.stop_words = stop_words.into_iter().map(|w| Self::normalize(&w)).collect();
         self.silence_timeout_ms = silence_timeout_ms;
+        self.fuzzy_match = fuzzy_match;
+        self.fuzzy_threshold = fuzzy_threshold;
     }
 }

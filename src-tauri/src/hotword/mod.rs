@@ -71,6 +71,8 @@ pub async fn run_control_loop(
         initial_words,
         config.dictation.stop_words.clone(),
         config.dictation.silence_timeout_ms,
+        config.trigger.fuzzy_match,
+        config.trigger.fuzzy_threshold,
     );
 
     let mut _current_partial = String::new();
@@ -90,20 +92,29 @@ pub async fn run_control_loop(
                 }
                 ControlCommand::SetTriggerWords(words) => {
                     config.trigger.words = words.clone();
+                    let latest_cfg = state.config.lock().await.clone();
+                    config.trigger.fuzzy_match = latest_cfg.trigger.fuzzy_match;
+                    config.trigger.fuzzy_threshold = latest_cfg.trigger.fuzzy_threshold;
                     let detector_words = if config.trigger.translate {
                         get_translated_words(&words, &config.general.language)
                     } else {
                         words
                     };
-                    detector.update_config(detector_words, config.dictation.stop_words.clone(), config.dictation.silence_timeout_ms);
+                    detector.update_config(detector_words, config.dictation.stop_words.clone(), config.dictation.silence_timeout_ms, config.trigger.fuzzy_match, config.trigger.fuzzy_threshold);
                 }
                 ControlCommand::SetStopWords(words) => {
                     config.dictation.stop_words = words.clone();
-                    detector.update_config(config.trigger.words.clone(), words, config.dictation.silence_timeout_ms);
+                    let latest_cfg = state.config.lock().await.clone();
+                    config.trigger.fuzzy_match = latest_cfg.trigger.fuzzy_match;
+                    config.trigger.fuzzy_threshold = latest_cfg.trigger.fuzzy_threshold;
+                    detector.update_config(config.trigger.words.clone(), words, config.dictation.silence_timeout_ms, config.trigger.fuzzy_match, config.trigger.fuzzy_threshold);
                 }
                 ControlCommand::SetSilenceTimeout(timeout_ms) => {
                     config.dictation.silence_timeout_ms = timeout_ms;
-                    detector.update_config(config.trigger.words.clone(), config.dictation.stop_words.clone(), timeout_ms);
+                    let latest_cfg = state.config.lock().await.clone();
+                    config.trigger.fuzzy_match = latest_cfg.trigger.fuzzy_match;
+                    config.trigger.fuzzy_threshold = latest_cfg.trigger.fuzzy_threshold;
+                    detector.update_config(config.trigger.words.clone(), config.dictation.stop_words.clone(), timeout_ms, config.trigger.fuzzy_match, config.trigger.fuzzy_threshold);
                 }
                 ControlCommand::SetEngine(engine_type) => {
                     let app_config = state.config.lock().await.clone();
@@ -115,21 +126,27 @@ pub async fn run_control_loop(
                 }
                 ControlCommand::SetTriggerTranslate(val) => {
                     config.trigger.translate = val;
+                    let latest_cfg = state.config.lock().await.clone();
+                    config.trigger.fuzzy_match = latest_cfg.trigger.fuzzy_match;
+                    config.trigger.fuzzy_threshold = latest_cfg.trigger.fuzzy_threshold;
                     let detector_words = if val {
                         get_translated_words(&config.trigger.words, &config.general.language)
                     } else {
                         config.trigger.words.clone()
                     };
-                    detector.update_config(detector_words, config.dictation.stop_words.clone(), config.dictation.silence_timeout_ms);
+                    detector.update_config(detector_words, config.dictation.stop_words.clone(), config.dictation.silence_timeout_ms, config.trigger.fuzzy_match, config.trigger.fuzzy_threshold);
                 }
                 ControlCommand::SetLanguage(lang) => {
                     config.general.language = lang.clone();
+                    let latest_cfg = state.config.lock().await.clone();
+                    config.trigger.fuzzy_match = latest_cfg.trigger.fuzzy_match;
+                    config.trigger.fuzzy_threshold = latest_cfg.trigger.fuzzy_threshold;
                     let detector_words = if config.trigger.translate {
                         get_translated_words(&config.trigger.words, &lang)
                     } else {
                         config.trigger.words.clone()
                     };
-                    detector.update_config(detector_words, config.dictation.stop_words.clone(), config.dictation.silence_timeout_ms);
+                    detector.update_config(detector_words, config.dictation.stop_words.clone(), config.dictation.silence_timeout_ms, config.trigger.fuzzy_match, config.trigger.fuzzy_threshold);
                 }
                 ControlCommand::ForceDictate => {
                     let status = state.status.lock().await.clone();
@@ -197,6 +214,11 @@ pub async fn run_control_loop(
 
                     let final_text = engine.finalize().await.unwrap_or_default();
                     if !final_text.is_empty() {
+                        {
+                            let mut stats = state.session_stats.lock().await;
+                            stats.dictations_count += 1;
+                            stats.words_total += final_text.split_whitespace().count() as u32;
+                        }
                         focus = detect_focused_text_field();
                         if !matches!(focus, FocusResult::NoTextField) {
                             let _ = live_typing.finalize(&final_text, &focus, config.input.key_delay_ms).await;
@@ -227,6 +249,11 @@ pub async fn run_control_loop(
                             }
                         } else {
                             println!("[FINAL] [Engine: {}, Lang: {}] Transcript: '{}'", engine.active_type, config.general.language, transcript.text);
+                            if !transcript.text.is_empty() {
+                                let mut stats = state.session_stats.lock().await;
+                                stats.dictations_count += 1;
+                                stats.words_total += transcript.text.split_whitespace().count() as u32;
+                            }
                             _current_partial = String::new();
                             app_handle.emit("transcript_final", transcript.text.clone()).ok();
                             

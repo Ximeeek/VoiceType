@@ -1,5 +1,14 @@
 use crate::input::FocusResult;
 
+fn compute_diff(old: &str, new: &str) -> (usize, String) {
+    let old_chars: Vec<char> = old.chars().collect();
+    let new_chars: Vec<char> = new.chars().collect();
+    let common = old_chars.iter().zip(new_chars.iter()).take_while(|(a, b)| a == b).count();
+    let backspaces = old_chars.len() - common;
+    let suffix: String = new_chars[common..].iter().collect();
+    (backspaces, suffix)
+}
+
 pub struct LiveTypingState {
     pub injected_partial: String,
 }
@@ -12,13 +21,7 @@ impl LiveTypingState {
     pub async fn update_partial(&mut self, new_partial: &str, focus: &FocusResult, delay_ms: u64) -> anyhow::Result<()> {
         #[cfg(windows)]
         {
-            let common_prefix_len = self.injected_partial
-                .chars()
-                .zip(new_partial.chars())
-                .take_while(|(a, b)| a == b)
-                .count();
-            let backspace_count = self.injected_partial.chars().count() - common_prefix_len;
-            let suffix: String = new_partial.chars().skip(common_prefix_len).collect();
+            let (backspace_count, suffix) = compute_diff(&self.injected_partial, new_partial);
 
             if backspace_count > 0 {
                 send_backspaces(backspace_count, focus).await?;
@@ -35,13 +38,7 @@ impl LiveTypingState {
         let final_with_space = format!("{} ", final_text);
         #[cfg(windows)]
         {
-            let common_prefix_len = self.injected_partial
-                .chars()
-                .zip(final_with_space.chars())
-                .take_while(|(a, b)| a == b)
-                .count();
-            let backspace_count = self.injected_partial.chars().count() - common_prefix_len;
-            let suffix: String = final_with_space.chars().skip(common_prefix_len).collect();
+            let (backspace_count, suffix) = compute_diff(&self.injected_partial, &final_with_space);
 
             if backspace_count > 0 {
                 send_backspaces(backspace_count, focus).await?;

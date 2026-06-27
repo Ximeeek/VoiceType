@@ -9,14 +9,23 @@ mod recognition;
 mod hotword;
 mod input;
 mod downloader;
+mod platform;
 
 use config::load_config;
 use recognition::engine_manager::EngineManager;
 use hotword::run_control_loop;
+use tauri::{Manager, Emitter};
+use tauri_plugin_global_shortcut::GlobalShortcutExt;
 
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 use std::sync::Arc;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default)]
+pub struct SessionStats {
+    pub dictations_count: u32,
+    pub words_total: u32,
+}
 
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -60,7 +69,10 @@ pub struct AppState {
     pub status: Mutex<AppStatus>,
     pub config: Mutex<config::Config>,
     pub control_tx: tokio::sync::mpsc::Sender<ControlCommand>,
+    pub session_stats: Mutex<SessionStats>,
 }
+
+static TRAY_HINT_SHOWN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 fn main() {
     let (control_tx, control_rx) = mpsc::channel(32);
@@ -73,15 +85,50 @@ fn main() {
         status: Mutex::new(AppStatus::Idle),
         config: Mutex::new(initial_config),
         control_tx,
+        session_stats: Mutex::new(SessionStats::default()),
     });
 
     let app_state_for_task = Arc::clone(&app_state);
+    let app_state_for_shortcut = Arc::clone(&app_state);
 
     tauri::Builder::default()
         .manage(app_state)
         .setup(move |app| {
             let handle = app.handle().clone();
             tray::setup_tray(&handle)?;
+
+            app.handle().plugin(tauri_plugin_notification::init())?;
+            
+            let state_shortcut = app_state_for_shortcut.clone();
+            app.handle().plugin(
+                tauri_plugin_global_shortcut::Builder::new()
+                    .with_handler(move |_app, shortcut, _event| {
+                        if shortcut.to_string().to_lowercase().contains("v") {
+                            let state = state_shortcut.clone();
+                            tauri::async_runtime::spawn(async move {
+                                let current_status = state.status.lock().await.clone();
+                                match current_status {
+                                    AppStatus::Paused => {
+                                        let _ = state.control_tx.send(ControlCommand::Resume).await;
+                                    }
+                                    _ => {
+                                        let _ = state.control_tx.send(ControlCommand::Pause).await;
+                                    }
+                                }
+                            });
+                        }
+                    })
+                    .build()
+            )?;
+
+            app.global_shortcut().register("Ctrl+Shift+V")?;
+
+            let args: Vec<String> = std::env::args().collect();
+            if args.iter().any(|arg| arg == "--minimized") {
+                if let Some(window) = app.get_webview_window("main") {
+                    window.hide().ok();
+                }
+            }
 
             let (rx, stream) = audio::spawn_audio_pipeline(&audio_config_clone)
                 .expect("Failed to start audio pipeline");
@@ -137,12 +184,22 @@ fn main() {
             commands::get_installed_models_summary,
             commands::delete_installed_model,
             commands::cleanup_model_tmp_files,
-            commands::open_url
+            commands::open_url,
+            commands::get_session_stats
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {
                 window.hide().unwrap();
                 api.prevent_close();
+
+                if !TRAY_HINT_SHOWN.swap(true, std::sync::atomic::Ordering::SeqCst) {
+                    use tauri_plugin_notification::NotificationExt;
+                    let _ = window.app_handle().notification()
+                        .builder()
+                        .title("VoiceType")
+                        .body("VoiceType dziala w tle. Kliknij ikone w zasobniku aby wrocic.")
+                        .show();
+                }
             }
             _ => {}
         })
