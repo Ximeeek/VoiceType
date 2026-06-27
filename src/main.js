@@ -3245,6 +3245,19 @@ if (dashboardViewHistoryBtn) {
   });
 }
 
+// Bind About Repository Button
+const aboutGithubRepoBtn = document.getElementById('about-github-repo-btn');
+if (aboutGithubRepoBtn) {
+  aboutGithubRepoBtn.addEventListener('click', () => {
+    const repoUrl = 'https://github.com/Ximeeek/VoiceType';
+    if (window.__TAURI__) {
+      window.__TAURI__.core.invoke('open_url', { url: repoUrl });
+    } else {
+      window.open(repoUrl, '_blank');
+    }
+  });
+}
+
 // ==========================================
 // STARTUP MODEL VERIFICATION
 // ==========================================
