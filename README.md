@@ -61,17 +61,49 @@ To build an optimized production executable:
 ```powershell
 cargo tauri build
 ```
-The compiled output will be generated at `src-tauri/target/release/voicetype.exe`.
+The compiled output will be generated at `src-tauri/target/release/voicetype.exe` (or inside `src-tauri/target/release/bundle/nsis/` for installer setup).
 
-Domyślna kompilacja zawiera auto-updater:
-```powershell
-cargo tauri build
-```
+---
 
-Jeśli budujesz własną wersję i **nie chcesz** auto-updatera:
+## Auto-Update System & Self-Building Guide
+
+VoiceType includes a two-layer automated update system designed to keep the application up-to-date seamlessly:
+
+1. **Layer 1: Delta Updates (Frontend Assets)**
+   - Delivers UI fixes, style updates, and lightweight JavaScript modifications (< 2 MB) silently in the background without requiring application restarts.
+2. **Layer 2: Full Binary Updates (Rust/Tauri Native Code)**
+   - Updates core Rust components, native DLLs, or major backend features. Smaller binary patches execute silently, while larger installers prompt the user with a download progress bar and an "Install & Relaunch" notification.
+
+### Building for Custom / Forked Distribution
+
+If you are building your own custom version or fork of VoiceType, you should manage the updater feature carefully:
+
+#### Option A: Building Without Auto-Updater (Recommended for Self-Builders)
+By default, the auto-updater connects to the official repository releases (`Ximeeek/VoiceType`) and verifies signatures using the embedded public key. If you are compiling VoiceType for personal use or modifying the codebase without signing releases, disable the updater feature during build:
+
 ```powershell
 cargo tauri build -- --no-default-features
 ```
+*Note: Using `--no-default-features` disables the `tauri-plugin-updater` compilation unit, resulting in a clean standalone executable without update checks or network calls to update endpoints.*
+
+#### Option B: Configuring Auto-Updater for Your Own Repository
+If you maintain a public fork and want to publish signed updates via your own GitHub Releases:
+1. Generate your own cryptographic key pair:
+   ```powershell
+   cargo tauri signer generate -w ~/.tauri/myapp.key
+   ```
+2. Update `src-tauri/tauri.conf.json` with your generated public key and GitHub repository URL endpoint:
+   ```json
+   "plugins": {
+     "updater": {
+       "pubkey": "YOUR_PUBLIC_KEY_HERE",
+       "endpoints": [
+         "https://github.com/YOUR_USERNAME/YOUR_REPO/releases/latest/download/latest.json"
+       ]
+     }
+   }
+   ```
+3. Add your private key to your GitHub Repository Secrets as `TAURI_PRIVATE_KEY` (and `TAURI_KEY_PASSWORD` if protected).
 
 ---
 
