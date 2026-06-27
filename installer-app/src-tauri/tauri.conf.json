@@ -1,0 +1,32 @@
+{
+  "productName": "VoiceType Installer",
+  "version": "0.1.1",
+  "identifier": "com.voicetype.installer",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "VoiceType Installer",
+        "width": 600,
+        "height": 450,
+        "resizable": false,
+        "fullscreen": false,
+        "decorations": false,
+        "transparent": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "../../src-tauri/icons/icon.ico"
+    ]
+  }
+}
