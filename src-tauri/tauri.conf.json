@@ -1,6 +1,6 @@
 {
   "productName": "VoiceType",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "com.voicetype.app",
   "build": {
     "frontendDist": "../src"
@@ -16,6 +16,23 @@
       "title": "VoiceType",
       "resizable": true
     }]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "publisher": "VoiceType",
+    "copyright": "Copyright © 2026 VoiceType",
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "installMode": "both",
+        "displayLanguageSelector": true,
+        "languages": ["Polish", "English"]
+      }
+    }
   },
   "plugins": {
     "updater": {
