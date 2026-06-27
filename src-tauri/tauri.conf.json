@@ -1,0 +1,20 @@
+{
+  "productName": "VoiceType",
+  "version": "0.1.0",
+  "identifier": "com.voicetype.app",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [{
+      "width": 900,
+      "height": 620,
+      "minWidth": 800,
+      "minHeight": 550,
+      "decorations": false,
+      "title": "VoiceType",
+      "resizable": true
+    }]
+  }
+}

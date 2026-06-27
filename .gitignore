@@ -1,0 +1,7 @@
+/target
+/src-tauri/target
+/models
+/python_embed
+node_modules
+.DS_Store
+*.log
