@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ModelInfo {
@@ -35,9 +35,17 @@ pub struct AvailableModel {
     pub size_bytes: u64,
 }
 
+pub fn get_models_dir() -> PathBuf {
+    let mut p = PathBuf::from("models");
+    if !p.exists() {
+        p = Path::new("..").join("models");
+    }
+    p
+}
+
 // Pobiera listę modeli Vosk dla wybranego języka z internetu, albo zwraca fallback jeśli brak sieci
 pub async fn fetch_available_vosk_models(current_model_path: &str, lang: &str) -> Vec<AvailableModel> {
-    let models_dir = Path::new("..").join("models").join("vosk");
+    let models_dir = get_models_dir().join("vosk");
     
     let mut fetched_models = Vec::new();
     
@@ -128,7 +136,7 @@ pub async fn fetch_available_vosk_models(current_model_path: &str, lang: &str) -
 }
 
 pub async fn fetch_available_sherpa_models(current_model_path: &str, lang: &str) -> Vec<AvailableModel> {
-    let models_dir = Path::new("..").join("models").join("sherpa");
+    let models_dir = get_models_dir().join("sherpa");
     let mut fetched_models = Vec::new();
     
     // Oficjalnie dostępne i zweryfikowane modele Sherpa-ONNX z repozytorium k2-fsa/sherpa-onnx

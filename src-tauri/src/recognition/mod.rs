@@ -1,5 +1,6 @@
 pub mod engine_manager;
 pub mod offline;
+pub mod online;
 
 use async_trait::async_trait;
 

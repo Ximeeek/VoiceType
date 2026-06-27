@@ -332,6 +332,14 @@
                                 </div>
                                 <div class="engine-card-desc">Najlepszy dla wielu języków</div>
                             </div>
+                            <!-- Azure Speech -->
+                            <div class="engine-card compact" id="engine-card-azure" data-engine-id="azure">
+                                <div class="engine-card-header">
+                                    <div class="engine-card-name">Azure Speech</div>
+                                    <span class="engine-card-badge">Wybierz</span>
+                                </div>
+                                <div class="engine-card-desc">Szybki streaming Microsoft Azure</div>
+                            </div>
                         </div>
 
                         <!-- Configuration Panel -->
@@ -356,11 +364,20 @@
                                 <button class="btn-primary" id="btn-download-vosk">Pobierz model</button>
                             </div>
 
-                            <!-- Deepgram/Assembly/OpenAI API Config Panel -->
+                            <!-- Online API Config Panel -->
                             <div class="config-fields" id="config-fields-api" style="display: none;">
-                                <div class="form-group" style="margin-bottom: 16px;">
-                                    <label class="form-label">Klucz API</label>
-                                    <input type="password" class="input-field" id="engine-api-key" placeholder="Wklej klucz API (np. sk-...)">
+                                <div class="api-info-box" id="api-provider-info" style="margin-bottom: 16px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px;">
+                                    <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;" id="provider-info-title">Dostawca: Deepgram</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;" id="provider-info-price">Szacowany koszt: ~$0.0043 / min (~$0.00007 za słowo). $200 gratis.</div>
+                                    <button class="btn-provider-link" id="provider-info-link">Kup / Załóż konto API ↗</button>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 16px;" id="api-key-group">
+                                    <label class="form-label" id="engine-api-key-label">Klucz API</label>
+                                    <input type="password" class="input-field" id="engine-api-key" placeholder="Wklej klucz API">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 16px; display: none;" id="azure-region-group">
+                                    <label class="form-label">Region Azure (np. eastus)</label>
+                                    <input type="text" class="input-field" id="engine-azure-region" placeholder="eastus">
                                 </div>
                                 <button class="btn-primary" id="btn-test-api">Testuj połączenie</button>
                             </div>

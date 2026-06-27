@@ -136,7 +136,8 @@ fn main() {
             commands::hide_window,
             commands::get_installed_models_summary,
             commands::delete_installed_model,
-            commands::cleanup_model_tmp_files
+            commands::cleanup_model_tmp_files,
+            commands::open_url
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

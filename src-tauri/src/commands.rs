@@ -4,6 +4,7 @@ use crate::AppState;
 use crate::config::Config;
 use crate::ControlCommand;
 use crate::recognition::engine_manager::EngineInfo;
+use crate::recognition::SpeechEngine;
 use crate::audio::capture::AudioDevice;
 
 #[tauri::command]
@@ -58,20 +59,95 @@ pub async fn set_engine(state: State<'_, Arc<AppState>>, engine_type: String) ->
 }
 
 #[tauri::command]
-pub async fn test_engine(state: State<'_, Arc<AppState>>) -> Result<String, String> {
+pub fn open_url(url: String) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("cmd")
+            .args(["/C", "start", "", &url])
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = url;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn test_engine(state: State<'_, Arc<AppState>>, engine_type: Option<String>) -> Result<String, String> {
     let config = state.config.lock().await;
+    let target_id = engine_type.unwrap_or_else(|| config.engine.engine_type.clone());
     let engines = crate::recognition::engine_manager::EngineManager::list_engines(&config.engine);
-    let active = engines.iter().find(|e| e.is_active);
-    match active {
-        Some(e) if e.is_available => Ok(format!("{} dostepny", e.name)),
-        Some(e) => Err(format!("{} niedostepny — sprawdz model/klucz API", e.name)),
+    let target_engine = engines.iter().find(|e| e.id == target_id);
+    match target_engine {
+        Some(e) if e.is_available => {
+            match e.id.as_str() {
+                "deepgram" => {
+                    let mut engine = crate::recognition::online::DeepgramEngine::new(&config.engine.deepgram, &config.general.language).map_err(|err| err.to_string())?;
+                    engine.start_stream().await.map_err(|err| format!("Deepgram błąd połączenia: {}", err))?;
+                    Ok(format!("{} dostępny i połączony pomyślnie!", e.name))
+                }
+                "assemblyai" => {
+                    let client = reqwest::Client::new();
+                    let res = client.get("https://api.assemblyai.com/v2/transcript?limit=1")
+                        .header("Authorization", &config.engine.assemblyai.api_key)
+                        .send().await
+                        .map_err(|err| format!("Połączenie z AssemblyAI nieudane: {}", err))?;
+                    if !res.status().is_success() {
+                        return Err("Nieprawidłowy klucz API AssemblyAI (Brak autoryzacji 401/403)".into());
+                    }
+                    Ok(format!("{} klucz API poprawny!", e.name))
+                }
+                "openai" => {
+                    let client = reqwest::Client::new();
+                    let res = client.get("https://api.openai.com/v1/models")
+                        .header("Authorization", format!("Bearer {}", config.engine.openai.api_key))
+                        .send().await
+                        .map_err(|err| format!("Połączenie z OpenAI nieudane: {}", err))?;
+                    if !res.status().is_success() {
+                        return Err("Nieprawidłowy klucz API OpenAI (Brak autoryzacji 401/403)".into());
+                    }
+                    Ok(format!("{} klucz API poprawny!", e.name))
+                }
+                "google" => {
+                    let key = if std::path::Path::new(&config.engine.google.credentials_path).exists() {
+                        std::fs::read_to_string(&config.engine.google.credentials_path).unwrap_or_default().trim().to_string()
+                    } else {
+                        config.engine.google.credentials_path.trim().to_string()
+                    };
+                    let client = reqwest::Client::new();
+                    let url = format!("https://speech.googleapis.com/v1/speech:recognize?key={}", key);
+                    let res = client.post(&url).json(&serde_json::json!({})).send().await
+                        .map_err(|err| format!("Połączenie z Google nieudane: {}", err))?;
+                    let status = res.status().as_u16();
+                    if status == 403 || status == 401 {
+                        Err("Nieprawidłowy klucz API Google STT (Brak autoryzacji)".into())
+                    } else {
+                        let text = res.text().await.unwrap_or_default();
+                        if text.contains("API key not valid") || text.contains("API_KEY_INVALID") {
+                            Err("Nieprawidłowy klucz API Google STT".into())
+                        } else {
+                            Ok(format!("{} klucz API poprawny!", e.name))
+                        }
+                    }
+                }
+                "azure" => {
+                    let mut engine = crate::recognition::online::AzureSpeechEngine::new(&config.engine.azure, &config.general.language).map_err(|err| err.to_string())?;
+                    engine.start_stream().await.map_err(|err| format!("Azure błąd połączenia: {}", err))?;
+                    Ok(format!("{} dostępny i połączony pomyślnie!", e.name))
+                }
+                _ => Ok(format!("{} dostępny", e.name)),
+            }
+        }
+        Some(e) => Err(format!("{} niedostępny — sprawdź model/klucz API", e.name)),
         None => Err("Brak aktywnego silnika".into()),
     }
 }
 
 #[tauri::command]
 pub async fn download_model(app: tauri::AppHandle, state: State<'_, Arc<AppState>>, engine: String, model: String) -> Result<(), String> {
-    let models_dir = std::path::Path::new("..").join("models");
+    let models_dir = crate::downloader::model_registry::get_models_dir();
     
     // Pobierz informacje o modelu, zeby wiedziec jaki bedzie folder docelowy
     let info = crate::downloader::model_registry::get_model_info(&engine, &model).await
@@ -79,28 +155,32 @@ pub async fn download_model(app: tauri::AppHandle, state: State<'_, Arc<AppState
         
     crate::downloader::download_model(app, &engine, &model, &models_dir).await.map_err(|e| e.to_string())?;
     
-    // Zaktualizuj ścieżkę do modelu w konfiguracji, jeśli to Vosk
+    // Zaktualizuj ścieżkę do modelu w konfiguracji
+    let mut config = state.config.lock().await;
     if engine == "vosk" {
-        let mut config = state.config.lock().await;
-        // dest_filename to np. "vosk/vosk-model-pl-0.22"
-        // my musimy zapisać "models/vosk/vosk-model-pl-0.22"
         let new_path = format!("models/{}", info.dest_filename);
         config.engine.vosk.model_path = new_path;
-        crate::config::save_config(&config).ok();
+    } else if engine == "sherpa_onnx" {
+        let new_path = format!("models/{}", info.dest_filename);
+        config.engine.sherpa_onnx.model_path = new_path;
+    } else if engine == "whisper" || engine == "faster_whisper" {
+        config.engine.whisper.model = model.clone();
     }
+    crate::config::save_config(&config).ok();
     
     Ok(())
 }
 
 #[tauri::command]
 pub fn check_model_downloaded(engine: String, model: String) -> bool {
-    let models_dir = std::path::Path::new("..").join("models");
+    let models_dir = crate::downloader::model_registry::get_models_dir();
+    let clean_model = model.split('/').next_back().unwrap_or(&model).split('\\').next_back().unwrap_or(&model);
     if engine == "vosk" {
-        models_dir.join("vosk").join(&model).is_dir()
+        models_dir.join("vosk").join(clean_model).is_dir()
     } else if engine == "sherpa_onnx" {
-        models_dir.join("sherpa").join(&model).is_dir()
+        models_dir.join("sherpa").join(clean_model).is_dir()
     } else {
-        models_dir.join("whisper").join(format!("ggml-{}.bin", model)).is_file()
+        models_dir.join("whisper").join(format!("ggml-{}.bin", clean_model)).is_file()
     }
 }
 
@@ -121,7 +201,7 @@ pub async fn get_available_models(state: State<'_, Arc<AppState>>, engine: Strin
         Ok(crate::downloader::model_registry::fetch_available_sherpa_models(&config.engine.sherpa_onnx.model_path, &lang).await)
     } else {
         // Whisper fallback list
-        let models_dir = std::path::Path::new("..").join("models").join("whisper");
+        let models_dir = crate::downloader::model_registry::get_models_dir().join("whisper");
         let active_model = {
             let config = state.config.lock().await;
             config.engine.whisper.model.clone()

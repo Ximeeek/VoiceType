@@ -624,7 +624,8 @@ function updateActiveEnginePanel(engineId) {
     deepgram: 'Deepgram Online',
     assemblyai: 'AssemblyAI Online',
     openai: 'OpenAI Whisper',
-    google: 'Google STT'
+    google: 'Google STT',
+    azure: 'Azure Speech'
   };
   
   const prettyName = nameMap[engineId] || engineId;
@@ -638,7 +639,7 @@ function updateActiveEnginePanel(engineId) {
 
   if (activeEngineLabel && activeEngineBadge) {
     activeEngineLabel.textContent = prettyName;
-    const isStreaming = ['vosk', 'sherpa_onnx', 'deepgram'].includes(engineId);
+    const isStreaming = ['vosk', 'sherpa_onnx', 'deepgram', 'assemblyai', 'azure'].includes(engineId);
     activeEngineBadge.textContent = isStreaming ? 'Streaming' : 'Batch';
   }
 
@@ -663,7 +664,24 @@ function updateActiveEnginePanel(engineId) {
       .replace(/^vosk-model-/, '')
       .replace(/-0\.\d+$/, '')
       .replace(/-lgraph$/, '');
-    modelShortLabel.textContent = shortName;
+
+    if (window.__TAURI__ && ['vosk', 'sherpa_onnx', 'whisper', 'faster_whisper'].includes(activeType)) {
+      const checkEngine = activeType === 'faster_whisper' ? 'whisper' : activeType;
+      window.__TAURI__.core.invoke('check_model_downloaded', { engine: checkEngine, model: rawModel }).then(isDownloaded => {
+        if (isDownloaded) {
+          modelShortLabel.textContent = shortName;
+          modelShortLabel.style.color = 'var(--text-muted)';
+        } else {
+          modelShortLabel.textContent = `${shortName} (Brak pliku)`;
+          modelShortLabel.style.color = '#ef4444';
+        }
+      }).catch(() => {
+        modelShortLabel.textContent = shortName;
+      });
+    } else {
+      modelShortLabel.textContent = shortName;
+      modelShortLabel.style.color = 'var(--text-muted)';
+    }
   }
 
   if (['vosk', 'whisper', 'faster_whisper', 'sherpa_onnx'].includes(engineId)) {
@@ -706,25 +724,97 @@ function updateActiveEnginePanel(engineId) {
         }
       };
     }
-  } else if (['deepgram', 'assemblyai', 'openai', 'google'].includes(engineId)) {
+  } else if (['deepgram', 'assemblyai', 'openai', 'google', 'azure'].includes(engineId)) {
     apiFields.style.display = 'block';
     
-    const keyInput = document.getElementById('engine-api-key');
-    if (pendingConfig && pendingConfig.engine) {
-      if (engineId === 'deepgram') keyInput.value = pendingConfig.engine.deepgram.api_key;
-      if (engineId === 'assemblyai') keyInput.value = pendingConfig.engine.assemblyai.api_key;
-      if (engineId === 'openai') keyInput.value = pendingConfig.engine.openai.api_key;
-      if (engineId === 'google') keyInput.value = pendingConfig.engine.google.credentials_path;
+    const infoTitle = document.getElementById('provider-info-title');
+    const infoPrice = document.getElementById('provider-info-price');
+    const infoLink = document.getElementById('provider-info-link');
+
+    const providerData = {
+      deepgram: {
+        title: 'Dostawca: Deepgram Online',
+        price: 'Szacowany koszt: ~$0.0043 / min (~$0.00007 / słowo). $200 darmowych kredytów na start.',
+        url: 'https://console.deepgram.com'
+      },
+      assemblyai: {
+        title: 'Dostawca: AssemblyAI Online',
+        price: 'Szacowany koszt: ~$0.0062 / min (~$0.00010 / słowo). $50 darmowych kredytów na start.',
+        url: 'https://www.assemblyai.com'
+      },
+      openai: {
+        title: 'Dostawca: OpenAI Whisper API',
+        price: 'Szacowany koszt: ~$0.0060 / min (~$0.00010 / słowo). Rozliczanie za minutę audio.',
+        url: 'https://platform.openai.com/api-keys'
+      },
+      google: {
+        title: 'Dostawca: Google Cloud Speech-to-Text',
+        price: 'Szacowany koszt: ~$0.0160 / min. 60 minut miesięcznie gratis + $300 w GCP.',
+        url: 'https://console.cloud.google.com/speech'
+      },
+      azure: {
+        title: 'Dostawca: Microsoft Azure Speech Services',
+        price: 'Szacowany koszt: ~$0.0100 / min. 5 godzin miesięcznie gratis (Tier F0).',
+        url: 'https://azure.microsoft.com/en-us/products/ai-services/speech-to-text'
+      }
+    };
+
+    const currentData = providerData[engineId];
+    if (currentData) {
+      if (infoTitle) infoTitle.textContent = currentData.title;
+      if (infoPrice) infoPrice.textContent = currentData.price;
+      if (infoLink) {
+        infoLink.onclick = (e) => {
+          e.preventDefault();
+          if (window.__TAURI__) {
+            window.__TAURI__.core.invoke('open_url', { url: currentData.url });
+          } else {
+            window.open(currentData.url, '_blank');
+          }
+        };
+      }
     }
 
-    keyInput.onchange = (e) => {
+    const keyInput = document.getElementById('engine-api-key');
+    const azureGroup = document.getElementById('azure-region-group');
+    const azureRegionInput = document.getElementById('engine-azure-region');
+
+    if (azureGroup) {
+      azureGroup.style.display = engineId === 'azure' ? 'block' : 'none';
+    }
+
+    if (pendingConfig && pendingConfig.engine) {
+      if (engineId === 'deepgram') keyInput.value = pendingConfig.engine.deepgram.api_key || '';
+      if (engineId === 'assemblyai') keyInput.value = pendingConfig.engine.assemblyai.api_key || '';
+      if (engineId === 'openai') keyInput.value = pendingConfig.engine.openai.api_key || '';
+      if (engineId === 'google') keyInput.value = pendingConfig.engine.google.credentials_path || '';
+      if (engineId === 'azure') {
+        keyInput.value = pendingConfig.engine.azure.subscription_key || '';
+        if (azureRegionInput) azureRegionInput.value = pendingConfig.engine.azure.region || 'eastus';
+      }
+    }
+
+    const handleKeyInput = (e) => {
       const val = e.target.value;
       if (engineId === 'deepgram') pendingConfig.engine.deepgram.api_key = val;
       if (engineId === 'assemblyai') pendingConfig.engine.assemblyai.api_key = val;
       if (engineId === 'openai') pendingConfig.engine.openai.api_key = val;
       if (engineId === 'google') pendingConfig.engine.google.credentials_path = val;
+      if (engineId === 'azure') pendingConfig.engine.azure.subscription_key = val;
       checkEngineDirty();
     };
+
+    keyInput.oninput = handleKeyInput;
+    keyInput.onchange = handleKeyInput;
+
+    if (azureRegionInput) {
+      const handleRegionInput = (e) => {
+        if (engineId === 'azure') pendingConfig.engine.azure.region = e.target.value;
+        checkEngineDirty();
+      };
+      azureRegionInput.oninput = handleRegionInput;
+      azureRegionInput.onchange = handleRegionInput;
+    }
   }
 }
 
@@ -1027,18 +1117,17 @@ async function startSingleDownload(item) {
         item.status = 'completed';
         ToastManager.show({ type: 'success', title: 'Pobieranie ukończone', message: `Model ${item.model} gotowy do użycia.` });
         if (pendingConfig && pendingConfig.engine) {
-          const eng = pendingConfig.engine.type;
-          let pendingModel = '';
-          if (eng === 'vosk') pendingModel = pendingConfig.engine.vosk.model_path.split(/[/\\]/).pop();
-          else if (eng === 'sherpa_onnx') pendingModel = pendingConfig.engine.sherpa_onnx.model_path.split(/[/\\]/).pop();
-          else pendingModel = pendingConfig.engine.whisper.model;
-
-          if (pendingModel === item.model) {
-            activeConfig = JSON.parse(JSON.stringify(pendingConfig));
-            await saveConfigState();
-            checkEngineDirty();
-            updateActiveEnginePanel(activeConfig.engine.type);
+          if (item.engine === 'vosk') {
+            pendingConfig.engine.vosk.model_path = `models/vosk/${item.model}`;
+          } else if (item.engine === 'sherpa_onnx') {
+            pendingConfig.engine.sherpa_onnx.model_path = `models/sherpa/${item.model}`;
+          } else {
+            pendingConfig.engine.whisper.model = item.model;
           }
+          activeConfig = JSON.parse(JSON.stringify(pendingConfig));
+          await saveConfigState();
+          checkEngineDirty();
+          updateActiveEnginePanel(activeConfig.engine.type);
         }
       }
     } catch (err) {
@@ -1808,7 +1897,10 @@ if (testApiBtn) {
     ToastManager.show({ type: 'info', title: 'Testowanie połączenia...' });
     if (window.__TAURI__) {
       try {
-        const response = await window.__TAURI__.core.invoke('test_engine');
+        if (pendingConfig) {
+          await window.__TAURI__.core.invoke('save_config', { config: pendingConfig });
+        }
+        const response = await window.__TAURI__.core.invoke('test_engine', { engineType: pendingConfig ? pendingConfig.engine.type : null });
         ToastManager.show({ type: 'success', title: 'Test połączenia', message: response });
       } catch (err) {
         ToastManager.show({ type: 'error', title: 'Błąd testu połączenia', message: err.toString(), persistent: true });
@@ -2334,7 +2426,12 @@ function checkEngineDirty() {
     pendingConfig.engine.vosk.model_path !== activeConfig.engine.vosk.model_path ||
     pendingConfig.engine.sherpa_onnx.model_path !== activeConfig.engine.sherpa_onnx.model_path ||
     pendingConfig.engine.whisper.model !== activeConfig.engine.whisper.model ||
-    pendingConfig.engine.whisper.use_gpu !== activeConfig.engine.whisper.use_gpu;
+    pendingConfig.engine.whisper.use_gpu !== activeConfig.engine.whisper.use_gpu ||
+    (pendingConfig.engine.deepgram && activeConfig.engine.deepgram && pendingConfig.engine.deepgram.api_key !== activeConfig.engine.deepgram.api_key) ||
+    (pendingConfig.engine.assemblyai && activeConfig.engine.assemblyai && pendingConfig.engine.assemblyai.api_key !== activeConfig.engine.assemblyai.api_key) ||
+    (pendingConfig.engine.openai && activeConfig.engine.openai && pendingConfig.engine.openai.api_key !== activeConfig.engine.openai.api_key) ||
+    (pendingConfig.engine.google && activeConfig.engine.google && pendingConfig.engine.google.credentials_path !== activeConfig.engine.google.credentials_path) ||
+    (pendingConfig.engine.azure && activeConfig.engine.azure && (pendingConfig.engine.azure.subscription_key !== activeConfig.engine.azure.subscription_key || pendingConfig.engine.azure.region !== activeConfig.engine.azure.region));
 
   if (isDirty) {
     applyBtn.style.display = 'flex';
@@ -2347,6 +2444,66 @@ const applyBtn = document.getElementById('btn-engine-apply');
 if (applyBtn) {
   applyBtn.addEventListener('click', async () => {
     const engineId = pendingConfig.engine.type;
+    const onlineEngines = ['deepgram', 'assemblyai', 'openai', 'google', 'azure'];
+
+    if (onlineEngines.includes(engineId)) {
+      let key = '';
+      if (engineId === 'deepgram') key = pendingConfig.engine.deepgram.api_key;
+      if (engineId === 'assemblyai') key = pendingConfig.engine.assemblyai.api_key;
+      if (engineId === 'openai') key = pendingConfig.engine.openai.api_key;
+      if (engineId === 'google') key = pendingConfig.engine.google.credentials_path;
+      if (engineId === 'azure') key = pendingConfig.engine.azure.subscription_key;
+
+      if (!key || !key.trim()) {
+        ToastManager.show({ type: 'error', title: 'Brak klucza API', message: `Musisz podać klucz API dla silnika ${engineId}, aby go aktywować.`, persistent: true });
+        return;
+      }
+
+      ToastManager.show({ type: 'info', title: 'Weryfikacja połączenia z API...' });
+      try {
+        if (window.__TAURI__) {
+          await window.__TAURI__.core.invoke('save_config', { config: pendingConfig });
+          const testRes = await window.__TAURI__.core.invoke('test_engine', { engineType: engineId });
+          await window.__TAURI__.core.invoke('set_engine', { engineType: engineId });
+          
+          activeConfig = JSON.parse(JSON.stringify(pendingConfig));
+          checkEngineDirty();
+
+          document.querySelectorAll('.engine-card').forEach(c => {
+            c.classList.remove('active');
+            const badge = c.querySelector('.engine-card-badge');
+            if (badge) {
+              badge.classList.remove('active');
+              badge.textContent = 'Wybierz';
+            }
+          });
+          const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
+          if (activeCard) {
+            activeCard.classList.add('active');
+            const badge = activeCard.querySelector('.engine-card-badge');
+            if (badge) {
+              badge.classList.add('active');
+              badge.textContent = 'Aktywny';
+            }
+          }
+
+          renderTriggerWords(activeConfig.trigger.words);
+          renderStopWords(activeConfig.dictation.stop_words);
+          loadConfigGeneralUI(activeConfig);
+          updateActiveEnginePanel(activeConfig.engine.type);
+
+          ToastManager.show({ type: 'success', title: 'Silnik zweryfikowany i aktywowany', message: testRes });
+          return;
+        }
+      } catch (err) {
+        if (window.__TAURI__) {
+          await window.__TAURI__.core.invoke('save_config', { config: activeConfig });
+        }
+        ToastManager.show({ type: 'error', title: 'Błąd weryfikacji klucza API', message: `Nie można aktywować silnika. ${err.toString()}`, persistent: true });
+        return;
+      }
+    }
+
     let modelId = '';
     if (engineId === 'vosk') {
       const parts = pendingConfig.engine.vosk.model_path.split(/[/\\]/);
@@ -2367,6 +2524,9 @@ if (applyBtn) {
     if (isDownloaded) {
       activeConfig = JSON.parse(JSON.stringify(pendingConfig));
       await saveConfigState();
+      if (window.__TAURI__) {
+        await window.__TAURI__.core.invoke('set_engine', { engineType: engineId });
+      }
       checkEngineDirty();
       
       document.querySelectorAll('.engine-card').forEach(c => {

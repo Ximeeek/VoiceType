@@ -109,6 +109,8 @@ pub async fn run_control_loop(
                     let app_config = state.config.lock().await.clone();
                     if let Err(e) = engine.switch_engine(&engine_type, &app_config).await {
                         app_handle.emit("engine_error", e.to_string()).ok();
+                    } else {
+                        let _ = engine.start_stream().await;
                     }
                 }
                 ControlCommand::SetTriggerTranslate(val) => {
@@ -134,6 +136,7 @@ pub async fn run_control_loop(
                     if matches!(status, AppStatus::Idle | AppStatus::Listening) {
                         println!("[STATE] Idle → Dictating (forced by user)");
                         let _ = engine.finalize().await;
+                        let _ = engine.start_stream().await;
                         
                         *state.status.lock().await = AppStatus::Dictating;
                         app_handle.emit("status_changed", "dictating").ok();
@@ -163,6 +166,7 @@ pub async fn run_control_loop(
                         if let Some(remaining) = detector.check_trigger(&transcript.text) {
                             println!("[STATE] Idle → Dictating (trigger matched, remaining: '{}')", remaining);
                             let _ = engine.finalize().await;
+                            let _ = engine.start_stream().await;
                             
                             *state.status.lock().await = AppStatus::Dictating;
                             app_handle.emit("status_changed", "dictating").ok();

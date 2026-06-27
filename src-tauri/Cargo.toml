@@ -20,12 +20,16 @@ async-trait = "0.1"
 vosk = "0.3"
 whisper-rs = "0.16.0"
 arboard = "3"
-reqwest = { version = "0.12", features = ["stream", "json"] }
+reqwest = { version = "0.12", features = ["stream", "json", "multipart"] }
 sha2 = "0.10"
 tokio-util = { version = "0.7", features = ["io"] }
 futures-util = "0.3"
 tempfile = "3"
 zip = "0.6"
+tokio-tungstenite = { version = "0.23", features = ["native-tls"] }
+tungstenite = "0.23"
+url = "2"
+base64 = { version = "0.22", features = ["std"] }
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
