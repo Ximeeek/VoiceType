@@ -16,5 +16,16 @@
       "title": "VoiceType",
       "resizable": true
     }]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc2Qzg1MzlFODlEMjdFOUQKUldTZGZ0S0pubFBJZHRiZS9VemF2TDBUSUhWNWpRTE5DeSswNnN6RWwvSVlKcTU0NFFVN1JieXUK",
+      "endpoints": [
+        "https://github.com/Ximeeek/VoiceType/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

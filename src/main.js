@@ -1,4 +1,5 @@
 import { setLanguage, t, updateDOMTranslations, getLanguage } from './i18n.js';
+import { setupUpdateNotificationUI } from './updater.js';
 
 const ACCENT_PRESETS = {
   neon: { main: '#39ff50', sec: '#e0147a', dim: 'rgba(57,255,80,0.12)', border: 'rgba(57,255,80,0.25)' },
@@ -2584,6 +2585,7 @@ async function init() {
     renderHistoryUI();
     ToastManager.show({ type: 'info', title: 'Mock Environment', message: 'Running outside Tauri container.' });
   }
+  setupUpdateNotificationUI();
 }
 
 document.addEventListener('DOMContentLoaded', init);

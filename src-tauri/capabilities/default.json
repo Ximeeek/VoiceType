@@ -8,6 +8,13 @@
   "permissions": [
     "core:default",
     "core:window:default",
-    "core:window:allow-start-dragging"
+    "core:window:allow-start-dragging",
+    "updater:default",
+    "updater:allow-check",
+    "updater:allow-download-and-install",
+    "process:allow-restart",
+    "http:default",
+    "fs:allow-app-write",
+    "fs:allow-app-read"
   ]
 }

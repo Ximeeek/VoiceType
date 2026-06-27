@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Package frontend assets for delta update
+        run: |
+          $version = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
+          Compress-Archive -Path src/* -DestinationPath "assets-$version.zip" -Force
+          $size = (Get-Item "assets-$version.zip").Length
+          $json = @{
+            version = $version
+            url = "https://github.com/${{ github.repository }}/releases/download/v$version/assets-$version.zip"
+            size = $size
+            notes = "Frontend update v$version"
+          } | ConvertTo-Json
+          Set-Content -Path assets-manifest.json -Value $json
+        shell: pwsh
+
+      - name: Commit updated assets-manifest.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets-manifest.json
+          git commit -m "chore: update assets manifest for v${{ github.ref_name }}" || echo "Nothing to commit"
+          git push origin HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish Tauri release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        with:
+          projectPath: src-tauri
+          tagName: ${{ github.ref_name }}
+          releaseName: 'v__VERSION__'
+          releaseDraft: false
+          prerelease: false
+
+      - name: Upload assets zip to release
+        run: |
+          $version = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
+          gh release upload "v$version" "assets-$version.zip" --clobber
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

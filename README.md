@@ -63,6 +63,16 @@ cargo tauri build
 ```
 The compiled output will be generated at `src-tauri/target/release/voicetype.exe`.
 
+Domyślna kompilacja zawiera auto-updater:
+```powershell
+cargo tauri build
+```
+
+Jeśli budujesz własną wersję i **nie chcesz** auto-updatera:
+```powershell
+cargo tauri build -- --no-default-features
+```
+
 ---
 
 ## Engine Configurations & Implementation Notes

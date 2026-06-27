@@ -33,6 +33,15 @@ base64 = { version = "0.22", features = ["std"] }
 strsim = "0.11"
 tauri-plugin-notification = "2"
 tauri-plugin-global-shortcut = "2"
+tauri-plugin-updater = { version = "2", optional = true }
+tauri-plugin-process = "2"
+tauri-plugin-http = "2"
+tauri-plugin-fs = "2"
+
+[features]
+default = ["updater"]
+updater = ["dep:tauri-plugin-updater"]
+
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

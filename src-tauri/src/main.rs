@@ -91,7 +91,16 @@ fn main() {
     let app_state_for_task = Arc::clone(&app_state);
     let app_state_for_shortcut = Arc::clone(&app_state);
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+    #[cfg(feature = "updater")]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
+
+    builder
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_fs::init())
         .manage(app_state)
         .setup(move |app| {
             let handle = app.handle().clone();
