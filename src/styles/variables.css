@@ -2,6 +2,7 @@
   --bg-primary:     #080c08;
   --bg-secondary:   #0e130e;
   --bg-elevated:    #141a14;
+  --card-bg:        rgba(14, 19, 14, 0.8);
   --border-subtle:  rgba(255,255,255,0.07);
   --border-accent:  rgba(57,255,80,0.25);
   --accent-green:   #39ff50;
@@ -13,6 +14,41 @@
   --radius-sm: 6px; --radius-md: 12px; --radius-lg: 18px; --radius-xl: 24px;
   --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
   --space-lg: 24px; --space-xl: 32px; --space-2xl: 48px;
+
+  /* Density Defaults */
+  --card-padding: 20px;
+  --sidebar-font-size: 14px;
 }
+
+[data-theme="light"] {
+  --bg-primary:     #f4f6f9;
+  --bg-secondary:   #ffffff;
+  --bg-elevated:    #eef2f7;
+  --card-bg:        rgba(255, 255, 255, 0.85);
+  --border-subtle:  rgba(0, 0, 0, 0.08);
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+}
+
+/* Density Modifiers */
+html.density-compact, body.density-compact {
+  --card-padding: 14px;
+  --space-md: 11px;
+  --space-lg: 17px;
+  --sidebar-font-size: 13px;
+}
+
+html.density-spacious, body.density-spacious {
+  --card-padding: 26px;
+  --space-md: 20px;
+  --space-lg: 29px;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg-primary); color: var(--text-primary); font-family: Inter, system-ui, sans-serif; }
+body { 
+  background-color: var(--bg-primary); 
+  color: var(--text-primary); 
+  font-family: Inter, system-ui, sans-serif; 
+  transition: background-color 0.3s ease, color 0.3s ease;
+}

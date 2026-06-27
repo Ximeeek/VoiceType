@@ -26,6 +26,7 @@ impl Default for Config {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(default)]
 pub struct GeneralConfig {
     pub autostart: bool,
     pub minimize_to_tray_on_close: bool,
@@ -309,8 +310,17 @@ impl Default for InputConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(default)]
 pub struct UiConfig {
     pub theme: String,
+    pub accent_preset: String,
+    pub dual_accent: bool,
+    pub accent_custom_main: String,
+    pub accent_custom_sec: String,
+    pub orb_style: String,
+    pub background_style: String,
+    pub ui_density: String,
+    pub animation_intensity: String,
     pub window_opacity: f32,
     pub always_on_top: bool,
     pub start_minimized: bool,
@@ -320,6 +330,14 @@ impl Default for UiConfig {
     fn default() -> Self {
         Self {
             theme: "dark".to_string(),
+            accent_preset: "neon".to_string(),
+            dual_accent: false,
+            accent_custom_main: "#39ff50".to_string(),
+            accent_custom_sec: "#e0147a".to_string(),
+            orb_style: "liquid".to_string(),
+            background_style: "void".to_string(),
+            ui_density: "comfortable".to_string(),
+            animation_intensity: "full".to_string(),
             window_opacity: 1.0,
             always_on_top: false,
             start_minimized: false,

@@ -156,8 +156,9 @@
                 <div class="settings-layout">
                     <!-- Settings sub-navigation tabs -->
                     <div class="settings-tabs">
-                        <button class="settings-tab-btn active" data-tab="general">General</button>
-                        <button class="settings-tab-btn" data-tab="engine">Speech Engine</button>
+                        <button class="settings-tab-btn active" data-tab="general" data-i18n="settings.tab.general">General</button>
+                        <button class="settings-tab-btn" data-tab="engine" data-i18n="settings.tab.engine">Speech Engine</button>
+                        <button class="settings-tab-btn" data-tab="appearance" data-i18n="settings.tab.appearance">Appearance</button>
                     </div>
 
                     <!-- General Settings Section -->
@@ -165,69 +166,76 @@
                         <div class="settings-grid">
                             <!-- Card 1: Trigger Words -->
                             <div class="card">
-                                <div class="card-title">Trigger Words</div>
+                                <div class="card-title" data-i18n="settings.trigger.title">Trigger Words</div>
                                 <div class="chips-container" id="settings-trigger-chips"></div>
                                 <div class="input-group" style="margin-bottom: 16px;">
-                                    <input type="text" class="input-field" id="settings-trigger-input" placeholder="Add trigger word...">
-                                    <button class="btn-primary" id="settings-trigger-add-btn">Add</button>
+                                    <input type="text" class="input-field" id="settings-trigger-input" placeholder="Add trigger word..." data-i18n="settings.trigger.placeholder" data-i18n-attr="placeholder">
+                                    <button class="btn-primary" id="settings-trigger-add-btn" data-i18n="settings.trigger.btn_add">Add</button>
                                 </div>
                                 <label class="checkbox-container">
                                     <input type="checkbox" id="settings-trigger-fuzzy">
-                                    <span class="checkbox-label">Fuzzy matching (toleruje błędy wymowy, ±2 litery)</span>
+                                    <span class="checkbox-label" data-i18n="settings.trigger.fuzzy">Fuzzy matching (toleruje błędy wymowy, ±2 litery)</span>
                                 </label>
                                 <label class="checkbox-container" style="margin-top: 10px;">
                                     <input type="checkbox" id="settings-trigger-translate">
-                                    <span class="checkbox-label">Tłumacz słowa wyzwalające na język silnika</span>
+                                    <span class="checkbox-label" data-i18n="settings.trigger.translate">Tłumacz słowa wyzwalające na język silnika</span>
                                 </label>
                             </div>
 
                             <!-- Card 2: Zatrzymanie dyktowania -->
                             <div class="card">
-                                <div class="card-title">Zatrzymanie dyktowania</div>
+                                <div class="card-title" data-i18n="settings.stop.title">Zatrzymanie dyktowania</div>
                                 <div class="chips-container" id="settings-stop-chips"></div>
                                 <div class="input-group" style="margin-bottom: 16px;">
-                                    <input type="text" class="input-field" id="settings-stop-input" placeholder="Add stop word...">
-                                    <button class="btn-primary" id="settings-stop-add-btn">Add</button>
+                                    <input type="text" class="input-field" id="settings-stop-input" placeholder="Add stop word..." data-i18n="settings.stop.placeholder" data-i18n-attr="placeholder">
+                                    <button class="btn-primary" id="settings-stop-add-btn" data-i18n="settings.stop.btn_add">Add</button>
                                 </div>
                                 <div class="slider-container" style="margin-bottom: 16px;">
                                     <div class="slider-header">
-                                        <span class="slider-label">Limit ciszy</span>
+                                        <span class="slider-label" data-i18n="settings.stop.silence_limit">Limit ciszy</span>
                                         <span class="slider-value" id="silence-timeout-val">1500 ms</span>
                                     </div>
                                     <input type="range" id="settings-silence-timeout" min="500" max="5000" step="100" value="1500">
                                 </div>
                                 <label class="checkbox-container">
                                     <input type="checkbox" id="settings-stop-word-remove">
-                                    <span class="checkbox-label">Usuń stop word z wpisanego tekstu</span>
+                                    <span class="checkbox-label" data-i18n="settings.stop.remove_word">Usuń stop word z wpisanego tekstu</span>
                                 </label>
                             </div>
 
-                            <!-- Card 3: Zachowanie -->
+                            <!-- Card 3: Zachowanie & Language -->
                             <div class="card">
-                                <div class="card-title">Zachowanie</div>
+                                <div class="card-title" data-i18n="settings.behavior.title">Zachowanie i System</div>
                                 <div class="form-group" style="margin-bottom: 16px;">
-                                    <label class="form-label">Mikrofon</label>
+                                    <label class="form-label" data-i18n="settings.lang.label">Język aplikacji</label>
+                                    <select class="input-field" id="settings-app-language" style="width: 100%;">
+                                        <option value="en">English (Angielski)</option>
+                                        <option value="pl">Polski (Polish)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 16px;">
+                                    <label class="form-label" data-i18n="settings.mic.label">Mikrofon</label>
                                     <select class="input-field" id="settings-audio-device" style="width: 100%;">
-                                        <option value="default">Default Device</option>
+                                        <option value="default" data-i18n="settings.mic.default">Default Device</option>
                                     </select>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
                                     <label class="checkbox-container">
                                         <input type="checkbox" id="settings-autostart">
-                                        <span class="checkbox-label">Autostart z Windows</span>
+                                        <span class="checkbox-label" data-i18n="settings.autostart">Autostart z Windows</span>
                                     </label>
                                     <label class="checkbox-container">
                                         <input type="checkbox" id="settings-clipboard-fallback">
-                                        <span class="checkbox-label">Kopiuj do schowka gdy brak pola tekstowego</span>
+                                        <span class="checkbox-label" data-i18n="settings.clipboard_fallback">Kopiuj do schowka gdy brak pola tekstowego</span>
                                     </label>
                                     <label class="checkbox-container">
                                         <input type="checkbox" id="settings-clipboard-toast">
-                                        <span class="checkbox-label">Pokaż komunikat przy kopiowaniu</span>
+                                        <span class="checkbox-label" data-i18n="settings.clipboard_toast">Pokaż komunikat przy kopiowaniu</span>
                                     </label>
                                 </div>
                                 <div class="slider-container">
                                     <div class="slider-header">
-                                        <span class="slider-label">Opóźnienie startu</span>
+                                        <span class="slider-label" data-i18n="settings.start_delay">Opóźnienie startu</span>
                                         <span class="slider-value" id="start-delay-val">0 ms</span>
                                     </div>
                                     <input type="range" id="settings-start-delay" min="0" max="500" step="10" value="0">
@@ -436,8 +444,122 @@
                         <!-- Zastosuj zmiany Floating Button -->
                         <button class="apply-floating-btn" id="btn-engine-apply" style="display: none;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-                            <span>Zastosuj zmiany</span>
+                            <span data-i18n="btn.apply">Zastosuj zmiany</span>
                         </button>
+                    </div>
+
+                    <!-- Appearance Section -->
+                    <div class="settings-tab-content" id="settings-tab-appearance">
+                        <div class="appearance-grid">
+                            <!-- Card 1: Theme & Presets -->
+                            <div class="card">
+                                <div class="card-title" data-i18n="appearance.theme.title">Color Theme</div>
+                                <div class="option-grid" style="margin-bottom: 20px;">
+                                    <button class="option-btn active" data-appearance-theme="dark" data-i18n="appearance.theme.dark">Dark Theme</button>
+                                    <button class="option-btn" data-appearance-theme="light" data-i18n="appearance.theme.light">Light Theme</button>
+                                </div>
+
+                                <div class="card-title" style="margin-top: 16px;" data-i18n="appearance.accent.title">Accent Color Preset</div>
+                                <label class="checkbox-container" style="margin-bottom: 12px;">
+                                    <input type="checkbox" id="settings-dual-accent">
+                                    <span class="checkbox-label" data-i18n="appearance.accent.dual_toggle">Dual Color Accent Mode (Gradient)</span>
+                                </label>
+                                <div class="preset-grid" style="grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));">
+                                    <div class="preset-card active" data-accent-preset="neon">
+                                        <div class="preset-swatch"><div class="preset-swatch-main" style="background:#39ff50;"></div><div class="preset-swatch-sec" style="background:#e0147a;"></div></div>
+                                        <span class="preset-name" data-i18n="appearance.accent.neon">Neon</span>
+                                    </div>
+                                    <div class="preset-card" data-accent-preset="electric">
+                                        <div class="preset-swatch"><div class="preset-swatch-main" style="background:#00d4ff;"></div><div class="preset-swatch-sec" style="background:#7b2fff;"></div></div>
+                                        <span class="preset-name" data-i18n="appearance.accent.electric">Electric</span>
+                                    </div>
+                                    <div class="preset-card" data-accent-preset="plasma">
+                                        <div class="preset-swatch"><div class="preset-swatch-main" style="background:#9b59ff;"></div><div class="preset-swatch-sec" style="background:#e0147a;"></div></div>
+                                        <span class="preset-name" data-i18n="appearance.accent.plasma">Plasma</span>
+                                    </div>
+                                    <div class="preset-card" data-accent-preset="amber">
+                                        <div class="preset-swatch"><div class="preset-swatch-main" style="background:#ff8c00;"></div><div class="preset-swatch-sec" style="background:#ff2d6f;"></div></div>
+                                        <span class="preset-name" data-i18n="appearance.accent.amber">Amber</span>
+                                    </div>
+                                    <div class="preset-card" data-accent-preset="rose">
+                                        <div class="preset-swatch"><div class="preset-swatch-main" style="background:#ff2d6f;"></div><div class="preset-swatch-sec" style="background:#ff8c00;"></div></div>
+                                        <span class="preset-name" data-i18n="appearance.accent.rose">Rose</span>
+                                    </div>
+                                    <div class="preset-card" data-accent-preset="arctic">
+                                        <div class="preset-swatch"><div class="preset-swatch-main" style="background:#e8f4f8;"></div><div class="preset-swatch-sec" style="background:#4a9eff;"></div></div>
+                                        <span class="preset-name" data-i18n="appearance.accent.arctic">Arctic</span>
+                                    </div>
+                                    <div class="preset-card" data-accent-preset="custom" id="preset-card-custom">
+                                        <div class="preset-swatch"><div class="preset-swatch-main" id="custom-swatch-main" style="background:#39ff50;"></div><div class="preset-swatch-sec" id="custom-swatch-sec" style="background:#e0147a;"></div></div>
+                                        <span class="preset-name" data-i18n="appearance.accent.custom">Custom Colors</span>
+                                    </div>
+                                </div>
+
+                                <div class="custom-color-pickers" id="custom-color-pickers" style="display: none; margin-top: 16px; gap: 12px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                                        <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);" data-i18n="appearance.accent.main_label">Primary Accent</label>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="color" id="accent-custom-main-input" value="#39ff50" style="width: 36px; height: 36px; border: none; border-radius: 6px; cursor: pointer; background: transparent;">
+                                            <input type="text" id="accent-custom-main-text" value="#39ff50" class="input-field" style="flex: 1; padding: 6px 10px; font-size: 12px; font-family: monospace;">
+                                        </div>
+                                    </div>
+                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                                        <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);" data-i18n="appearance.accent.sec_label">Secondary Accent</label>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="color" id="accent-custom-sec-input" value="#e0147a" style="width: 36px; height: 36px; border: none; border-radius: 6px; cursor: pointer; background: transparent;">
+                                            <input type="text" id="accent-custom-sec-text" value="#e0147a" class="input-field" style="flex: 1; padding: 6px 10px; font-size: 12px; font-family: monospace;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Orb Style Signature -->
+                            <div class="card">
+                                <div class="card-title" data-i18n="appearance.orb.title">Orb Style Signature</div>
+                                <div class="option-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                                    <button class="option-btn active" data-orb-style="liquid" data-i18n="appearance.orb.liquid">Liquid (Morphing Blob)</button>
+                                    <button class="option-btn" data-orb-style="pulse" data-i18n="appearance.orb.pulse">Pulse (Radar Ping Rings)</button>
+                                    <button class="option-btn" data-orb-style="neon-ring" data-i18n="appearance.orb.neon_ring">Neon Ring (Outline Glow)</button>
+                                    <button class="option-btn" data-orb-style="crystal" data-i18n="appearance.orb.crystal">Crystal (Sharp Edges)</button>
+                                    <button class="option-btn" data-orb-style="minimal" data-i18n="appearance.orb.minimal">Minimal (Indicator Dot)</button>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Background & Layout -->
+                            <div class="card">
+                                <div class="card-title" data-i18n="appearance.bg.title">Window Background</div>
+                                <div class="option-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 20px;">
+                                    <button class="option-btn active" data-bg-style="void" data-i18n="appearance.bg.void">Void</button>
+                                    <button class="option-btn" data-bg-style="grid" data-i18n="appearance.bg.grid">Grid</button>
+                                    <button class="option-btn" data-bg-style="dots" data-i18n="appearance.bg.dots">Dots</button>
+                                    <button class="option-btn" data-bg-style="clean" data-i18n="appearance.bg.clean">Clean</button>
+                                </div>
+
+                                <div class="card-title" data-i18n="appearance.density.title">UI Density</div>
+                                <div class="option-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+                                    <button class="option-btn active" data-ui-density="comfortable" data-i18n="appearance.density.comfortable">Comfortable</button>
+                                    <button class="option-btn" data-ui-density="compact" data-i18n="appearance.density.compact">Compact</button>
+                                    <button class="option-btn" data-ui-density="spacious" data-i18n="appearance.density.spacious">Spacious</button>
+                                </div>
+
+                                <div class="card-title" data-i18n="appearance.anim.title">Animation Intensity</div>
+                                <div class="option-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+                                    <button class="option-btn active" data-anim-intensity="full" data-i18n="appearance.anim.full">Full</button>
+                                    <button class="option-btn" data-anim-intensity="subtle" data-i18n="appearance.anim.subtle">Subtle</button>
+                                    <button class="option-btn" data-anim-intensity="none" data-i18n="appearance.anim.none">None</button>
+                                </div>
+
+                                <div class="card-title" data-i18n="appearance.opacity.title">Window Transparency</div>
+                                <div class="slider-container" style="margin-top: 10px;">
+                                    <div class="slider-header">
+                                        <span class="slider-label" data-i18n="appearance.opacity.title">Window Transparency</span>
+                                        <span class="slider-value" id="window-opacity-val">100%</span>
+                                    </div>
+                                    <input type="range" id="settings-window-opacity" min="70" max="100" step="1" value="100">
+                                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;" data-i18n="appearance.opacity.subtext">Requires window to not be maximized.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -446,8 +568,8 @@
             <div class="page" id="page-history">
                 <div style="display: flex; flex-direction: column; gap: 24px; max-width: 800px; padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-primary);">Historia Transkrypcji</h1>
-                        <button class="btn-primary" id="btn-clear-history" style="padding: 10px 20px; background: var(--text-error); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); font-weight: 600;">Wyczyść historię</button>
+                        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-primary);" data-i18n="history.title">Historia Transkrypcji</h1>
+                        <button class="btn-danger" id="btn-clear-history" data-i18n="history.btn.clear">Wyczyść historię</button>
                     </div>
                     <div id="history-container" style="display: flex; flex-direction: column; gap: 24px; margin-top: 10px;">
                         <div style="color: var(--text-muted); font-size: 14px; font-style: italic;">Brak historii transkrypcji</div>

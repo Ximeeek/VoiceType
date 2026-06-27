@@ -1,3 +1,320 @@
+import { setLanguage, t, updateDOMTranslations, getLanguage } from './i18n.js';
+
+const ACCENT_PRESETS = {
+  neon: { main: '#39ff50', sec: '#e0147a', dim: 'rgba(57,255,80,0.12)', border: 'rgba(57,255,80,0.25)' },
+  electric: { main: '#00d4ff', sec: '#7b2fff', dim: 'rgba(0,212,255,0.12)', border: 'rgba(0,212,255,0.25)' },
+  plasma: { main: '#9b59ff', sec: '#e0147a', dim: 'rgba(155,89,255,0.12)', border: 'rgba(155,89,255,0.25)' },
+  amber: { main: '#ff8c00', sec: '#ff2d6f', dim: 'rgba(255,140,0,0.12)', border: 'rgba(255,140,0,0.25)' },
+  rose: { main: '#ff2d6f', sec: '#ff8c00', dim: 'rgba(255,45,111,0.12)', border: 'rgba(255,45,111,0.25)' },
+  arctic: { main: '#e8f4f8', sec: '#4a9eff', dim: 'rgba(232,244,248,0.12)', border: 'rgba(232,244,248,0.25)' }
+};
+
+function hexToRgba(hex, alpha) {
+  if (!hex || typeof hex !== 'string') return `rgba(57,255,80,${alpha})`;
+  let c = hex.replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const num = parseInt(c, 16);
+  if (isNaN(num)) return `rgba(57,255,80,${alpha})`;
+  return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+}
+
+function getContrastTextColor(hex) {
+  if (!hex || typeof hex !== 'string') return '#080c08';
+  let c = hex.replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const num = parseInt(c, 16);
+  if (isNaN(num)) return '#080c08';
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.55 ? '#080c08' : '#ffffff';
+}
+
+function applyAppearanceSettings(config) {
+  if (!config || !config.ui) return;
+  const ui = config.ui;
+
+  document.documentElement.setAttribute('data-theme', ui.theme || 'dark');
+
+  const isDual = ui.dual_accent || false;
+  document.body.classList.toggle('dual-accent', isDual);
+
+  const presetKey = ui.accent_preset || 'neon';
+  let mainColor, secColor, dimColor, borderColor;
+
+  if (presetKey === 'custom') {
+    mainColor = ui.accent_custom_main || '#39ff50';
+    secColor = isDual ? (ui.accent_custom_sec || '#e0147a') : mainColor;
+    dimColor = hexToRgba(mainColor, 0.12);
+    borderColor = hexToRgba(mainColor, 0.25);
+  } else {
+    const preset = ACCENT_PRESETS[presetKey] || ACCENT_PRESETS.neon;
+    mainColor = preset.main;
+    secColor = isDual ? preset.sec : mainColor;
+    dimColor = preset.dim;
+    borderColor = preset.border;
+  }
+
+  const contrastText = getContrastTextColor(mainColor);
+
+  document.documentElement.style.setProperty('--accent-green', mainColor);
+  document.documentElement.style.setProperty('--accent-magenta', secColor);
+  document.documentElement.style.setProperty('--accent-green-dim', dimColor);
+  document.documentElement.style.setProperty('--border-accent', borderColor);
+  document.documentElement.style.setProperty('--accent-contrast-text', contrastText);
+
+  const orb = document.getElementById('status-orb');
+  if (orb) {
+    orb.className = orb.className.replace(/\borb-style-\S+/g, '').trim();
+    orb.classList.add(`orb-style-${ui.orb_style || 'liquid'}`);
+  }
+
+  document.body.className = document.body.className.replace(/\bbg-\S+/g, '').trim();
+  document.body.classList.add(`bg-${ui.background_style || 'void'}`);
+
+  document.documentElement.className = document.documentElement.className.replace(/\bdensity-\S+/g, '').trim();
+  document.documentElement.classList.add(`density-${ui.ui_density || 'comfortable'}`);
+
+  document.body.className = document.body.className.replace(/\banim-\S+/g, '').trim();
+  document.body.classList.add(`anim-${ui.animation_intensity || 'full'}`);
+
+  const opacity = (ui.window_opacity !== undefined) ? ui.window_opacity : 1.0;
+  document.body.style.opacity = opacity;
+}
+
+function loadConfigAppearanceUI(config) {
+  if (!config || !config.ui) return;
+  const ui = config.ui;
+
+  document.querySelectorAll('[data-appearance-theme]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-appearance-theme') === (ui.theme || 'dark'));
+  });
+
+  const dualToggle = document.getElementById('settings-dual-accent');
+  if (dualToggle) dualToggle.checked = ui.dual_accent || false;
+
+  const currentPreset = ui.accent_preset || 'neon';
+  document.querySelectorAll('.preset-card').forEach(card => {
+    card.classList.toggle('active', card.getAttribute('data-accent-preset') === currentPreset);
+    const secSwatch = card.querySelector('.preset-swatch-sec');
+    if (secSwatch) {
+      secSwatch.style.display = ui.dual_accent ? 'block' : 'none';
+    }
+  });
+
+  const pickersContainer = document.getElementById('custom-color-pickers');
+  if (pickersContainer) {
+    pickersContainer.style.display = currentPreset === 'custom' ? 'flex' : 'none';
+    if (pickersContainer.children.length >= 2) {
+      pickersContainer.children[1].style.display = ui.dual_accent ? 'flex' : 'none';
+    }
+  }
+
+  const customMain = ui.accent_custom_main || '#39ff50';
+  const customSec = ui.accent_custom_sec || '#e0147a';
+
+  const swatchMain = document.getElementById('custom-swatch-main');
+  const swatchSec = document.getElementById('custom-swatch-sec');
+  if (swatchMain) swatchMain.style.background = customMain;
+  if (swatchSec) swatchSec.style.background = customSec;
+
+  const mainInput = document.getElementById('accent-custom-main-input');
+  const mainText = document.getElementById('accent-custom-main-text');
+  const secInput = document.getElementById('accent-custom-sec-input');
+  const secText = document.getElementById('accent-custom-sec-text');
+  if (mainInput) mainInput.value = customMain;
+  if (mainText) mainText.value = customMain;
+  if (secInput) secInput.value = customSec;
+  if (secText) secText.value = customSec;
+
+  document.querySelectorAll('[data-orb-style]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-orb-style') === (ui.orb_style || 'liquid'));
+  });
+
+  document.querySelectorAll('[data-bg-style]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-bg-style') === (ui.background_style || 'void'));
+  });
+
+  document.querySelectorAll('[data-ui-density]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-ui-density') === (ui.ui_density || 'comfortable'));
+  });
+
+  document.querySelectorAll('[data-anim-intensity]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-anim-intensity') === (ui.animation_intensity || 'full'));
+  });
+
+  const opacityInput = document.getElementById('settings-window-opacity');
+  const opacityVal = document.getElementById('window-opacity-val');
+  if (opacityInput && opacityVal) {
+    const valPercent = Math.round((ui.window_opacity || 1.0) * 100);
+    opacityInput.value = valPercent;
+    opacityVal.textContent = `${valPercent}%`;
+  }
+}
+
+function setupAppearanceEventListeners() {
+  document.querySelectorAll('[data-appearance-theme]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const theme = e.currentTarget.getAttribute('data-appearance-theme');
+      if (activeConfig && activeConfig.ui) {
+        activeConfig.ui.theme = theme;
+        if (pendingConfig && pendingConfig.ui) pendingConfig.ui.theme = theme;
+        applyAppearanceSettings(activeConfig);
+        loadConfigAppearanceUI(activeConfig);
+        saveConfigState();
+      }
+    });
+  });
+
+  const dualToggle = document.getElementById('settings-dual-accent');
+  if (dualToggle) {
+    dualToggle.addEventListener('change', (e) => {
+      const isChecked = e.target.checked;
+      if (activeConfig && activeConfig.ui) {
+        activeConfig.ui.dual_accent = isChecked;
+        if (pendingConfig && pendingConfig.ui) pendingConfig.ui.dual_accent = isChecked;
+        applyAppearanceSettings(activeConfig);
+        loadConfigAppearanceUI(activeConfig);
+        saveConfigState();
+      }
+    });
+  }
+
+  document.querySelectorAll('.preset-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      const preset = e.currentTarget.getAttribute('data-accent-preset');
+      if (activeConfig && activeConfig.ui) {
+        activeConfig.ui.accent_preset = preset;
+        if (pendingConfig && pendingConfig.ui) pendingConfig.ui.accent_preset = preset;
+        applyAppearanceSettings(activeConfig);
+        loadConfigAppearanceUI(activeConfig);
+        saveConfigState();
+      }
+    });
+  });
+
+  function updateCustomAccent(main, sec) {
+    if (!activeConfig || !activeConfig.ui) return;
+    if (main !== null) {
+      activeConfig.ui.accent_custom_main = main;
+      if (pendingConfig && pendingConfig.ui) pendingConfig.ui.accent_custom_main = main;
+    }
+    if (sec !== null) {
+      activeConfig.ui.accent_custom_sec = sec;
+      if (pendingConfig && pendingConfig.ui) pendingConfig.ui.accent_custom_sec = sec;
+    }
+    activeConfig.ui.accent_preset = 'custom';
+    if (pendingConfig && pendingConfig.ui) pendingConfig.ui.accent_preset = 'custom';
+    applyAppearanceSettings(activeConfig);
+    loadConfigAppearanceUI(activeConfig);
+    debouncedSaveConfig();
+  }
+
+  const mainInput = document.getElementById('accent-custom-main-input');
+  const mainText = document.getElementById('accent-custom-main-text');
+  const secInput = document.getElementById('accent-custom-sec-input');
+  const secText = document.getElementById('accent-custom-sec-text');
+
+  if (mainInput) {
+    mainInput.addEventListener('input', (e) => {
+      if (mainText) mainText.value = e.target.value;
+      updateCustomAccent(e.target.value, null);
+    });
+  }
+  if (mainText) {
+    mainText.addEventListener('input', (e) => {
+      if (mainInput && e.target.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+        mainInput.value = e.target.value;
+      }
+      updateCustomAccent(e.target.value, null);
+    });
+  }
+  if (secInput) {
+    secInput.addEventListener('input', (e) => {
+      if (secText) secText.value = e.target.value;
+      updateCustomAccent(null, e.target.value);
+    });
+  }
+  if (secText) {
+    secText.addEventListener('input', (e) => {
+      if (secInput && e.target.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+        secInput.value = e.target.value;
+      }
+      updateCustomAccent(null, e.target.value);
+    });
+  }
+
+  document.querySelectorAll('[data-orb-style]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const style = e.currentTarget.getAttribute('data-orb-style');
+      if (activeConfig && activeConfig.ui) {
+        activeConfig.ui.orb_style = style;
+        if (pendingConfig && pendingConfig.ui) pendingConfig.ui.orb_style = style;
+        applyAppearanceSettings(activeConfig);
+        loadConfigAppearanceUI(activeConfig);
+        saveConfigState();
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-bg-style]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const bg = e.currentTarget.getAttribute('data-bg-style');
+      if (activeConfig && activeConfig.ui) {
+        activeConfig.ui.background_style = bg;
+        if (pendingConfig && pendingConfig.ui) pendingConfig.ui.background_style = bg;
+        applyAppearanceSettings(activeConfig);
+        loadConfigAppearanceUI(activeConfig);
+        saveConfigState();
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-ui-density]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const density = e.currentTarget.getAttribute('data-ui-density');
+      if (activeConfig && activeConfig.ui) {
+        activeConfig.ui.ui_density = density;
+        if (pendingConfig && pendingConfig.ui) pendingConfig.ui.ui_density = density;
+        applyAppearanceSettings(activeConfig);
+        loadConfigAppearanceUI(activeConfig);
+        saveConfigState();
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-anim-intensity]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const anim = e.currentTarget.getAttribute('data-anim-intensity');
+      if (activeConfig && activeConfig.ui) {
+        activeConfig.ui.animation_intensity = anim;
+        if (pendingConfig && pendingConfig.ui) pendingConfig.ui.animation_intensity = anim;
+        applyAppearanceSettings(activeConfig);
+        loadConfigAppearanceUI(activeConfig);
+        saveConfigState();
+      }
+    });
+  });
+
+  const opacityInput = document.getElementById('settings-window-opacity');
+  if (opacityInput) {
+    opacityInput.addEventListener('input', (e) => {
+      const valPercent = parseInt(e.target.value, 10);
+      const valFloat = parseFloat((valPercent / 100).toFixed(2));
+      const opacityVal = document.getElementById('window-opacity-val');
+      if (opacityVal) opacityVal.textContent = `${valPercent}%`;
+
+      if (activeConfig && activeConfig.ui) {
+        activeConfig.ui.window_opacity = valFloat;
+        if (pendingConfig && pendingConfig.ui) pendingConfig.ui.window_opacity = valFloat;
+        applyAppearanceSettings(activeConfig);
+        debouncedSaveConfig();
+      }
+    });
+  }
+}
+
 // Toast Notification System
 class ToastManager {
   static show({ type, title, message = '', persistent = false }) {
@@ -544,6 +861,21 @@ function loadConfigGeneralUI(config) {
       checkEngineDirty();
     };
   }
+
+  // Bind App Language selector
+  const appLangSelect = document.getElementById('settings-app-language');
+  if (appLangSelect && config.general) {
+    appLangSelect.value = config.general.language || 'en';
+    appLangSelect.onchange = (e) => {
+      const newLang = e.target.value;
+      activeConfig.general.language = newLang;
+      if (pendingConfig) pendingConfig.general.language = newLang;
+      setLanguage(newLang);
+      saveConfigState();
+    };
+  }
+
+  loadConfigAppearanceUI(config);
 }
 
 // Engine Selection & dynamic panels
@@ -1523,7 +1855,16 @@ async function renderInstalledModelsManager() {
   }
 }
 
-function showCustomConfirmModal({ title, message, confirmText = 'Usuń', onConfirm }) {
+function showCustomConfirmModal({ title, message, confirmText, cancelText, isDanger = true, onConfirm }) {
+  const cancelBtnText = cancelText || t('btn.cancel');
+  const confirmBtnText = confirmText || (isDanger ? t('models.btn.delete') : t('btn.apply'));
+  const headerColor = isDanger ? '#ff4d4d' : 'var(--accent-green)';
+  const btnBackground = isDanger ? '#ff4d4d' : 'var(--accent-green)';
+  const btnTextColor = isDanger ? '#ffffff' : 'var(--accent-contrast-text, #080c08)';
+  const iconSvg = isDanger 
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>';
+
   const backdrop = document.createElement('div');
   backdrop.className = 'modal-backdrop';
   backdrop.style.zIndex = '100000';
@@ -1533,16 +1874,16 @@ function showCustomConfirmModal({ title, message, confirmText = 'Usuń', onConfi
   card.style.maxWidth = '420px';
 
   card.innerHTML = `
-    <div class="modal-title" style="color: #ff4d4d; display: flex; align-items: center; gap: 8px;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+    <div class="modal-title" style="color: ${headerColor}; display: flex; align-items: center; gap: 8px;">
+      ${iconSvg}
       ${title}
     </div>
     <div class="modal-body" style="margin-top: 12px; margin-bottom: 24px;">
       <p style="margin: 0; font-size: 14px; color: var(--text-secondary); line-height: 1.5;">${message}</p>
     </div>
     <div style="display: flex; justify-content: flex-end; gap: 12px;">
-      <button class="btn-cancel" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Anuluj</button>
-      <button class="btn-confirm-delete" style="background: #ff4d4d; border: none; color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(255,77,77,0.3);">${confirmText}</button>
+      <button class="btn-cancel" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">${cancelBtnText}</button>
+      <button class="btn-confirm-action" style="background: ${btnBackground}; border: none; color: ${btnTextColor}; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">${confirmBtnText}</button>
     </div>
   `;
 
@@ -1551,7 +1892,7 @@ function showCustomConfirmModal({ title, message, confirmText = 'Usuń', onConfi
 
   const close = () => backdrop.remove();
   card.querySelector('.btn-cancel').onclick = close;
-  card.querySelector('.btn-confirm-delete').onclick = () => {
+  card.querySelector('.btn-confirm-action').onclick = () => {
     close();
     if (onConfirm) onConfirm();
   };
@@ -1916,31 +2257,36 @@ if (testApiBtn) {
 // Reset Configuration Button
 const resetConfigBtn = document.getElementById('btn-reset-all-config');
 if (resetConfigBtn) {
-  resetConfigBtn.addEventListener('click', async () => {
-    const confirmReset = confirm('Czy na pewno chcesz zresetować całą konfigurację do wartości domyślnych?');
-    if (!confirmReset) return;
+  resetConfigBtn.addEventListener('click', () => {
+    showCustomConfirmModal({
+      title: 'Resetuj Konfigurację',
+      message: 'Czy na pewno chcesz zresetować całą konfigurację do wartości domyślnych?',
+      confirmText: 'Zresetuj',
+      isDanger: true,
+      onConfirm: async () => {
+        if (window.__TAURI__) {
+          try {
+            const defaultCfg = await window.__TAURI__.core.invoke('reset_config');
+            activeConfig = defaultCfg;
+            
+            // Reload all layouts
+            renderTriggerWords(defaultCfg.trigger.words);
+            renderStopWords(defaultCfg.dictation.stop_words);
+            loadConfigGeneralUI(defaultCfg);
+            
+            // Swapping to Vosk card automatically
+            const voskCard = document.getElementById('engine-card-vosk');
+            if (voskCard) voskCard.click();
 
-    if (window.__TAURI__) {
-      try {
-        const defaultCfg = await window.__TAURI__.core.invoke('reset_config');
-        activeConfig = defaultCfg;
-        
-        // Reload all layouts
-        renderTriggerWords(defaultCfg.trigger.words);
-        renderStopWords(defaultCfg.dictation.stop_words);
-        loadConfigGeneralUI(defaultCfg);
-        
-        // Swapping to Vosk card automatically
-        const voskCard = document.getElementById('engine-card-vosk');
-        if (voskCard) voskCard.click();
-
-        ToastManager.show({ type: 'success', title: 'Przywrócono domyślne ustawienia' });
-      } catch (err) {
-        ToastManager.show({ type: 'error', title: 'Reset failed', message: err.toString() });
+            ToastManager.show({ type: 'success', title: 'Przywrócono domyślne ustawienia' });
+          } catch (err) {
+            ToastManager.show({ type: 'error', title: 'Reset failed', message: err.toString() });
+          }
+        } else {
+          ToastManager.show({ type: 'success', title: 'Reset (Mock) successful' });
+        }
       }
-    } else {
-      ToastManager.show({ type: 'success', title: 'Reset (Mock) successful' });
-    }
+    });
   });
 }
 
@@ -2139,6 +2485,11 @@ async function init() {
       activeConfig = config;
       pendingConfig = JSON.parse(JSON.stringify(config));
       
+      // Initialize i18n and Appearance
+      setLanguage(config.general ? config.general.language : 'en');
+      setupAppearanceEventListeners();
+      applyAppearanceSettings(config);
+
       // 2. Render UI lists
       renderTriggerWords(config.trigger.words);
       renderStopWords(config.dictation.stop_words);
@@ -2871,12 +3222,17 @@ function renderHistoryUI() {
 const clearHistoryBtn = document.getElementById('btn-clear-history');
 if (clearHistoryBtn) {
   clearHistoryBtn.addEventListener('click', () => {
-    const confirmClear = confirm('Czy na pewno chcesz usunąć całą historię transkrypcji?');
-    if (confirmClear) {
-      localStorage.removeItem('transcript_history');
-      renderHistoryUI();
-      ToastManager.show({ type: 'success', title: 'Historia wyczyszczona' });
-    }
+    showCustomConfirmModal({
+      title: t('history.title') || 'Historia Transkrypcji',
+      message: t('history.confirm_clear') || 'Czy na pewno chcesz usunąć całą historię transkrypcji?',
+      confirmText: t('history.btn.clear') || 'Wyczyść historię',
+      isDanger: true,
+      onConfirm: () => {
+        localStorage.removeItem('transcript_history');
+        renderHistoryUI();
+        ToastManager.show({ type: 'success', title: 'Historia wyczyszczona' });
+      }
+    });
   });
 }
 
