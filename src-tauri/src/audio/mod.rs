@@ -30,14 +30,20 @@ pub fn spawn_audio_pipeline(config: &crate::config::settings::AudioConfig) -> an
     std::thread::spawn(move || {
         println!("[VAD] Worker thread starting...");
         let mut rb = RingBuffer::new(ring_buffer::CHUNK_SAMPLES * 10);
-        let model_path = if std::path::Path::new("models/silero-vad.onnx").exists() {
-            "models/silero-vad.onnx"
+        let model_path_buf = if std::path::Path::new("models/silero-vad.onnx").exists() {
+            std::path::PathBuf::from("models/silero-vad.onnx")
+        } else if std::path::Path::new("../models/silero-vad.onnx").exists() {
+            std::path::PathBuf::from("../models/silero-vad.onnx")
+        } else if let Ok(exe_path) = std::env::current_exe() {
+            let p = exe_path.parent().unwrap_or(std::path::Path::new(".")).join("models/silero-vad.onnx");
+            if p.exists() { p } else { std::path::PathBuf::from("models/silero-vad.onnx") }
         } else {
-            "../models/silero-vad.onnx"
+            std::path::PathBuf::from("models/silero-vad.onnx")
         };
+        let model_path = model_path_buf.to_string_lossy();
         println!("[VAD] Loading model from: {}", model_path);
         
-        let mut vad = match SileroVad::new(model_path) {
+        let mut vad = match SileroVad::new(&model_path) {
             Ok(v) => {
                 println!("[VAD] Model loaded successfully.");
                 v
