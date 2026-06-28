@@ -1,5 +1,7 @@
 /target
 /src-tauri/target
+/installer/src-tauri/target
+/installer/payload.zip
 /models
 /python_embed
 node_modules
@@ -8,3 +10,4 @@ node_modules
 *.key
 *.key*
 /~
+

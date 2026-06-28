@@ -55,12 +55,30 @@ jobs:
           cargo build --release
         shell: pwsh
 
+      - name: Build Custom Installer App
+        run: |
+          cd installer/src-tauri
+          cargo build --release
+          Copy-Item target/release/voicetype-installer.exe ../../VoiceType-Setup.exe
+        shell: pwsh
+
       - name: Create Release and Upload
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
+          name: "VoiceType ${{ github.ref_name }} (Wersja Beta)"
+          prerelease: true
+          body: |
+            ⚠️ **UWAGA: Wersja BETA / Pre-release**
+            Ta wersja aplikacji VoiceType jest w fazie testów i rozwoju. Może zawierać błędy lub niedociągnięcia.
+
+            ### 📦 Pobieranie i Instalacja:
+            - **`VoiceType-Setup.exe`** – Zalecany, ładny i przejrzysty instalator dla użytkowników.
+            - **`voicetype.exe`** – Samodzielny plik wykonywalny aplikacji.
           files: |
+            VoiceType-Setup.exe
             src-tauri/target/release/voicetype.exe
             assets-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
