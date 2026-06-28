@@ -1,7 +1,7 @@
 # VoiceType
 
-> **Project Status: Under Active Development**
-> There is currently no pre-compiled installation package or release binary available. The codebase is rapidly evolving, and bugs or unoptimized behavior may be present across different engines. Active development is focused on reaching production stability.
+> **Project Status: Beta Release Available**
+> Pre-compiled Beta releases and standalone installers (`VoiceType-Setup.exe`) are available under GitHub Releases. Active development is ongoing to reach production stability.
 
 VoiceType is a Windows desktop application for continuous Speech-to-Text (Voice Typing). It captures audio input, transcribes it locally or via cloud APIs, and injects the text directly into the focused field of any active Windows application (text editors, browsers, IDEs, messengers).
 
@@ -61,7 +61,23 @@ To build an optimized production executable:
 ```powershell
 cargo tauri build
 ```
-The compiled output will be generated at `src-tauri/target/release/voicetype.exe` (or inside `src-tauri/target/release/bundle/nsis/` for installer setup).
+The compiled output will be generated at `src-tauri/target/release/voicetype.exe`.
+
+### 5. Compiling Custom Setup Installer
+If you want to compile the custom standalone setup installer (`VoiceType-Setup.exe`) from source:
+1. Build the main application release binary first:
+   ```powershell
+   cd src-tauri
+   cargo build --release
+   cd ..
+   ```
+2. Build the installer package:
+   ```powershell
+   cd installer/src-tauri
+   cargo build --release
+   cd ../..
+   ```
+The standalone installer executable will be generated at `installer/src-tauri/target/release/voicetype-installer.exe`. When launched, it extracts and installs the embedded binaries and configures desktop/start menu shortcuts.
 
 ---
 
