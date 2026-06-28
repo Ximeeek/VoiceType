@@ -90,34 +90,43 @@ async fn install_app(app: tauri::AppHandle, path: String, create_desktop_shortcu
     let exe_path = target_dir.join("voicetype.exe");
 
     if create_desktop_shortcut {
-        let desktop = std::env::var("USERPROFILE").unwrap_or_default() + "\\Desktop";
-        let lnk = PathBuf::from(desktop).join("VoiceType.lnk");
-        let sl = mslinks::ShellLink::new(&exe_path.to_string_lossy()).unwrap();
-        sl.create_lnk(&lnk).unwrap();
+        let desktop = std::env::var("USERPROFILE").unwrap_or_default() + "\\Desktop\\VoiceType.lnk";
+        let ps_script = format!(
+            "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('{}'); $Shortcut.TargetPath = '{}'; $Shortcut.Save()",
+            desktop.replace("'", "''"),
+            exe_path.to_string_lossy().replace("'", "''")
+        );
+        let _ = std::process::Command::new("powershell")
+            .args(["-NoProfile", "-Command", &ps_script])
+            .output();
     }
 
     // Start Menu shortcut
-    let start_menu = std::env::var("APPDATA").unwrap_or_default() + "\\Microsoft\\Windows\\Start Menu\\Programs";
-    let start_lnk = PathBuf::from(start_menu).join("VoiceType.lnk");
-    let sl = mslinks::ShellLink::new(&exe_path.to_string_lossy()).unwrap();
-    sl.create_lnk(&start_lnk).unwrap();
+    let start_menu = std::env::var("APPDATA").unwrap_or_default() + "\\Microsoft\\Windows\\Start Menu\\Programs\\VoiceType.lnk";
+    let ps_script_start = format!(
+        "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('{}'); $Shortcut.TargetPath = '{}'; $Shortcut.Save()",
+        start_menu.replace("'", "''"),
+        exe_path.to_string_lossy().replace("'", "''")
+    );
+    let _ = std::process::Command::new("powershell")
+        .args(["-NoProfile", "-Command", &ps_script_start])
+        .output();
 
     app.emit("install-progress", ProgressPayload {
         progress: 95.0,
         status: "Registering app...".to_string()
     }).unwrap();
 
-    // Write Registry Keys for Uninstall
-    use winreg::enums::*;
-    use winreg::RegKey;
-    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-    if let Ok((key, _)) = hkcu.create_subkey(r#"Software\Microsoft\Windows\CurrentVersion\Uninstall\VoiceType"#) {
-        key.set_value("DisplayName", &"VoiceType").unwrap_or_default();
-        key.set_value("DisplayIcon", &exe_path.to_string_lossy().to_string()).unwrap_or_default();
-        key.set_value("InstallLocation", &path).unwrap_or_default();
-        key.set_value("UninstallString", &format!("powershell.exe -ExecutionPolicy Bypass -Command \"Remove-Item -Recurse -Force '{}'\"", path)).unwrap_or_default();
-        key.set_value("Publisher", &"VoiceType").unwrap_or_default();
-    }
+    // Write Registry Keys for Uninstall via PowerShell
+    let reg_script = format!(
+        "$path = 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VoiceType'; if (-not (Test-Path $path)) {{ New-Item -Path $path -Force | Out-Null }}; Set-ItemProperty -Path $path -Name 'DisplayName' -Value 'VoiceType'; Set-ItemProperty -Path $path -Name 'DisplayIcon' -Value '{}'; Set-ItemProperty -Path $path -Name 'InstallLocation' -Value '{}'; Set-ItemProperty -Path $path -Name 'UninstallString' -Value 'powershell.exe -ExecutionPolicy Bypass -Command \"Remove-Item -Recurse -Force ''{}''\"'; Set-ItemProperty -Path $path -Name 'Publisher' -Value 'VoiceType'",
+        exe_path.to_string_lossy().replace("'", "''"),
+        path.replace("'", "''"),
+        path.replace("'", "''")
+    );
+    let _ = std::process::Command::new("powershell")
+        .args(["-NoProfile", "-Command", &reg_script])
+        .output();
 
     app.emit("install-progress", ProgressPayload {
         progress: 100.0,
