@@ -23,7 +23,12 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         &quit,
     ])?;
 
+    let tray_icon = app.default_window_icon()
+        .cloned()
+        .ok_or_else(|| Box::<dyn std::error::Error>::from("Failed to get default window icon"))?;
+
     TrayIconBuilder::new()
+        .icon(tray_icon)
         .menu(&menu)
         .on_menu_event(|app, event| {
             match event.id().as_ref() {
