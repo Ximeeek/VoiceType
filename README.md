@@ -80,20 +80,8 @@ cargo tauri build
 ```
 The NSIS setup installer will be generated at `src-tauri/target/release/bundle/nsis/`.
 
-### 4. Compiling the Standalone Setup Installer (`VoiceType-Setup.exe`)
-If you want to compile the custom installer app from source:
-```powershell
-# 1. Build the main application binary
-cd src-tauri
-cargo build --release
-cd ..
-
-# 2. Build the installer bootstrapper
-cd installer/src-tauri
-cargo build --release
-cd ../..
-```
-The custom installer executable will be generated at `installer/src-tauri/target/release/voicetype-installer.exe`. When launched, it extracts and installs the embedded binaries, and configures desktop/start menu shortcuts.
+> [!NOTE]
+> Custom Tauri-based installer (`VoiceType-Installer`) is managed in a separate repository/workspace and is not required to run or compile the application from source. If you compile VoiceType locally, you can run the generated `voicetype.exe` executable directly or package it with the default Tauri NSIS builder.
 
 ---
 
