@@ -327,9 +327,6 @@ class ToastManager {
     toast.className = `toast ${type}`;
     toast.id = id;
 
-    const translatedTitle = t(title);
-    const translatedMessage = t(message);
-
     let closeBtnHtml = '';
     if (persistent || type === 'error') {
       closeBtnHtml = `<button class="toast-close">×</button>`;
@@ -337,8 +334,8 @@ class ToastManager {
 
     toast.innerHTML = `
       <div class="toast-content">
-        <div class="toast-title">${translatedTitle}</div>
-        ${translatedMessage ? `<div class="toast-message">${translatedMessage}</div>` : ''}
+        <div class="toast-title">${title}</div>
+        ${message ? `<div class="toast-message">${message}</div>` : ''}
       </div>
       ${closeBtnHtml}
     `;
@@ -489,7 +486,7 @@ async function saveConfigState() {
     try {
       await window.__TAURI__.core.invoke('save_config', { config: activeConfig });
     } catch (err) {
-      ToastManager.show({ type: 'error', title: 'toast.error.save_config_failed', message: err.toString() });
+      ToastManager.show({ type: 'error', title: 'Save Config Failed', message: err.toString() });
     }
   }
 }
@@ -607,9 +604,9 @@ function renderTriggerWords(words) {
         if (window.__TAURI__) {
           try {
             await window.__TAURI__.core.invoke('set_trigger_words', { words: updatedList });
-            ToastManager.show({ type: 'success', title: 'toast.trigger.updated' });
+            ToastManager.show({ type: 'success', title: 'Trigger words updated' });
           } catch (err) {
-            ToastManager.show({ type: 'error', title: 'toast.error.update_failed', message: err.toString() });
+            ToastManager.show({ type: 'error', title: 'Update failed', message: err.toString() });
           }
         }
       });
@@ -661,9 +658,9 @@ function renderStopWords(words) {
       if (window.__TAURI__) {
         try {
           await window.__TAURI__.core.invoke('set_stop_words', { words: updatedList });
-          ToastManager.show({ type: 'success', title: 'toast.stop.updated' });
+          ToastManager.show({ type: 'success', title: 'Stop words updated' });
         } catch (err) {
-          ToastManager.show({ type: 'error', title: 'toast.error.update_failed', message: err.toString() });
+          ToastManager.show({ type: 'error', title: 'Update failed', message: err.toString() });
         }
       }
     });
@@ -682,7 +679,7 @@ async function handleAddTrigger(inputEl) {
   if (!newWord) return;
 
   if (triggerWords.includes(newWord)) {
-    ToastManager.show({ type: 'info', title: 'toast.trigger.already_registered' });
+    ToastManager.show({ type: 'info', title: 'Word already registered' });
     return;
   }
 
@@ -701,9 +698,9 @@ async function handleAddTrigger(inputEl) {
   if (window.__TAURI__) {
     try {
       await window.__TAURI__.core.invoke('set_trigger_words', { words: updatedList });
-      ToastManager.show({ type: 'success', title: 'toast.trigger.add_success' });
+      ToastManager.show({ type: 'success', title: 'Trigger word added' });
     } catch (err) {
-      ToastManager.show({ type: 'error', title: 'toast.error.add_failed', message: err.toString() });
+      ToastManager.show({ type: 'error', title: 'Add failed', message: err.toString() });
     }
   }
 }
@@ -722,7 +719,7 @@ async function handleAddStop() {
   if (!newWord) return;
 
   if (stopWords.includes(newWord)) {
-    ToastManager.show({ type: 'info', title: 'toast.trigger.already_registered' });
+    ToastManager.show({ type: 'info', title: 'Word already registered' });
     return;
   }
 
@@ -741,9 +738,9 @@ async function handleAddStop() {
   if (window.__TAURI__) {
     try {
       await window.__TAURI__.core.invoke('set_stop_words', { words: updatedList });
-      ToastManager.show({ type: 'success', title: 'toast.stop.add_success' });
+      ToastManager.show({ type: 'success', title: 'Stop word added' });
     } catch (err) {
-      ToastManager.show({ type: 'error', title: 'toast.error.add_failed', message: err.toString() });
+      ToastManager.show({ type: 'error', title: 'Add failed', message: err.toString() });
     }
   }
 }
@@ -847,9 +844,9 @@ function loadConfigGeneralUI(config) {
     if (window.__TAURI__) {
       try {
         await window.__TAURI__.core.invoke('set_audio_device', { deviceId: devId });
-        ToastManager.show({ type: 'success', title: 'toast.mic.updated' });
+        ToastManager.show({ type: 'success', title: 'Microphone updated' });
       } catch (err) {
-        ToastManager.show({ type: 'error', title: 'toast.error.mic_failed', message: err.toString() });
+        ToastManager.show({ type: 'error', title: 'Failed to update mic', message: err.toString() });
       }
     }
   };
@@ -905,8 +902,8 @@ engineCards.forEach(card => {
     if (engineId === 'whisper') {
       ToastManager.show({
         type: 'warning',
-        title: t('toast.whisper_cpu.title'),
-        message: t('toast.whisper_cpu.msg'),
+        title: 'Ostrzeżenie: Whisper.cpp (CPU-only)',
+        message: 'Natywny silnik Whisper.cpp na tym systemie działa w trybie wielowątkowego procesora (CPU). Przetwarzanie (zwłaszcza modeli large) może potrwać kilka sekund po zakończeniu mówienia. Dla pełnej akceleracji GPU wybierz silnik Faster-Whisper.',
         duration: 10000
       });
     }
@@ -917,8 +914,7 @@ engineCards.forEach(card => {
       const badge = c.querySelector('.engine-card-badge');
       if (badge) {
         badge.classList.remove('active');
-        badge.textContent = t('engines.badge.select');
-        badge.setAttribute('data-i18n', 'engines.badge.select');
+        badge.textContent = 'Wybierz';
       }
     });
 
@@ -926,8 +922,7 @@ engineCards.forEach(card => {
     const badge = card.querySelector('.engine-card-badge');
     if (badge) {
       badge.classList.add('active');
-      badge.textContent = t('engines.badge.active');
-      badge.setAttribute('data-i18n', 'engines.badge.active');
+      badge.textContent = 'Aktywny';
     }
 
     if (pendingConfig && pendingConfig.engine) {
@@ -974,7 +969,7 @@ function updateActiveEnginePanel(engineId) {
   };
   
   const prettyName = nameMap[engineId] || engineId;
-  title.textContent = `${t('engines.config.title_prefix')}: ${prettyName}`;
+  title.textContent = `Konfiguracja: ${prettyName}`;
 
   // Dashboard active display
   updateDashboardActiveEngineCard();
@@ -1009,8 +1004,8 @@ function updateActiveEnginePanel(engineId) {
           if (engineId === 'whisper') {
             ToastManager.show({
               type: 'warning',
-              title: 'toast.whisper_gpu_unavailable.title',
-              message: 'toast.whisper_gpu_unavailable.msg',
+              title: 'GPU niedostępne w Whisper.cpp',
+              message: 'Silnik Whisper.cpp nie posiada wkompilowanej obsługi GPU na tym systemie. Zostanie użyty wielowątkowy procesor (CPU). Jeśli chcesz korzystać z karty graficznej (GPU), przełącz na silnik Faster-Whisper.',
               duration: 8000
             });
           } else {
@@ -1028,28 +1023,28 @@ function updateActiveEnginePanel(engineId) {
 
     const providerData = {
       deepgram: {
-        title: `${t('engines.config.provider_prefix')}: Deepgram Online`,
-        price: t('engines.config.provider.deepgram.price'),
+        title: 'Dostawca: Deepgram Online',
+        price: 'Szacowany koszt: ~$0.0043 / min (~$0.00007 / słowo). $200 darmowych kredytów na start.',
         url: 'https://console.deepgram.com'
       },
       assemblyai: {
-        title: `${t('engines.config.provider_prefix')}: AssemblyAI Online`,
-        price: t('engines.config.provider.assemblyai.price'),
+        title: 'Dostawca: AssemblyAI Online',
+        price: 'Szacowany koszt: ~$0.0062 / min (~$0.00010 / słowo). $50 darmowych kredytów na start.',
         url: 'https://www.assemblyai.com'
       },
       openai: {
-        title: `${t('engines.config.provider_prefix')}: OpenAI Whisper API`,
-        price: t('engines.config.provider.openai.price'),
+        title: 'Dostawca: OpenAI Whisper API',
+        price: 'Szacowany koszt: ~$0.0060 / min (~$0.00010 / słowo). Rozliczanie za minutę audio.',
         url: 'https://platform.openai.com/api-keys'
       },
       google: {
-        title: `${t('engines.config.provider_prefix')}: Google Cloud Speech-to-Text`,
-        price: t('engines.config.provider.google.price'),
+        title: 'Dostawca: Google Cloud Speech-to-Text',
+        price: 'Szacowany koszt: ~$0.0160 / min. 60 minut miesięcznie gratis + $300 w GCP.',
         url: 'https://console.cloud.google.com/speech'
       },
       azure: {
-        title: `${t('engines.config.provider_prefix')}: Microsoft Azure Speech Services`,
-        price: t('engines.config.provider.azure.price'),
+        title: 'Dostawca: Microsoft Azure Speech Services',
+        price: 'Szacowany koszt: ~$0.0100 / min. 5 godzin miesięcznie gratis (Tier F0).',
         url: 'https://azure.microsoft.com/en-us/products/ai-services/speech-to-text'
       }
     };
@@ -1174,7 +1169,7 @@ async function updateDashboardActiveEngineCard() {
             modelShortLabel.textContent = shortName;
             modelShortLabel.style.color = 'var(--text-muted)';
           } else {
-            modelShortLabel.textContent = `${shortName} (${t('engines.model.missing_file')})`;
+            modelShortLabel.textContent = `${shortName} (Brak pliku)`;
             modelShortLabel.style.color = '#ef4444';
           }
         } catch (e) {
@@ -1186,7 +1181,7 @@ async function updateDashboardActiveEngineCard() {
         modelShortLabel.style.color = 'var(--text-muted)';
       }
     } else {
-      modelShortLabel.textContent = t('engines.cloud_label');
+      modelShortLabel.textContent = 'Chmura';
       modelShortLabel.style.color = 'var(--text-muted)';
     }
   }
@@ -1281,7 +1276,7 @@ async function renderAvailableModels(engineId) {
       radioGroup.innerHTML = '';
       
       if (models.length === 0) {
-        radioGroup.innerHTML = `<div style="color: var(--text-muted); font-size: 13px;" data-i18n="engines.no_models_available">${t('engines.no_models_available')}</div>`;
+        radioGroup.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Brak dostępnych modeli dla wybranych parametrów</div>';
         return;
       }
 
@@ -1337,7 +1332,7 @@ async function renderAvailableModels(engineId) {
         tip.style.fontSize = '12px';
         tip.style.color = 'var(--text-muted)';
         tip.style.lineHeight = '1.5';
-        tip.innerHTML = t('engines.vosk.tip');
+        tip.innerHTML = `<strong>Wskazówka:</strong> Im większy model, tym wyższa dokładność rozpoznawania mowy, ale też większe obciążenie procesora i pamięci RAM. Modele mniejsze niż 50 MB (jak Mikro) mogą mieć trudności z poprawną interpretacją polskich końcówek i specyficznych wyrazów.`;
         radioGroup.appendChild(tip);
       } else if (engineId === 'sherpa_onnx') {
         const tip = document.createElement('div');
@@ -1345,7 +1340,7 @@ async function renderAvailableModels(engineId) {
         tip.style.fontSize = '12px';
         tip.style.color = 'var(--text-muted)';
         tip.style.lineHeight = '1.5';
-        tip.innerHTML = t('engines.sherpa.tip');
+        tip.innerHTML = `<strong>Wskazówka:</strong> Modele Sherpa-ONNX pobierają się z oficjalnych wydań Next-Gen Kaldi i są optymalizowane pod kątem szybkiego wnioskowania na CPU w czasie rzeczywistym.`;
         radioGroup.appendChild(tip);
       }
 
@@ -1367,7 +1362,7 @@ async function renderAvailableModels(engineId) {
               checkEngineDirty();
               updateModelStatusText(engineId, modelId);
             } catch (err) {
-              ToastManager.show({ type: 'error', title: 'toast.error.model_config_failed', message: err.toString() });
+              ToastManager.show({ type: 'error', title: 'Błąd konfiguracji modelu', message: err.toString() });
             }
           }
         };
@@ -1402,19 +1397,19 @@ async function updateModelStatusText(engineId, modelId) {
     try {
       const isDownloaded = await window.__TAURI__.core.invoke('check_model_downloaded', { engine: engineId, model: modelId });
       if (isDownloaded) {
-        statusSpan.textContent = t('models.status.downloaded');
+        statusSpan.textContent = 'Pobrany';
         statusSpan.className = 'status-value highlight';
         if (downloadBtn) {
-          downloadBtn.textContent = t('models.status.downloaded');
+          downloadBtn.textContent = 'Pobrany';
           downloadBtn.disabled = true;
           downloadBtn.style.opacity = '0.5';
           downloadBtn.style.cursor = 'not-allowed';
         }
       } else {
-        statusSpan.textContent = t('models.status.not_downloaded');
+        statusSpan.textContent = 'Nie pobrany';
         statusSpan.className = 'status-value';
         if (downloadBtn) {
-          downloadBtn.textContent = t('downloads.quick.btn');
+          downloadBtn.textContent = 'Pobierz model';
           downloadBtn.disabled = false;
           downloadBtn.style.opacity = '1';
           downloadBtn.style.cursor = 'pointer';
@@ -1522,21 +1517,20 @@ async function updateQuickModelOptions() {
     if (models.length === 0) {
       const opt = document.createElement('option');
       opt.value = '';
-      opt.textContent = t('engines.no_models_available');
-      opt.setAttribute('data-i18n', 'engines.no_models_available');
+      opt.textContent = 'Brak dostępnych modeli';
       quickModelSelect.appendChild(opt);
     } else {
       models.forEach(m => {
         const opt = document.createElement('option');
         opt.value = m.id;
-        opt.textContent = `${m.name} (${m.size_text})${m.is_downloaded ? t('downloads.quick.downloaded_suffix') : ''}`;
+        opt.textContent = `${m.name} (${m.size_text})${m.is_downloaded ? ' ✔ (Pobrany)' : ''}`;
         quickModelSelect.appendChild(opt);
       });
       if (quickDownloadBtn) quickDownloadBtn.disabled = false;
     }
   } catch (err) {
     console.error('Error fetching available models:', err);
-    quickModelSelect.innerHTML = `<option value="">${t('downloads.quick.load_error')}</option>`;
+    quickModelSelect.innerHTML = '<option value="">Błąd ładowania modeli</option>';
   } finally {
     if (quickModelLoader) quickModelLoader.style.display = 'none';
     quickModelSelect.disabled = false;
@@ -1622,7 +1616,7 @@ async function startSingleDownload(item) {
 
   if (window.__TAURI__) {
     try {
-      ToastManager.show({ type: 'info', title: 'toast.download.started', message: t('toast.download.started_msg').replace('{model}', item.model) });
+      ToastManager.show({ type: 'info', title: 'Rozpoczęto pobieranie', message: `Pobieranie ${item.model}...` });
       const checkEngine = item.engine === 'faster_whisper' ? 'whisper' : item.engine;
       console.log('[DOWNLOAD_START] Wywołanie download_model w Tauri dla silnika:', checkEngine, 'modelu:', item.model);
       await window.__TAURI__.core.invoke('download_model', { engine: checkEngine, model: item.model });
@@ -1631,7 +1625,7 @@ async function startSingleDownload(item) {
       if (item.status !== 'cancelled') {
         item.status = 'completed';
         console.log('[DOWNLOAD_FINISH] Oznaczono pobieranie jako ukończone:', item.model);
-        ToastManager.show({ type: 'success', title: 'toast.download.completed', message: t('toast.download.completed_msg').replace('{model}', item.model) });
+        ToastManager.show({ type: 'success', title: 'Pobieranie ukończone', message: `Model ${item.model} gotowy do użycia.` });
       } else {
         console.log('[DOWNLOAD_FINISH] Pobieranie było anulowane w trakcie, pomijam oznaczanie jako ukończone.');
       }
@@ -1639,7 +1633,7 @@ async function startSingleDownload(item) {
       console.error('[DOWNLOAD_ERROR] Wystąpił błąd podczas pobierania:', err, 'aktualny status:', item.status);
       if (item.status !== 'cancelled') {
         item.status = 'error';
-        ToastManager.show({ type: 'error', title: 'toast.error.download_failed', message: err.toString() });
+        ToastManager.show({ type: 'error', title: 'Błąd pobierania', message: err.toString() });
       } else {
         console.log('[DOWNLOAD_ERROR] Błąd zignorowany, ponieważ status to cancelled.');
       }
@@ -1685,7 +1679,7 @@ async function triggerModelDownloadExplicit(engineId, modelName) {
   if (progressContainer) progressContainer.style.display = 'block';
   if (fill) fill.style.width = '0%';
   if (percentEl) percentEl.textContent = '0%';
-  if (text) text.textContent = t('toast.download.init_msg');
+  if (text) text.textContent = 'Inicjalizacja pobierania...';
 
   addModelToDownloadQueue(engineId, modelName);
 }
@@ -1698,7 +1692,7 @@ async function triggerModelDownload(engineId) {
   }
 
   if (!modelName) {
-    ToastManager.show({ type: 'error', title: 'toast.download.select_model_title', message: 'toast.download.select_model_msg' });
+    ToastManager.show({ type: 'error', title: 'Wybierz model', message: 'Zaznacz najpierw model do pobrania.' });
     return;
   }
 
@@ -1710,7 +1704,7 @@ async function triggerModelDownload(engineId) {
   if (progressContainer) progressContainer.style.display = 'block';
   if (fill) fill.style.width = '0%';
   if (percentEl) percentEl.textContent = '0%';
-  if (text) text.textContent = t('toast.download.init_msg');
+  if (text) text.textContent = 'Inicjalizacja pobierania...';
 
   addModelToDownloadQueue(engineId, modelName);
 }
@@ -1734,7 +1728,7 @@ function updateDashboardDownloadState(progress) {
       if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
         dashText.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB`;
       } else {
-        dashText.textContent = t('toast.download.dashboard_msg');
+        dashText.textContent = 'Pobieranie modelu...';
       }
     } else {
       dashStatus.style.display = 'none';
@@ -1778,13 +1772,13 @@ function updateDownloadProgress(progress) {
         if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
           stats.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB`;
         } else {
-          stats.textContent = t('toast.download.finishing');
+          stats.textContent = 'Kończenie pobierania...';
         }
       }
       if (badge && queueItem.status === 'completed') {
         badge.style.color = 'var(--accent-green)';
         badge.style.background = 'rgba(16,185,129,0.15)';
-        badge.textContent = t('toast.download.completed') || 'Completed';
+        badge.textContent = 'Ukończono';
       }
       updatedDOM = true;
     }
@@ -1802,7 +1796,7 @@ function updateDownloadProgress(progress) {
     if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
       text.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB`;
     } else {
-      text.textContent = progress.done ? t('toast.download.installing') : t('toast.download.finishing');
+      text.textContent = progress.done ? 'Instalowanie i rozpakowywanie ukończone' : 'Kończenie pobierania...';
     }
     
     percentEl.textContent = `${Math.round(progress.percent)}%`;
@@ -1851,7 +1845,7 @@ function addModelToDownloadQueue(engine, model) {
   let existing = downloadQueue.find(q => q.engine === engine && q.model === model);
   if (existing) {
     if (existing.status === 'completed') {
-      ToastManager.show({ type: 'info', title: 'toast.download.already_downloaded_title', message: 'toast.download.already_downloaded_msg' });
+      ToastManager.show({ type: 'info', title: 'Model pobrany', message: 'Ten model jest już pobrany na Twoim dysku.' });
       return;
     }
     existing.status = 'queued';
@@ -1881,8 +1875,9 @@ function renderDownloadQueue() {
   const activeItems = downloadQueue.filter(q => q.status === 'downloading' || q.status === 'queued' || q.status === 'paused');
   const historyItems = downloadQueue.filter(q => q.status === 'completed' || q.status === 'cancelled' || q.status === 'error');
 
+  // Render Active Downloads
   if (activeItems.length === 0) {
-    activeContainer.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); font-style: italic;" data-i18n="downloads.active.no_active">${t('downloads.active.no_active')}</div>`;
+    activeContainer.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); font-style: italic;">Brak aktywnych pobierań. Wybierz model powyżej, aby rozpocząć.</div>`;
   } else {
     activeContainer.innerHTML = '';
     activeItems.forEach(item => {
@@ -1949,7 +1944,7 @@ function renderDownloadQueue() {
         } else {
           console.log('[CANCEL_QUEUE] Brak środowiska Tauri - symulowane czyszczenie.');
         }
-        ToastManager.show({ type: 'info', title: 'toast.download.cancelled_title', message: t('toast.download.cancelled_msg').replace('{model}', item.model) });
+        ToastManager.show({ type: 'info', title: 'Anulowano pobieranie', message: `Pobieranie modelu ${item.model} zostało natychmiast anulowane.` });
         updateDashboardDownloadState(null);
         renderDownloadQueue();
         setTimeout(() => processDownloadQueue(), 300);
@@ -1961,7 +1956,7 @@ function renderDownloadQueue() {
 
   // Render History Downloads
   if (historyItems.length === 0) {
-    historyContainer.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); font-style: italic;" data-i18n="downloads.history.no_history">${t('downloads.history.no_history')}</div>`;
+    historyContainer.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); font-style: italic;">Brak historii pobierania.</div>`;
   } else {
     historyContainer.innerHTML = '';
     historyItems.forEach(item => {
@@ -2016,7 +2011,7 @@ async function renderInstalledModelsManager() {
 
         let modelsHtml = '';
         if (group.models.length === 0) {
-          modelsHtml = `<div style="font-size: 12px; color: var(--text-muted); font-style: italic;" data-i18n="models.manager.no_models">${t('models.manager.no_models')}</div>`;
+          modelsHtml = `<div style="font-size: 12px; color: var(--text-muted); font-style: italic;">Brak pobranych modeli dla tego silnika</div>`;
         } else {
           modelsHtml = group.models.map(m => `
             <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-elevated); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
@@ -2061,13 +2056,13 @@ async function renderInstalledModelsManager() {
           const engine = e.currentTarget.getAttribute('data-engine');
           const model = e.currentTarget.getAttribute('data-model');
           showCustomConfirmModal({
-            title: t('modal.delete_confirm.title'),
-            message: t('modal.delete_confirm.msg').replace('{model}', model),
-            confirmText: t('modal.delete_confirm.btn'),
+            title: 'Potwierdzenie usunięcia',
+            message: `Czy na pewno chcesz usunąć model "${model}" z dysku? Operacji nie można cofnąć.`,
+            confirmText: 'Usuń model',
             onConfirm: async () => {
               try {
                 await window.__TAURI__.core.invoke('delete_installed_model', { engine, model });
-                ToastManager.show({ type: 'success', title: 'toast.delete.success_title', message: t('toast.delete.success_msg').replace('{model}', model) });
+                ToastManager.show({ type: 'success', title: 'Usunięto model', message: `Model ${model} został usunięty z dysku.` });
                 removeModelFromDownloadQueue(engine, model);
                 await renderInstalledModelsManager();
                 const activeEngineId = pendingConfig ? pendingConfig.engine.type : 'vosk';
@@ -2075,7 +2070,7 @@ async function renderInstalledModelsManager() {
                 await updateDashboardActiveEngineCard();
                 await checkActiveEngineAvailability();
               } catch (err) {
-                ToastManager.show({ type: 'error', title: 'toast.error.delete_failed', message: err.toString() });
+                ToastManager.show({ type: 'error', title: 'Błąd usuwania', message: err.toString() });
               }
             }
           });
@@ -2086,13 +2081,13 @@ async function renderInstalledModelsManager() {
         btn.onclick = (e) => {
           const engine = e.currentTarget.getAttribute('data-engine');
           showCustomConfirmModal({
-            title: t('modal.delete_all_confirm.title'),
-            message: t('modal.delete_all_confirm.msg'),
-            confirmText: t('modal.delete_all_confirm.btn'),
+            title: 'Usuwanie wszystkich modeli',
+            message: `Czy na pewno chcesz usunąć WSZYSTKIE pobrane modele dla tego silnika?`,
+            confirmText: 'Usuń wszystkie',
             onConfirm: async () => {
               try {
                 await window.__TAURI__.core.invoke('delete_installed_model', { engine, model: null });
-                ToastManager.show({ type: 'success', title: 'toast.delete.success_title', message: t('toast.delete.success_all_msg') });
+                ToastManager.show({ type: 'success', title: 'Usunięto modele', message: `Wszystkie modele silnika zostały usunięte z dysku.` });
                 removeModelFromDownloadQueue(engine, null);
                 await renderInstalledModelsManager();
                 const activeEngineId = pendingConfig ? pendingConfig.engine.type : 'vosk';
@@ -2100,7 +2095,7 @@ async function renderInstalledModelsManager() {
                 await updateDashboardActiveEngineCard();
                 await checkActiveEngineAvailability();
               } catch (err) {
-                ToastManager.show({ type: 'error', title: 'toast.error.delete_failed', message: err.toString() });
+                ToastManager.show({ type: 'error', title: 'Błąd usuwania', message: err.toString() });
               }
             }
           });
@@ -2236,7 +2231,7 @@ function showDownloadingNavigationModal() {
     updateActiveEnginePanel(activeConfig.engine.type);
     checkEngineDirty();
     renderDownloadQueue();
-    ToastManager.show({ type: 'info', title: 'toast.engine_apply.removed_title', message: 'toast.engine_apply.removed_msg' });
+    ToastManager.show({ type: 'info', title: 'Usunięto model', message: 'Anulowano pobieranie i usunięto pliki modelu z dysku. Wrócono do poprzedniego silnika.' });
   };
 }
 
@@ -2284,7 +2279,7 @@ async function confirmUnsavedChanges(onProceed) {
         updateActiveEnginePanel(activeConfig.engine.type);
         checkEngineDirty();
         renderAvailableModels(activeConfig.engine.type);
-        ToastManager.show({ type: 'info', title: 'toast.engine_apply.restored_title', message: 'toast.engine_apply.restored_msg' });
+        ToastManager.show({ type: 'info', title: 'Przywrócono konfigurację', message: 'Wrócono do poprzedniego modelu.' });
         onProceed();
       }
     });
@@ -2354,7 +2349,7 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
       updateActiveEnginePanel(activeConfig.engine.type);
       checkEngineDirty();
       renderAvailableModels(activeConfig.engine.type);
-      ToastManager.show({ type: 'info', title: 'toast.engine_apply.cancelled_title', message: 'toast.engine_apply.cancelled_msg' });
+      ToastManager.show({ type: 'info', title: 'Anulowano pobieranie', message: 'Wrócono do poprzedniego silnika i modelu (anulowano pobieranie).' });
     }
     close();
   };
@@ -2366,7 +2361,7 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
     updateActiveEnginePanel(activeConfig.engine.type);
     checkEngineDirty();
     renderAvailableModels(activeConfig.engine.type);
-    ToastManager.show({ type: 'info', title: 'toast.engine_apply.restored_prev_title', message: 'toast.engine_apply.restored_prev_msg' });
+    ToastManager.show({ type: 'info', title: 'Przywrócono poprzedni model', message: 'Wrócono do wcześniej zapisanego modelu.' });
     onProceed();
   };
 
@@ -2378,7 +2373,7 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
     }
     checkEngineDirty();
     updateActiveEnginePanel(activeConfig.engine.type);
-    ToastManager.show({ type: 'info', title: 'toast.engine_apply.success_active_title', message: t('toast.engine_apply.success_active_msg').replace('{model}', modelId) });
+    ToastManager.show({ type: 'info', title: 'Rozpoczęto pobieranie i aktywowano model', message: `Model ${modelId} pobiera się w tle.` });
     close();
     onProceed();
   };
@@ -2479,7 +2474,7 @@ function showTranslationModelDownloadModal(onSuccess) {
       if (progress >= 100) {
         clearInterval(interval);
         localStorage.setItem('translator_model_downloaded', 'true');
-        ToastManager.show({ type: 'success', title: 'toast.translator.downloaded_title', message: 'toast.translator.downloaded_msg' });
+        ToastManager.show({ type: 'success', title: 'Model tłumaczeniowy pobrany', message: 'Tłumaczenie słów wyzwalających zostało aktywowane!' });
         setTimeout(() => {
           close();
           onSuccess();
@@ -2493,20 +2488,20 @@ function showTranslationModelDownloadModal(onSuccess) {
 const testApiBtn = document.getElementById('btn-test-api');
 if (testApiBtn) {
   testApiBtn.addEventListener('click', async () => {
-    ToastManager.show({ type: 'info', title: 'toast.api.testing_title' });
+    ToastManager.show({ type: 'info', title: 'Testowanie połączenia...' });
     if (window.__TAURI__) {
       try {
         if (pendingConfig) {
           await window.__TAURI__.core.invoke('save_config', { config: pendingConfig });
         }
         const response = await window.__TAURI__.core.invoke('test_engine', { engineType: pendingConfig ? pendingConfig.engine.type : null });
-        ToastManager.show({ type: 'success', title: 'toast.api.test_success_title', message: response });
+        ToastManager.show({ type: 'success', title: 'Test połączenia', message: response });
       } catch (err) {
-        ToastManager.show({ type: 'error', title: 'toast.api.test_error_title', message: err.toString(), persistent: true });
+        ToastManager.show({ type: 'error', title: 'Błąd testu połączenia', message: err.toString(), persistent: true });
       }
     } else {
       setTimeout(() => {
-        ToastManager.show({ type: 'success', title: 'toast.api.test_success_title', message: 'toast.api.test_success_mock' });
+        ToastManager.show({ type: 'success', title: 'Test połączenia', message: 'Test API udany (Mock)' });
       }, 1000);
     }
   });
@@ -2517,9 +2512,9 @@ const resetConfigBtn = document.getElementById('btn-reset-all-config');
 if (resetConfigBtn) {
   resetConfigBtn.addEventListener('click', () => {
     showCustomConfirmModal({
-      title: t('toast.config.reset_title'),
-      message: t('toast.config.reset_msg'),
-      confirmText: t('toast.config.reset_btn'),
+      title: 'Resetuj Konfigurację',
+      message: 'Czy na pewno chcesz zresetować całą konfigurację do wartości domyślnych?',
+      confirmText: 'Zresetuj',
       isDanger: true,
       onConfirm: async () => {
         if (window.__TAURI__) {
@@ -2536,12 +2531,12 @@ if (resetConfigBtn) {
             const voskCard = document.getElementById('engine-card-vosk');
             if (voskCard) voskCard.click();
 
-            ToastManager.show({ type: 'success', title: 'toast.config.reset_success_title' });
+            ToastManager.show({ type: 'success', title: 'Przywrócono domyślne ustawienia' });
           } catch (err) {
-            ToastManager.show({ type: 'error', title: 'toast.error.reset_failed', message: err.toString() });
+            ToastManager.show({ type: 'error', title: 'Reset failed', message: err.toString() });
           }
         } else {
-          ToastManager.show({ type: 'success', title: 'toast.config.reset_success_title' });
+          ToastManager.show({ type: 'success', title: 'Reset (Mock) successful' });
         }
       }
     });
@@ -2560,16 +2555,16 @@ function updateOrbState(status) {
   
   if (currentStatus === 'idle') {
     orb.classList.add('idle');
-    statusText.textContent = t('dash.status.idle');
-    statusSubtext.textContent = t('dash.substatus.idle');
+    statusText.textContent = 'Idle';
+    statusSubtext.textContent = 'Waiting for trigger word';
   } else if (currentStatus === 'listening') {
     orb.classList.add('listening');
-    statusText.textContent = t('dash.status.listening');
-    statusSubtext.textContent = t('dash.substatus.listening');
+    statusText.textContent = 'Listening';
+    statusSubtext.textContent = 'Speak to begin dictating';
   } else if (currentStatus === 'dictating') {
     orb.classList.add('dictating');
-    statusText.textContent = t('dash.status.dictating');
-    statusSubtext.textContent = t('dash.substatus.dictating');
+    statusText.textContent = 'Dictating';
+    statusSubtext.textContent = 'Actively typing into focus field';
     
     // Clear recent transcripts container for the new session!
     const container = document.getElementById('transcript-container');
@@ -2578,15 +2573,15 @@ function updateOrbState(status) {
     }
   } else if (currentStatus === 'processing') {
     orb.classList.add('processing');
-    statusText.textContent = t('dash.status.processing');
-    statusSubtext.textContent = t('dash.substatus.processing');
+    statusText.textContent = 'Processing';
+    statusSubtext.textContent = 'Transcribing speech using engine...';
   } else if (currentStatus === 'paused') {
     orb.classList.add('paused');
-    statusText.textContent = t('dash.status.paused');
-    statusSubtext.textContent = t('dash.substatus.paused');
+    statusText.textContent = 'Paused';
+    statusSubtext.textContent = 'Click the orb to resume';
   } else if (currentStatus.startsWith('error')) {
     orb.classList.add('error');
-    statusText.textContent = t('dash.status.error');
+    statusText.textContent = 'Error';
     statusSubtext.textContent = status;
   }
 
@@ -2611,13 +2606,13 @@ if (forceDictateBtn) {
     if (window.__TAURI__) {
       try {
         await window.__TAURI__.core.invoke('force_dictate');
-        ToastManager.show({ type: 'success', title: 'toast.dictation.force_title', message: 'toast.dictation.force_msg' });
+        ToastManager.show({ type: 'success', title: 'Wymuszono dyktowanie', message: 'Zacznij mówić bez słowa kluczowego.' });
       } catch (err) {
-        ToastManager.show({ type: 'error', title: 'toast.error.force_failed', message: err.toString() });
+        ToastManager.show({ type: 'error', title: 'Błąd wymuszenia', message: err.toString() });
       }
     } else {
       updateOrbState('dictating');
-      ToastManager.show({ type: 'success', title: 'toast.dictation.force_title', message: 'toast.dictation.force_msg_mock' });
+      ToastManager.show({ type: 'success', title: 'Wymuszono dyktowanie (Mock)' });
     }
   });
 }
@@ -2630,13 +2625,13 @@ if (orb) {
       try {
         if (currentStatus === 'paused') {
           await window.__TAURI__.core.invoke('resume_listening');
-          ToastManager.show({ type: 'info', title: 'toast.dictation.resumed_title' });
+          ToastManager.show({ type: 'info', title: 'Listening resumed' });
         } else {
           await window.__TAURI__.core.invoke('pause_listening');
-          ToastManager.show({ type: 'info', title: 'toast.dictation.paused_title' });
+          ToastManager.show({ type: 'info', title: 'Listening paused' });
         }
       } catch (err) {
-        ToastManager.show({ type: 'error', title: 'toast.error.command_failed', message: err.toString() });
+        ToastManager.show({ type: 'error', title: 'Command error', message: err.toString() });
       }
     } else {
       updateOrbState(currentStatus === 'paused' ? 'idle' : 'paused');
@@ -2764,8 +2759,7 @@ async function init() {
           const badge = c.querySelector('.engine-card-badge');
           if (badge) {
             badge.classList.remove('active');
-            badge.textContent = t('engines.badge.select');
-            badge.setAttribute('data-i18n', 'engines.badge.select');
+            badge.textContent = 'Wybierz';
           }
         });
         const activeCard = document.querySelector(`.engine-card[data-engine-id="${active.id}"]`);
@@ -2774,8 +2768,7 @@ async function init() {
           const badge = activeCard.querySelector('.engine-card-badge');
           if (badge) {
             badge.classList.add('active');
-            badge.textContent = t('engines.badge.active');
-            badge.setAttribute('data-i18n', 'engines.badge.active');
+            badge.textContent = 'Aktywny';
           }
           updateActiveEnginePanel(active.id);
           await verifyStartupModel();
@@ -2811,7 +2804,7 @@ async function init() {
       });
       
       await window.__TAURI__.event.listen('engine_error', (event) => {
-        ToastManager.show({ type: 'error', title: 'toast.error.engine_error', message: event.payload, persistent: true });
+        ToastManager.show({ type: 'error', title: 'Engine Error', message: event.payload, persistent: true });
       });
 
       await window.__TAURI__.event.listen('download_progress', (event) => {
@@ -2823,18 +2816,18 @@ async function init() {
         if (!hasField) {
           ToastManager.show({ 
             type: 'info', 
-            title: 'toast.focus.no_field_title', 
-            message: 'toast.focus.no_field_msg' 
+            title: 'No text field active', 
+            message: 'Dictated text will fall back to clipboard.' 
           });
         }
       });
 
       // 5. Initial welcome message
-      ToastManager.show({ type: 'success', title: 'toast.init.success_title', message: 'toast.init.success_msg' });
+      ToastManager.show({ type: 'success', title: 'VoiceType Active', message: 'Listening initialized successfully.' });
       renderHistoryUI();
     } catch (err) {
       console.error(err);
-      ToastManager.show({ type: 'error', title: 'toast.init.error_title', message: err.toString(), persistent: true });
+      ToastManager.show({ type: 'error', title: 'Initialization Error', message: err.toString(), persistent: true });
     }
   } else {
     // Mock configuration for dev environment
@@ -2854,7 +2847,7 @@ async function init() {
     updateActiveEnginePanel('vosk');
     updateOrbState('idle');
     renderHistoryUI();
-    ToastManager.show({ type: 'info', title: 'toast.init.mock_title', message: 'toast.init.mock_msg' });
+    ToastManager.show({ type: 'info', title: 'Mock Environment', message: 'Running outside Tauri container.' });
   }
   if (quickLangSelect && activeConfig && activeConfig.general) {
     quickLangSelect.value = activeConfig.general.language;
@@ -2895,8 +2888,7 @@ function updateEngineCardsLockUI() {
       if (header) {
         const badge = document.createElement('span');
         badge.className = 'python-warning-badge';
-        badge.textContent = t('engines.badge.no_python');
-        badge.setAttribute('data-i18n', 'engines.badge.no_python');
+        badge.textContent = 'Brak Pythona';
         header.appendChild(badge);
       }
     }
@@ -2945,7 +2937,7 @@ function showPythonModal(targetEngineId) {
         progressPercent.textContent = `${Math.round(payload.percent)}%`;
 
         if (payload.done) {
-          ToastManager.show({ type: 'success', title: 'toast.python.install_success_title', message: 'toast.python.install_success_msg' });
+          ToastManager.show({ type: 'success', title: 'Python zainstalowany!', message: 'Silniki Whisper są gotowe do pracy.' });
           isPythonAvailableGlobal = true;
           updateEngineCardsLockUI();
           
@@ -2957,8 +2949,8 @@ function showPythonModal(targetEngineId) {
             unlisten();
           }, 1500);
         } else if (payload.error) {
-          ToastManager.show({ type: 'error', title: 'toast.python.install_error_title', message: payload.error });
-          desc.innerHTML = t('toast.python.install_error_retry').replace('{error}', payload.error);
+          ToastManager.show({ type: 'error', title: 'Błąd instalacji Pythona', message: payload.error });
+          desc.innerHTML = `<span style="color: var(--text-error); font-weight: 600;">Błąd:</span> ${payload.error}<br><br>Spróbuj ponownie lub zainstaluj Python ręcznie.`;
           actions.style.display = 'flex';
           progressContainer.style.display = 'none';
           unlisten();
@@ -3016,14 +3008,14 @@ function showCudaInstallModal() {
         progressPercent.textContent = `${Math.round(payload.percent)}%`;
 
         if (payload.done) {
-          ToastManager.show({ type: 'success', title: 'toast.cuda.install_success_title', message: 'toast.cuda.install_success_msg' });
+          ToastManager.show({ type: 'success', title: 'CUDA zainstalowane!', message: 'GPU jest teraz gotowe do pracy.' });
           setTimeout(() => {
             modal.style.display = 'none';
-            title.textContent = t('toast.config.reset_title') || 'Wymagana instalacja środowiska Python';
+            title.textContent = 'Wymagana instalacja środowiska Python';
             unlisten();
           }, 2000);
         } else if (payload.error) {
-          ToastManager.show({ type: 'error', title: 'toast.cuda.install_error_title', message: payload.error });
+          ToastManager.show({ type: 'error', title: 'Błąd instalacji CUDA', message: payload.error });
           desc.innerHTML = `<span style="color: var(--text-error); font-weight: 600;">Błąd:</span> ${payload.error}<br><br>Upewnij się, że masz połączenie z internetem i spróbuj ponownie.`;
           actions.style.display = 'flex';
           progressContainer.style.display = 'none';
@@ -3084,11 +3076,11 @@ if (applyBtn) {
       if (engineId === 'azure') key = pendingConfig.engine.azure.subscription_key;
 
       if (!key || !key.trim()) {
-        ToastManager.show({ type: 'error', title: 'toast.api.missing_key_title', message: t('toast.api.missing_key_msg').replace('{engine}', engineId), persistent: true });
+        ToastManager.show({ type: 'error', title: 'Brak klucza API', message: `Musisz podać klucz API dla silnika ${engineId}, aby go aktywować.`, persistent: true });
         return;
       }
 
-      ToastManager.show({ type: 'info', title: 'toast.api.verify_title' });
+      ToastManager.show({ type: 'info', title: 'Weryfikacja połączenia z API...' });
       try {
         if (window.__TAURI__) {
           await window.__TAURI__.core.invoke('save_config', { config: pendingConfig });
@@ -3103,8 +3095,7 @@ if (applyBtn) {
             const badge = c.querySelector('.engine-card-badge');
             if (badge) {
               badge.classList.remove('active');
-              badge.textContent = t('engines.badge.select');
-              badge.setAttribute('data-i18n', 'engines.badge.select');
+              badge.textContent = 'Wybierz';
             }
           });
           const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
@@ -3113,8 +3104,7 @@ if (applyBtn) {
             const badge = activeCard.querySelector('.engine-card-badge');
             if (badge) {
               badge.classList.add('active');
-              badge.textContent = t('engines.badge.active');
-              badge.setAttribute('data-i18n', 'engines.badge.active');
+              badge.textContent = 'Aktywny';
             }
           }
 
@@ -3123,14 +3113,14 @@ if (applyBtn) {
           loadConfigGeneralUI(activeConfig);
           updateActiveEnginePanel(activeConfig.engine.type);
 
-          ToastManager.show({ type: 'success', title: 'toast.api.verified_title', message: testRes });
+          ToastManager.show({ type: 'success', title: 'Silnik zweryfikowany i aktywowany', message: testRes });
           return;
         }
       } catch (err) {
         if (window.__TAURI__) {
           await window.__TAURI__.core.invoke('save_config', { config: activeConfig });
         }
-        ToastManager.show({ type: 'error', title: 'toast.api.verify_error_title', message: t('toast.api.verify_error_msg').replace('{error}', err.toString()), persistent: true });
+        ToastManager.show({ type: 'error', title: 'Błąd weryfikacji klucza API', message: `Nie można aktywować silnika. ${err.toString()}`, persistent: true });
         return;
       }
     }
@@ -3165,7 +3155,7 @@ if (applyBtn) {
         const badge = c.querySelector('.engine-card-badge');
         if (badge) {
           badge.classList.remove('active');
-          badge.textContent = t('badge.select');
+          badge.textContent = 'Wybierz';
         }
       });
       const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
@@ -3174,7 +3164,7 @@ if (applyBtn) {
         const badge = activeCard.querySelector('.engine-card-badge');
         if (badge) {
           badge.classList.add('active');
-          badge.textContent = t('badge.active');
+          badge.textContent = 'Aktywny';
         }
       }
       
@@ -3183,7 +3173,7 @@ if (applyBtn) {
       loadConfigGeneralUI(activeConfig);
       updateActiveEnginePanel(activeConfig.engine.type);
       
-      ToastManager.show({ type: 'success', title: 'toast.engine_apply.changes_applied', message: t('toast.engine_apply.changes_msg') });
+      ToastManager.show({ type: 'success', title: 'Zastosowano zmiany', message: 'Silnik mowy został zaktualizowany.' });
     } else {
       const isCurrentlyDownloading = downloadQueue.some(q => q.model === modelId && (q.status === 'downloading' || q.status === 'queued'));
       if (isCurrentlyDownloading) {
@@ -3196,16 +3186,16 @@ if (applyBtn) {
           const badge = c.querySelector('.engine-card-badge');
           if (badge) {
             badge.classList.remove('active');
-            badge.textContent = t('badge.select');
+            badge.textContent = 'Wybierz';
           }
         });
-        const activeCardDl = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
-        if (activeCardDl) {
-          activeCardDl.classList.add('active');
-          const badge = activeCardDl.querySelector('.engine-card-badge');
+        const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
+        if (activeCard) {
+          activeCard.classList.add('active');
+          const badge = activeCard.querySelector('.engine-card-badge');
           if (badge) {
             badge.classList.add('active');
-            badge.textContent = t('badge.active');
+            badge.textContent = 'Aktywny';
           }
         }
         
@@ -3216,16 +3206,16 @@ if (applyBtn) {
         
         ToastManager.show({ 
           type: 'info', 
-          title: 'toast.engine_apply.success', 
-          message: 'toast.engine_apply.success_msg'
+          title: 'Zastosowano silnik mowy', 
+          message: 'Będzie można zacząć przetwarzać mowę na tekst dopiero gdy pobierze się model.' 
         });
         return;
       }
 
       showCustomConfirmModal({
-        title: t('toast.engine_apply.confirm_title'),
-        message: t('toast.engine_apply.confirm_msg').replace('{model}', modelId),
-        confirmText: t('toast.engine_apply.confirm_btn'),
+        title: 'Wymagane pobranie modelu',
+        message: `Wybrany model "${modelId}" nie znajduje się jeszcze na Twoim dysku. Czy chcesz go teraz pobrać, aby aktywować zmiany?`,
+        confirmText: 'Pobierz i aktywuj',
         onConfirm: async () => {
           const checkEngine = engineId === 'faster_whisper' ? 'whisper' : engineId;
           const progressContainer = document.getElementById('download-progress-container');
@@ -3235,7 +3225,7 @@ if (applyBtn) {
           applyBtn.style.opacity = '0.5';
 
           try {
-            ToastManager.show({ type: 'info', title: 'toast.download.started_info', message: t('toast.download.started_msg').replace('{model}', modelId) });
+            ToastManager.show({ type: 'info', title: 'Rozpoczęto pobieranie', message: `Pobieranie ${modelId}...` });
             await window.__TAURI__.core.invoke('download_model', { engine: checkEngine, model: modelId });
             
             activeConfig = JSON.parse(JSON.stringify(pendingConfig));
@@ -3247,16 +3237,16 @@ if (applyBtn) {
               const badge = c.querySelector('.engine-card-badge');
               if (badge) {
                 badge.classList.remove('active');
-                badge.textContent = t('badge.select');
+                badge.textContent = 'Wybierz';
               }
             });
-            const activeCard3 = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
-            if (activeCard3) {
-              activeCard3.classList.add('active');
-              const badge = activeCard3.querySelector('.engine-card-badge');
+            const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
+            if (activeCard) {
+              activeCard.classList.add('active');
+              const badge = activeCard.querySelector('.engine-card-badge');
               if (badge) {
                 badge.classList.add('active');
-                badge.textContent = t('badge.active');
+                badge.textContent = 'Aktywny';
               }
             }
             
@@ -3265,9 +3255,9 @@ if (applyBtn) {
             loadConfigGeneralUI(activeConfig);
             updateActiveEnginePanel(activeConfig.engine.type);
             
-            ToastManager.show({ type: 'success', title: 'toast.engine_apply.changes_applied', message: t('toast.engine_apply.download_done_msg') });
+            ToastManager.show({ type: 'success', title: 'Zastosowano zmiany', message: 'Pobieranie ukończone. Silnik jest aktywny.' });
           } catch (err) {
-            ToastManager.show({ type: 'error', title: 'toast.error.download_failed', message: err.toString(), persistent: true });
+            ToastManager.show({ type: 'error', title: 'Błąd pobierania', message: err.toString(), persistent: true });
           } finally {
             applyBtn.disabled = false;
             applyBtn.style.opacity = '1';
@@ -3282,7 +3272,7 @@ if (applyBtn) {
             const badge = c.querySelector('.engine-card-badge');
             if (badge) {
               badge.classList.remove('active');
-              badge.textContent = t('badge.select');
+              badge.textContent = 'Wybierz';
             }
           });
           const cardEl = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
@@ -3291,7 +3281,7 @@ if (applyBtn) {
             const badge = cardEl.querySelector('.engine-card-badge');
             if (badge) {
               badge.classList.add('active');
-              badge.textContent = t('badge.active');
+              badge.textContent = 'Aktywny';
             }
           }
           updateActiveEnginePanel(activeConfig.engine.type);
@@ -3306,17 +3296,11 @@ if (applyBtn) {
 // TRANSCRIPT HISTORY MODULE
 // ==========================================
 function formatDatePl(timestamp) {
-  const monthsPl = [
+  const months = [
     "stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca",
     "lipca", "sierpnia", "września", "października", "listopada", "grudnia"
   ];
-  const monthsEn = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
   const d = new Date(timestamp);
-  const lang = typeof getLanguage === 'function' ? getLanguage() : 'pl';
-  const months = lang === 'pl' ? monthsPl : monthsEn;
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
@@ -3333,7 +3317,7 @@ function renderHistoryUI() {
   const dashboardContainer = document.getElementById('dashboard-history-list');
   if (dashboardContainer) {
     if (historyList.length === 0) {
-      dashboardContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; font-style: italic;" data-i18n="dash.no_history">${t('dash.no_history')}</div>`;
+      dashboardContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">No history yet</div>';
     } else {
       dashboardContainer.innerHTML = '';
       const recent = historyList.slice(0, 3);
@@ -3368,7 +3352,7 @@ function renderHistoryUI() {
           const btnEl = e.currentTarget;
           const text = decodeURIComponent(btnEl.getAttribute('data-text'));
           navigator.clipboard.writeText(text);
-          ToastManager.show({ type: 'success', title: 'toast.history.copied_title', message: 'toast.history.copied_msg' });
+          ToastManager.show({ type: 'success', title: 'Skopiowano', message: 'Tekst skopiowany do schowka.' });
         };
       });
     }
@@ -3378,7 +3362,7 @@ function renderHistoryUI() {
   const pageContainer = document.getElementById('history-container');
   if (pageContainer) {
     if (historyList.length === 0) {
-      pageContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 14px; font-style: italic;" data-i18n="history.no_transcripts">${t('history.no_transcripts')}</div>`;
+      pageContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 14px; font-style: italic;">Brak historii transkrypcji</div>';
       return;
     }
 
@@ -3475,15 +3459,15 @@ function renderHistoryUI() {
         toggleBtn.style.display = 'flex';
         toggleBtn.style.alignItems = 'center';
         toggleBtn.style.gap = '4px';
-        toggleBtn.textContent = t('history.show_more').replace('{count}', transcripts.length - maxVisible);
+        toggleBtn.textContent = `••• Pokaż więcej (${transcripts.length - maxVisible})`;
         
         toggleBtn.onclick = () => {
           if (collapsedContainer.style.display === 'none') {
             collapsedContainer.style.display = 'flex';
-            toggleBtn.textContent = t('history.hide_extra');
+            toggleBtn.textContent = 'Ukryj dodatkowe transkrypcje';
           } else {
             collapsedContainer.style.display = 'none';
-            toggleBtn.textContent = t('history.show_more').replace('{count}', transcripts.length - maxVisible);
+            toggleBtn.textContent = `••• Pokaż więcej (${transcripts.length - maxVisible})`;
           }
         };
         groupEl.appendChild(toggleBtn);
@@ -3498,7 +3482,7 @@ function renderHistoryUI() {
         const btnEl = e.currentTarget;
         const text = decodeURIComponent(btnEl.getAttribute('data-text'));
         navigator.clipboard.writeText(text);
-        ToastManager.show({ type: 'success', title: 'toast.history.copied_title', message: 'toast.history.copied_msg' });
+        ToastManager.show({ type: 'success', title: 'Skopiowano', message: 'Tekst skopiowany do schowka.' });
       };
     });
   }
@@ -3516,7 +3500,7 @@ if (clearHistoryBtn) {
       onConfirm: () => {
         localStorage.removeItem('transcript_history');
         renderHistoryUI();
-        ToastManager.show({ type: 'success', title: 'toast.history.cleared_title' });
+        ToastManager.show({ type: 'success', title: 'Historia wyczyszczona' });
       }
     });
   });
@@ -3584,21 +3568,20 @@ async function verifyStartupModel() {
         updateActiveEnginePanel(foundEngine);
         ToastManager.show({
           type: 'warning',
-          title: 'toast.engine.model_fallback_title',
-          message: t('toast.engine.model_fallback_msg').replace('{model}', modelId).replace('{found}', foundModel),
+          title: 'Ostatni model nie istnieje',
+          message: `Ostatnio zapisany model (${modelId}) nie istnieje na dysku. Automatycznie przełączono na dostępny model: ${foundModel}.`,
           persistent: true
         });
       } else {
         const modelShortLabel = document.getElementById('engine-model-short');
         if (modelShortLabel) {
-          modelShortLabel.textContent = t('engines.model.no_model_downloaded');
-          modelShortLabel.setAttribute('data-i18n', 'engines.model.no_model_downloaded');
+          modelShortLabel.textContent = 'Brak pobranego modelu';
           modelShortLabel.style.color = '#ef4444';
         }
         ToastManager.show({
           type: 'error',
-          title: 'toast.engine.model_missing_title',
-          message: t('toast.engine.model_missing_msg').replace('{model}', modelId),
+          title: 'Brak pobranego modelu mowy',
+          message: `Ostatnio wybrany model (${modelId}) nie znajduje się na dysku. Pobierz model w Menedżerze Pobierania.`,
           persistent: true
         });
       }
@@ -3657,15 +3640,15 @@ async function renderAddonsManagerUI() {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       </div>
       <div>
-        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.addons.python_title">${t('about.addons.python_title')}</div>
-        <div style="font-size: 12px; color: var(--text-muted);">${isPythonAvailableGlobal ? t('engines.python.installed') : t('engines.python.not_installed')}</div>
+        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Zintegrowany Python Embed</div>
+        <div style="font-size: 12px; color: var(--text-muted);">${isPythonAvailableGlobal ? 'Zainstalowano (~500 MB)' : 'Brak / Nie zainstalowano'}</div>
       </div>
     </div>
     <div>
       ${isPythonAvailableGlobal ? `
-        <button id="btn-remove-python-env" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;" data-i18n="about.addons.btn_remove_python">${t('about.addons.btn_remove_python')}</button>
+        <button id="btn-remove-python-env" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Usuń Python</button>
       ` : `
-        <span style="font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 4px;" data-i18n="about.addons.not_installed">${t('about.addons.not_installed')}</span>
+        <span style="font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 4px;">Niezainstalowane</span>
       `}
     </div>
   `;
@@ -3674,7 +3657,7 @@ async function renderAddonsManagerUI() {
   const removePyBtn = pyCard.querySelector('#btn-remove-python-env');
   if (removePyBtn) {
     removePyBtn.onclick = () => {
-      ToastManager.show({ type: 'info', title: 'toast.python.remove_title', message: 'toast.python.remove_msg' });
+      ToastManager.show({ type: 'info', title: 'Usuwanie środowiska', message: 'Funkcja usuwania środowiska Python uruchomiona.' });
     };
   }
 
@@ -3694,12 +3677,12 @@ async function renderAddonsManagerUI() {
 
         let modelsListHtml = '';
         if (group.models.length === 0) {
-          modelsListHtml = `<div style="font-size: 12px; color: var(--text-muted); font-style: italic;" data-i18n="models.manager.no_models">${t('models.manager.no_models')}</div>`;
+          modelsListHtml = `<div style="font-size: 12px; color: var(--text-muted); font-style: italic;">Brak zainstalowanych modeli</div>`;
         } else {
           modelsListHtml = group.models.map(m => `
             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 6px 10px; border-radius: 6px;">
               <span style="font-size: 12px; color: var(--text-secondary);">${m.name} (${m.size_text})</span>
-              <button class="btn-remove-addon-model" data-engine="${group.engine_id}" data-model="${m.model_id}" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 12px; font-weight: 600;" data-i18n="btn.delete">${t('btn.delete')}</button>
+              <button class="btn-remove-addon-model" data-engine="${group.engine_id}" data-model="${m.model_id}" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 12px; font-weight: 600;">Usuń</button>
             </div>
           `).join('');
         }
@@ -3721,14 +3704,14 @@ async function renderAddonsManagerUI() {
           const model = e.currentTarget.getAttribute('data-model');
           try {
             await window.__TAURI__.core.invoke('delete_installed_model', { engine, model });
-            ToastManager.show({ type: 'success', title: 'toast.delete.success_title', message: t('toast.delete.success_msg').replace('{model}', model) });
+            ToastManager.show({ type: 'success', title: 'Usunięto model', message: `Model ${model} usunięty z dysku.` });
             removeModelFromDownloadQueue(engine, model);
             renderAddonsManagerUI();
             renderInstalledModelsManager();
             await updateDashboardActiveEngineCard();
             await checkActiveEngineAvailability();
           } catch (err) {
-            ToastManager.show({ type: 'error', title: 'toast.error.delete_failed', message: err.toString() });
+            ToastManager.show({ type: 'error', title: 'Błąd usuwania', message: err.toString() });
           }
         };
       });
