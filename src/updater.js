@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 const FULL_BINARY_SILENT_MAX_BYTES = 20 * 1024 * 1024; // 20 MB
 const ASSETS_SILENT_MAX_BYTES = 2 * 1024 * 1024;        // 2 MB
 const ASSETS_MANIFEST_URL = 'https://raw.githubusercontent.com/Ximeeek/VoiceType/main/assets-manifest.json';
@@ -116,7 +118,7 @@ export function setupUpdateNotificationUI() {
         <div class="update-card" style="padding: 12px 16px;">
           <div class="update-header" style="margin-bottom: 0;">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent-green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span class="update-title" style="font-size: 13px;">Aktualizuję aplikację w tle...</span>
+            <span class="update-title" style="font-size: 13px;">${t('updater.bg_updating')}</span>
           </div>
         </div>
       `;
@@ -128,9 +130,9 @@ export function setupUpdateNotificationUI() {
         <div class="update-card">
           <div class="update-header">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent-green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span class="update-title">Pobieranie aktualizacji ${status.version}...</span>
+            <span class="update-title">${t('updater.downloading', { version: status.version })}</span>
           </div>
-          <div class="update-message">Pobrano ${status.progress}% wygenerowanej paczki wydań.</div>
+          <div class="update-message">${t('updater.downloaded_msg', { progress: status.progress })}</div>
           <div class="update-progress-container">
             <div class="update-progress-bar" style="width: ${status.progress}%;"></div>
           </div>
@@ -144,12 +146,12 @@ export function setupUpdateNotificationUI() {
         <div class="update-card">
           <div class="update-header">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent-green)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            <span class="update-title">Aktualizacja ${status.version} gotowa!</span>
+            <span class="update-title">${t('updater.ready_title', { version: status.version })}</span>
           </div>
-          <div class="update-message">Nowa wersja aplikacji została pobrana i przygotowana do instalacji.</div>
+          <div class="update-message">${t('updater.ready_msg')}</div>
           <div class="update-actions">
-            <button class="btn-secondary" id="btn-update-later" style="padding: 6px 12px; font-size: 12px;">Później</button>
-            <button class="btn-primary" id="btn-update-install" style="padding: 6px 12px; font-size: 12px;">Zainstaluj i uruchom ponownie</button>
+            <button class="btn-secondary" id="btn-update-later" style="padding: 6px 12px; font-size: 12px;">${t('updater.btn_later')}</button>
+            <button class="btn-primary" id="btn-update-install" style="padding: 6px 12px; font-size: 12px;">${t('updater.btn_install')}</button>
           </div>
         </div>
       `;

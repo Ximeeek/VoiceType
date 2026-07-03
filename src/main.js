@@ -1,4 +1,4 @@
-import { setLanguage, t, updateDOMTranslations, getLanguage } from './i18n.js';
+import { setLanguage, t, updateDOMTranslations, getLanguage, onLanguageChange } from './i18n.js';
 import { setupUpdateNotificationUI } from './updater.js';
 
 const ACCENT_PRESETS = {
@@ -562,7 +562,7 @@ function renderTriggerWords(words) {
     container.innerHTML = '';
     
     if (triggerWords.length === 0) {
-      container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">No trigger words</div>';
+      container.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">${t('dash.no_triggers')}</div>`;
       return;
     }
 
@@ -626,7 +626,7 @@ function renderStopWords(words) {
   settingsContainer.innerHTML = '';
   
   if (stopWords.length === 0) {
-    settingsContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">No stop words</div>';
+    settingsContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">${t('settings.no_stops')}</div>`;
     return;
   }
 
@@ -914,7 +914,7 @@ engineCards.forEach(card => {
       const badge = c.querySelector('.engine-card-badge');
       if (badge) {
         badge.classList.remove('active');
-        badge.textContent = 'Wybierz';
+        badge.textContent = t('engines.badge.select');
       }
     });
 
@@ -922,7 +922,7 @@ engineCards.forEach(card => {
     const badge = card.querySelector('.engine-card-badge');
     if (badge) {
       badge.classList.add('active');
-      badge.textContent = 'Aktywny';
+      badge.textContent = t('engines.badge.active');
     }
 
     if (pendingConfig && pendingConfig.engine) {
@@ -969,7 +969,7 @@ function updateActiveEnginePanel(engineId) {
   };
   
   const prettyName = nameMap[engineId] || engineId;
-  title.textContent = `Konfiguracja: ${prettyName}`;
+  title.textContent = `${t('engines.config.title_prefix')} ${prettyName}`;
 
   // Dashboard active display
   updateDashboardActiveEngineCard();
@@ -1169,7 +1169,7 @@ async function updateDashboardActiveEngineCard() {
             modelShortLabel.textContent = shortName;
             modelShortLabel.style.color = 'var(--text-muted)';
           } else {
-            modelShortLabel.textContent = `${shortName} (Brak pliku)`;
+            modelShortLabel.textContent = `${shortName} (${t('engines.status.not_installed')})`;
             modelShortLabel.style.color = '#ef4444';
           }
         } catch (e) {
@@ -1276,7 +1276,7 @@ async function renderAvailableModels(engineId) {
       radioGroup.innerHTML = '';
       
       if (models.length === 0) {
-        radioGroup.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Brak dostępnych modeli dla wybranych parametrów</div>';
+        radioGroup.innerHTML = `<div style="color: var(--text-muted); font-size: 13px;">${t('engines.no_models_found')}</div>`;
         return;
       }
 
@@ -1332,7 +1332,7 @@ async function renderAvailableModels(engineId) {
         tip.style.fontSize = '12px';
         tip.style.color = 'var(--text-muted)';
         tip.style.lineHeight = '1.5';
-        tip.innerHTML = `<strong>Wskazówka:</strong> Im większy model, tym wyższa dokładność rozpoznawania mowy, ale też większe obciążenie procesora i pamięci RAM. Modele mniejsze niż 50 MB (jak Mikro) mogą mieć trudności z poprawną interpretacją polskich końcówek i specyficznych wyrazów.`;
+        tip.innerHTML = t('engines.tip.whisper');
         radioGroup.appendChild(tip);
       } else if (engineId === 'sherpa_onnx') {
         const tip = document.createElement('div');
@@ -1340,7 +1340,7 @@ async function renderAvailableModels(engineId) {
         tip.style.fontSize = '12px';
         tip.style.color = 'var(--text-muted)';
         tip.style.lineHeight = '1.5';
-        tip.innerHTML = `<strong>Wskazówka:</strong> Modele Sherpa-ONNX pobierają się z oficjalnych wydań Next-Gen Kaldi i są optymalizowane pod kątem szybkiego wnioskowania na CPU w czasie rzeczywistym.`;
+        tip.innerHTML = t('engines.tip.sherpa');
         radioGroup.appendChild(tip);
       }
 
@@ -1452,7 +1452,7 @@ async function updateQuickModelOptions() {
   // For Whisper/Faster-Whisper, models are multilingual/universal. Disable the language select.
   if (eng === 'whisper' || eng === 'faster_whisper') {
     if (quickLangSelect) {
-      quickLangSelect.innerHTML = '<option value="all">Wszystkie języki (Multilingual)</option>';
+      quickLangSelect.innerHTML = `<option value="all">${t('downloads.quick.all_langs')}</option>`;
       quickLangSelect.disabled = true;
     }
   } else {
@@ -1517,20 +1517,20 @@ async function updateQuickModelOptions() {
     if (models.length === 0) {
       const opt = document.createElement('option');
       opt.value = '';
-      opt.textContent = 'Brak dostępnych modeli';
+      opt.textContent = t('engines.no_models_found');
       quickModelSelect.appendChild(opt);
     } else {
       models.forEach(m => {
         const opt = document.createElement('option');
         opt.value = m.id;
-        opt.textContent = `${m.name} (${m.size_text})${m.is_downloaded ? ' ✔ (Pobrany)' : ''}`;
+        opt.textContent = `${m.name} (${m.size_text})${m.is_downloaded ? ` ✔ (${t('engines.status.installed')})` : ''}`;
         quickModelSelect.appendChild(opt);
       });
       if (quickDownloadBtn) quickDownloadBtn.disabled = false;
     }
   } catch (err) {
     console.error('Error fetching available models:', err);
-    quickModelSelect.innerHTML = '<option value="">Błąd ładowania modeli</option>';
+    quickModelSelect.innerHTML = `<option value="">${t('engines.no_models_found')}</option>`;
   } finally {
     if (quickModelLoader) quickModelLoader.style.display = 'none';
     quickModelSelect.disabled = false;
@@ -1877,7 +1877,7 @@ function renderDownloadQueue() {
 
   // Render Active Downloads
   if (activeItems.length === 0) {
-    activeContainer.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); font-style: italic;">Brak aktywnych pobierań. Wybierz model powyżej, aby rozpocząć.</div>`;
+    activeContainer.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); font-style: italic;">${t('downloads.active.empty')}</div>`;
   } else {
     activeContainer.innerHTML = '';
     activeItems.forEach(item => {
@@ -1956,7 +1956,7 @@ function renderDownloadQueue() {
 
   // Render History Downloads
   if (historyItems.length === 0) {
-    historyContainer.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); font-style: italic;">Brak historii pobierania.</div>`;
+    historyContainer.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); font-style: italic;">${t('downloads.history.empty')}</div>`;
   } else {
     historyContainer.innerHTML = '';
     historyItems.forEach(item => {
@@ -2011,7 +2011,7 @@ async function renderInstalledModelsManager() {
 
         let modelsHtml = '';
         if (group.models.length === 0) {
-          modelsHtml = `<div style="font-size: 12px; color: var(--text-muted); font-style: italic;">Brak pobranych modeli dla tego silnika</div>`;
+          modelsHtml = `<div style="font-size: 12px; color: var(--text-muted); font-style: italic;">${t('models.manager.empty_group')}</div>`;
         } else {
           modelsHtml = group.models.map(m => `
             <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-elevated); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
@@ -2019,9 +2019,9 @@ async function renderInstalledModelsManager() {
                 <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">${m.name}</span>
                 <span style="font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">${m.size_text}</span>
               </div>
-              <button class="btn-delete-single-model" data-engine="${group.engine_id}" data-model="${m.model_id}" title="Usuń ten model" style="background: transparent; border: none; color: #ff4d4d; cursor: pointer; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; font-size: 12px; transition: background 0.2s;">
+              <button class="btn-delete-single-model" data-engine="${group.engine_id}" data-model="${m.model_id}" title="${t('models.manager.delete_tooltip')}" style="background: transparent; border: none; color: #ff4d4d; cursor: pointer; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; font-size: 12px; transition: background 0.2s;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
-                Usuń
+                ${t('models.manager.delete')}
               </button>
             </div>
           `).join('');
@@ -2034,9 +2034,9 @@ async function renderInstalledModelsManager() {
               <span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">(${group.total_size_text})</span>
             </div>
             ${group.models.length > 0 ? `
-              <button class="btn-delete-group-models" data-engine="${group.engine_id}" title="Usuń wszystkie modele silnika" style="background: rgba(255, 77, 77, 0.1); border: 1px solid rgba(255, 77, 77, 0.3); color: #ff4d4d; cursor: pointer; padding: 6px 12px; border-radius: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; transition: all 0.2s;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
-                Usuń wszystkie (${group.models.length})
+              <button class="btn-delete-group-models" data-engine="${group.engine_id}" title="${t('models.manager.delete_all')}" style="background: rgba(255, 77, 77, 0.1); border: 1px solid rgba(255, 77, 77, 0.3); color: #ff4d4d; cursor: pointer; padding: 6px 12px; border-radius: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; transition: all 0.2s;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+                ${t('models.manager.delete_all')} (${group.models.length})
               </button>
             ` : ''}
           </div>
@@ -2048,7 +2048,7 @@ async function renderInstalledModelsManager() {
       });
 
       if (totalBadge) {
-        totalBadge.textContent = `Razem: ${(grandTotalBytes / 1_048_576.0).toFixed(1)} MB`;
+        totalBadge.textContent = `${t('models.manager.total')} ${formatBytes(grandTotalBytes)}`;
       }
 
       container.querySelectorAll('.btn-delete-single-model').forEach(btn => {
@@ -2888,7 +2888,7 @@ function updateEngineCardsLockUI() {
       if (header) {
         const badge = document.createElement('span');
         badge.className = 'python-warning-badge';
-        badge.textContent = 'Brak Pythona';
+        badge.textContent = t('addons.py.not_installed');
         header.appendChild(badge);
       }
     }
@@ -3317,7 +3317,7 @@ function renderHistoryUI() {
   const dashboardContainer = document.getElementById('dashboard-history-list');
   if (dashboardContainer) {
     if (historyList.length === 0) {
-      dashboardContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">No history yet</div>';
+      dashboardContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">${t('dash.no_history')}</div>`;
     } else {
       dashboardContainer.innerHTML = '';
       const recent = historyList.slice(0, 3);
@@ -3362,7 +3362,7 @@ function renderHistoryUI() {
   const pageContainer = document.getElementById('history-container');
   if (pageContainer) {
     if (historyList.length === 0) {
-      pageContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 14px; font-style: italic;">Brak historii transkrypcji</div>';
+      pageContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 14px; font-style: italic;">${t('history.empty')}</div>`;
       return;
     }
 
@@ -3640,15 +3640,15 @@ async function renderAddonsManagerUI() {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       </div>
       <div>
-        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Zintegrowany Python Embed</div>
-        <div style="font-size: 12px; color: var(--text-muted);">${isPythonAvailableGlobal ? 'Zainstalowano (~500 MB)' : 'Brak / Nie zainstalowano'}</div>
+        <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${t('addons.py.title')}</div>
+        <div style="font-size: 12px; color: var(--text-muted);">${isPythonAvailableGlobal ? t('addons.py.installed') : t('addons.py.not_installed')}</div>
       </div>
     </div>
     <div>
       ${isPythonAvailableGlobal ? `
-        <button id="btn-remove-python-env" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Usuń Python</button>
+        <button id="btn-remove-python-env" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">${t('addons.py.remove_btn')}</button>
       ` : `
-        <span style="font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 4px;">Niezainstalowane</span>
+        <span style="font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 4px;">${t('addons.py.not_installed')}</span>
       `}
     </div>
   `;
@@ -3677,12 +3677,12 @@ async function renderAddonsManagerUI() {
 
         let modelsListHtml = '';
         if (group.models.length === 0) {
-          modelsListHtml = `<div style="font-size: 12px; color: var(--text-muted); font-style: italic;">Brak zainstalowanych modeli</div>`;
+          modelsListHtml = `<div style="font-size: 12px; color: var(--text-muted); font-style: italic;">${t('addons.models.empty')}</div>`;
         } else {
           modelsListHtml = group.models.map(m => `
             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 6px 10px; border-radius: 6px;">
               <span style="font-size: 12px; color: var(--text-secondary);">${m.name} (${m.size_text})</span>
-              <button class="btn-remove-addon-model" data-engine="${group.engine_id}" data-model="${m.model_id}" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 12px; font-weight: 600;">Usuń</button>
+              <button class="btn-remove-addon-model" data-engine="${group.engine_id}" data-model="${m.model_id}" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 12px; font-weight: 600;">${t('models.manager.delete')}</button>
             </div>
           `).join('');
         }
@@ -3704,14 +3704,14 @@ async function renderAddonsManagerUI() {
           const model = e.currentTarget.getAttribute('data-model');
           try {
             await window.__TAURI__.core.invoke('delete_installed_model', { engine, model });
-            ToastManager.show({ type: 'success', title: 'Usunięto model', message: `Model ${model} usunięty z dysku.` });
+            ToastManager.show({ type: 'success', title: t('toast.model_deleted'), message: `Model ${model} usunięty z dysku.` });
             removeModelFromDownloadQueue(engine, model);
             renderAddonsManagerUI();
             renderInstalledModelsManager();
             await updateDashboardActiveEngineCard();
             await checkActiveEngineAvailability();
           } catch (err) {
-            ToastManager.show({ type: 'error', title: 'Błąd usuwania', message: err.toString() });
+            ToastManager.show({ type: 'error', title: t('toast.model_delete_error'), message: err.toString() });
           }
         };
       });
@@ -3720,3 +3720,20 @@ async function renderAddonsManagerUI() {
     }
   }
 }
+
+onLanguageChange(() => {
+  try {
+    const activeEngine = pendingConfig ? pendingConfig.engine.type : (activeConfig ? activeConfig.engine.type : 'vosk');
+    updateActiveEnginePanel(activeEngine);
+    renderHistoryUI();
+    renderDownloadQueue();
+    renderInstalledModelsManager();
+    updateDashboardActiveEngineCard();
+    renderAddonsManagerUI();
+    updateEngineCardsLockUI();
+    updateDOMTranslations();
+  } catch (err) {
+    console.error('[i18n] Error updating UI on language change:', err);
+  }
+});
+

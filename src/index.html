@@ -25,20 +25,20 @@
     <div class="app-body">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
-            <button class="sidebar-btn active" id="nav-dashboard" data-page="dashboard" data-tooltip="Dashboard">
+            <button class="sidebar-btn active" id="nav-dashboard" data-page="dashboard" data-i18n="nav.dashboard" data-i18n-attr="data-tooltip" data-tooltip="Dashboard">
                 <svg viewBox="0 0 24 24"><path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zM14 4v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z"/></svg>
             </button>
-            <button class="sidebar-btn" id="nav-history" data-page="history" data-tooltip="History">
+            <button class="sidebar-btn" id="nav-history" data-page="history" data-i18n="nav.history" data-i18n-attr="data-tooltip" data-tooltip="History">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </button>
-            <button class="sidebar-btn" id="nav-settings" data-page="settings" data-tooltip="Settings">
+            <button class="sidebar-btn" id="nav-settings" data-page="settings" data-i18n="nav.settings" data-i18n-attr="data-tooltip" data-tooltip="Settings">
                 <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
             </button>
-            <button class="sidebar-btn" id="nav-downloads" data-page="downloads" data-tooltip="Pobierania">
+            <button class="sidebar-btn" id="nav-downloads" data-page="downloads" data-i18n="nav.downloads" data-i18n-attr="data-tooltip" data-tooltip="Downloads">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
             <div class="sidebar-spacer"></div>
-            <button class="sidebar-btn" id="nav-about" data-page="about" data-tooltip="About">
+            <button class="sidebar-btn" id="nav-about" data-page="about" data-i18n="nav.about" data-i18n-attr="data-tooltip" data-tooltip="About">
                 <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
             </button>
         </div>
@@ -52,28 +52,28 @@
                     <div class="dashboard-left">
                         <!-- Orb Status Card -->
                         <div class="card card-orb" id="card-dictation-control" style="position: relative;">
-                            <div class="card-title">Dictation Control</div>
+                            <div class="card-title" data-i18n="dash.dictation_control">Sterowanie dyktowaniem</div>
                             <div class="orb-container">
                                 <div class="orb idle" id="status-orb"></div>
                                 <div class="orb-glow"></div>
                             </div>
-                            <div class="status-text" id="status-text">Idle</div>
-                            <div class="status-subtext" id="status-subtext">Click the orb to pause listening</div>
+                            <div class="status-text" id="status-text" data-i18n="dash.status.idle">Ready to dictate</div>
+                            <div class="status-subtext" id="status-subtext" data-i18n="dash.substatus.idle">Say trigger word or click orb to start</div>
                             <button class="btn-primary" id="btn-force-dictate" style="margin-top: 15px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
                                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                                Wymuś dyktowanie
+                                <span data-i18n="dash.btn.force">Wymuś dyktowanie</span>
                             </button>
                             <!-- Disabled overlay during model download -->
                             <div id="dictation-disabled-overlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(4px); border-radius: 12px; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; z-index: 10;">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="margin-bottom: 12px;"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                                <span id="dictation-disabled-text" style="font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.5; margin-bottom: 15px;">Nie można używać dyktowania, dopóki model się nie pobierze.</span>
-                                <button class="btn-primary" id="btn-overlay-go-to-downloads" style="display: none; font-size: 12px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; width: auto; max-width: 220px; margin-top: 5px;">Pobierz model</button>
+                                <span id="dictation-disabled-text" style="font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.5; margin-bottom: 15px;" data-i18n="dash.overlay.downloading_model">Nie można używać dyktowania, dopóki model się nie pobierze.</span>
+                                <button class="btn-primary" id="btn-overlay-go-to-downloads" style="display: none; font-size: 12px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; width: auto; max-width: 220px; margin-top: 5px;" data-i18n="dash.overlay.btn_download">Przejdź do Pobierania</button>
                             </div>
                         </div>
 
                         <!-- Live Transcript Card -->
                         <div class="card card-transcript">
-                            <div class="card-title">Recent Transcript</div>
+                            <div class="card-title" data-i18n="dash.recent_transcript">Recent Transcript</div>
                             <div class="transcript-container" id="transcript-container">
                                 <div class="transcript-placeholder" id="transcript-placeholder">—</div>
                             </div>
@@ -84,19 +84,19 @@
                     <div class="dashboard-right">
                         <!-- Trigger Words Card -->
                         <div class="card">
-                            <div class="card-title">Trigger Words</div>
+                            <div class="card-title" data-i18n="dash.trigger_words">Frazy aktywujące</div>
                             <div class="chips-container" id="trigger-chips-container">
                                 <!-- Chips will be rendered dynamically -->
                             </div>
                             <div class="input-group">
-                                <input type="text" class="input-field" id="trigger-input" placeholder="New trigger word...">
-                                <button class="btn-primary" id="trigger-add-btn">Add</button>
+                                <input type="text" class="input-field" id="trigger-input" placeholder="New trigger word..." data-i18n="dash.trigger_input_placeholder" data-i18n-attr="placeholder">
+                                <button class="btn-primary" id="trigger-add-btn" data-i18n="dash.trigger_add_btn">Add</button>
                             </div>
                         </div>
 
                         <!-- Active Engine Card -->
                         <div class="card">
-                            <div class="card-title">Active Engine</div>
+                            <div class="card-title" data-i18n="dash.active_engine">Aktywny silnik</div>
                             <div class="engine-info-row">
                                 <div class="engine-details" style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
                                     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
@@ -104,7 +104,7 @@
                                             <div class="engine-name" id="engine-name">Loading...</div>
                                             <span class="engine-badge" id="engine-badge">Batch</span>
                                         </div>
-                                        <button class="btn-text-accent" id="engine-change-btn">Change</button>
+                                        <button class="btn-text-accent" id="engine-change-btn" data-i18n="dash.change_engine">Change</button>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;" id="engine-sub-details">
                                         <span id="engine-lang-badge" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 2px 8px; border-radius: 4px; font-weight: 700; color: var(--accent-green); text-transform: uppercase; font-size: 11px;">PL</span>
@@ -125,15 +125,15 @@
 
                         <!-- Session Statistics Card -->
                         <div class="card">
-                            <div class="card-title">Session Statistics</div>
+                            <div class="card-title" data-i18n="dash.session_stats">Session Statistics</div>
                             <div class="stats-grid">
                                 <div class="stat-item">
                                     <div class="stat-val" id="stat-dictations">0</div>
-                                    <div class="stat-lbl">Dictations</div>
+                                    <div class="stat-lbl" data-i18n="dash.stat.dictations">Dictations</div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-val" id="stat-words">0</div>
-                                    <div class="stat-lbl">Words</div>
+                                    <div class="stat-lbl" data-i18n="dash.stat.words_simple">Words</div>
                                 </div>
                             </div>
                         </div>
@@ -141,11 +141,11 @@
                         <!-- Recent History Card -->
                         <div class="card">
                             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <span>Recent Transcripts</span>
-                                <button class="btn-text-accent" id="dashboard-view-history-btn" style="font-size: 12px; background: none; border: none; cursor: pointer; color: var(--accent-green);">View All</button>
+                                <span data-i18n="dash.recent_history">Recent Transcripts</span>
+                                <button class="btn-text-accent" id="dashboard-view-history-btn" style="font-size: 12px; background: none; border: none; cursor: pointer; color: var(--accent-green);" data-i18n="dash.view_all">View All</button>
                             </div>
                             <div id="dashboard-history-list" style="display: flex; flex-direction: column; gap: 12px;">
-                                <div style="color: var(--text-muted); font-size: 13px; font-style: italic;">No history yet</div>
+                                <div style="color: var(--text-muted); font-size: 13px; font-style: italic;" data-i18n="dash.no_history">No history yet</div>
                             </div>
                         </div>
                     </div>
@@ -167,7 +167,7 @@
                         <div class="settings-grid">
                             <!-- Card 1: Trigger Words -->
                             <div class="card">
-                                <div class="card-title" data-i18n="settings.trigger.title">Trigger Words</div>
+                                <div class="card-title" data-i18n="settings.trigger.title">Frazy aktywujące</div>
                                 <div class="chips-container" id="settings-trigger-chips"></div>
                                 <div class="input-group" style="margin-bottom: 16px;">
                                     <input type="text" class="input-field" id="settings-trigger-input" placeholder="Add trigger word..." data-i18n="settings.trigger.placeholder" data-i18n-attr="placeholder">
@@ -179,7 +179,7 @@
                                 </label>
                                 <label class="checkbox-container" style="margin-top: 10px;">
                                     <input type="checkbox" id="settings-trigger-translate">
-                                    <span class="checkbox-label" data-i18n="settings.trigger.translate">Tłumacz słowa wyzwalające na język silnika</span>
+                                    <span class="checkbox-label" data-i18n="settings.trigger.translate">Tłumacz frazy aktywujące na język silnika</span>
                                 </label>
                             </div>
 
@@ -249,7 +249,7 @@
                     <div class="settings-tab-content" id="settings-tab-engine">
                         <!-- Language Selector -->
                         <div class="card" style="margin-bottom: 24px;">
-                            <div class="card-title">Język rozpoznawania / Speech Language</div>
+                            <div class="card-title" data-i18n="settings.engine.lang_title">Język rozpoznawania mowy</div>
                             <div class="form-group" style="margin-top: 10px;">
                                 <select class="input-field" id="settings-engine-language" style="width: 100%;">
                                     <option value="pl">Polski (Polish)</option>
@@ -263,91 +263,91 @@
                             </div>
                         </div>
 
-                        <div class="engine-section-header">OFFLINE ENGINES - PREFEROWANE DLA CPU</div>
+                        <div class="engine-section-header" data-i18n="engines.offline_header">OFFLINE ENGINES - PREFEROWANE DLA CPU</div>
                         <div class="engine-grid offline">
                             <!-- Vosk Card -->
                             <div class="engine-card active" id="engine-card-vosk" data-engine-id="vosk">
                                 <div class="engine-card-header">
                                     <div class="engine-card-name">Vosk</div>
-                                    <span class="engine-card-badge active">Aktywny</span>
+                                    <span class="engine-card-badge active" data-i18n="engines.badge.active">Aktywny</span>
                                 </div>
-                                <div class="engine-card-desc">Szybki live typing / Niskie zużycie RAM</div>
-                                <div class="engine-card-target">Dla: słabsze PC, płynne dyktowanie na żywo</div>
+                                <div class="engine-card-desc" data-i18n="engines.card.vosk.desc">Szybki live typing / Niskie zużycie RAM</div>
+                                <div class="engine-card-target" data-i18n="engines.card.vosk.target">Dla: słabsze PC, płynne dyktowanie na żywo</div>
                             </div>
                             <!-- Sherpa ONNX Card -->
                             <div class="engine-card" id="engine-card-sherpa-onnx" data-engine-id="sherpa_onnx">
                                 <div class="engine-card-header">
                                     <div class="engine-card-name">Sherpa-ONNX</div>
-                                    <span class="engine-card-badge">Wybierz</span>
+                                    <span class="engine-card-badge" data-i18n="engines.badge.select">Wybierz</span>
                                 </div>
-                                <div class="engine-card-desc">Next-Gen Kaldi / Niskie opóźnienie</div>
-                                <div class="engine-card-target">Dla: zoptymalizowana praca na CPU (ONNX)</div>
+                                <div class="engine-card-desc" data-i18n="engines.card.sherpa.desc">Next-Gen Kaldi / Niskie opóźnienie</div>
+                                <div class="engine-card-target" data-i18n="engines.card.sherpa.target">Dla: zoptymalizowana praca na CPU (ONNX)</div>
                             </div>
                             <!-- Whisper cpp Card -->
                             <div class="engine-card" id="engine-card-whisper" data-engine-id="whisper">
                                 <div class="engine-card-header">
                                     <div class="engine-card-name">Whisper.cpp</div>
-                                    <span class="engine-card-badge">Wybierz</span>
+                                    <span class="engine-card-badge" data-i18n="engines.badge.select">Wybierz</span>
                                 </div>
-                                <div class="engine-card-desc">Wysoka dokładność / Bez zewnętrznych zależności</div>
-                                <div class="engine-card-target">Dla: praca na CPU, natywny kod bez Pythona</div>
+                                <div class="engine-card-desc" data-i18n="engines.card.whisper.desc">Wysoka dokładność / Bez zewnętrznych zależności</div>
+                                <div class="engine-card-target" data-i18n="engines.card.whisper.target">Dla: praca na CPU, natywny kod bez Pythona</div>
                             </div>
                         </div>
 
-                        <div class="engine-section-header" style="margin-top: 24px;">OFFLINE ENGINES - AKCELERACJA GPU (CUDA)</div>
+                        <div class="engine-section-header" style="margin-top: 24px;" data-i18n="engines.offline_gpu_header">OFFLINE ENGINES - AKCELERACJA GPU (CUDA)</div>
                         <div class="engine-grid offline">
                             <!-- Faster Whisper Card -->
                             <div class="engine-card" id="engine-card-faster-whisper" data-engine-id="faster_whisper">
                                 <div class="engine-card-header">
                                     <div class="engine-card-name">Faster-Whisper</div>
-                                    <span class="engine-card-badge">Wybierz</span>
+                                    <span class="engine-card-badge" data-i18n="engines.badge.select">Wybierz</span>
                                 </div>
-                                <div class="engine-card-desc">Najwyższa szybkość i jakość / Obsługa GPU (CUDA)</div>
-                                <div class="engine-card-target">Dla: gracze i PC z kartą graficzną NVIDIA (GPU)</div>
+                                <div class="engine-card-desc" data-i18n="engines.card.faster_whisper.desc">Najwyższa szybkość i jakość / Obsługa GPU (CUDA)</div>
+                                <div class="engine-card-target" data-i18n="engines.card.faster_whisper.target">Dla: gracze i PC z kartą graficzną NVIDIA (GPU)</div>
                             </div>
                         </div>
 
-                        <div class="engine-section-header" style="margin-top: 24px;">ONLINE ENGINES</div>
+                        <div class="engine-section-header" style="margin-top: 24px;" data-i18n="engines.online_header">ONLINE ENGINES</div>
                         <div class="engine-grid online">
                             <!-- Deepgram -->
                             <div class="engine-card compact" id="engine-card-deepgram" data-engine-id="deepgram">
                                 <div class="engine-card-header">
                                     <div class="engine-card-name">Deepgram</div>
-                                    <span class="engine-card-badge">Wybierz</span>
+                                    <span class="engine-card-badge" data-i18n="engines.badge.select">Wybierz</span>
                                 </div>
-                                <div class="engine-card-desc">Najlepsza latencja, live typing</div>
+                                <div class="engine-card-desc" data-i18n="engines.card.deepgram.desc">Najlepsza latencja, live typing</div>
                             </div>
                             <!-- AssemblyAI -->
                             <div class="engine-card compact" id="engine-card-assemblyai" data-engine-id="assemblyai">
                                 <div class="engine-card-header">
                                     <div class="engine-card-name">AssemblyAI</div>
-                                    <span class="engine-card-badge">Wybierz</span>
+                                    <span class="engine-card-badge" data-i18n="engines.badge.select">Wybierz</span>
                                 </div>
-                                <div class="engine-card-desc">Dobra jakość, łatwe API</div>
+                                <div class="engine-card-desc" data-i18n="engines.card.assemblyai.desc">Dobra jakość, łatwe API</div>
                             </div>
                             <!-- OpenAI Whisper -->
                             <div class="engine-card compact" id="engine-card-openai" data-engine-id="openai">
                                 <div class="engine-card-header">
                                     <div class="engine-card-name">OpenAI Whisper</div>
-                                    <span class="engine-card-badge">Wybierz</span>
+                                    <span class="engine-card-badge" data-i18n="engines.badge.select">Wybierz</span>
                                 </div>
-                                <div class="engine-card-desc">Znany provider, brak live typing</div>
+                                <div class="engine-card-desc" data-i18n="engines.card.openai.desc">Znany provider, brak live typing</div>
                             </div>
                             <!-- Google STT -->
                             <div class="engine-card compact" id="engine-card-google" data-engine-id="google">
                                 <div class="engine-card-header">
                                     <div class="engine-card-name">Google STT</div>
-                                    <span class="engine-card-badge">Wybierz</span>
+                                    <span class="engine-card-badge" data-i18n="engines.badge.select">Wybierz</span>
                                 </div>
-                                <div class="engine-card-desc">Najlepszy dla wielu języków</div>
+                                <div class="engine-card-desc" data-i18n="engines.card.google.desc">Najlepszy dla wielu języków</div>
                             </div>
                             <!-- Azure Speech -->
                             <div class="engine-card compact" id="engine-card-azure" data-engine-id="azure">
                                 <div class="engine-card-header">
                                     <div class="engine-card-name">Azure Speech</div>
-                                    <span class="engine-card-badge">Wybierz</span>
+                                    <span class="engine-card-badge" data-i18n="engines.badge.select">Wybierz</span>
                                 </div>
-                                <div class="engine-card-desc">Szybki streaming Microsoft Azure</div>
+                                <div class="engine-card-desc" data-i18n="engines.card.azure.desc">Szybki streaming Microsoft Azure</div>
                             </div>
                         </div>
 
@@ -360,17 +360,17 @@
                                 <div class="radio-group" style="margin-bottom: 16px;">
                                     <label class="radio-container">
                                         <input type="radio" name="vosk-model-size" value="small" checked>
-                                        <span class="radio-label">Mikro (small - 50 MB)</span>
+                                        <span class="radio-label" data-i18n="engines.vosk.model.small">Mikro (small - 50 MB)</span>
                                     </label>
                                     <label class="radio-container">
                                         <input type="radio" name="vosk-model-size" value="standard">
-                                        <span class="radio-label">Standardowy (big - 1.2 GB)</span>
+                                        <span class="radio-label" data-i18n="engines.vosk.model.standard">Standardowy (big - 1.2 GB)</span>
                                     </label>
                                 </div>
                                 <div class="status-row" style="margin-bottom: 16px;">
-                                    <div class="status-label">Status modelu: <span id="vosk-model-status" class="status-value highlight">Pobrany</span></div>
+                                    <div class="status-label"><span data-i18n="engines.vosk.status_label">Status modelu:</span> <span id="vosk-model-status" class="status-value highlight" data-i18n="engines.status.installed">Pobrany</span></div>
                                 </div>
-                                <button class="btn-primary" id="btn-download-vosk">Pobierz model</button>
+                                <button class="btn-primary" id="btn-download-vosk" data-i18n="downloads.quick.btn">Pobierz model</button>
                             </div>
 
                             <!-- Online API Config Panel -->
@@ -378,17 +378,17 @@
                                 <div class="api-info-box" id="api-provider-info" style="margin-bottom: 16px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px;">
                                     <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;" id="provider-info-title">Dostawca: Deepgram</div>
                                     <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;" id="provider-info-price">Szacowany koszt: ~$0.0043 / min (~$0.00007 za słowo). $200 gratis.</div>
-                                    <button class="btn-provider-link" id="provider-info-link">Kup / Załóż konto API ↗</button>
+                                    <button class="btn-provider-link" id="provider-info-link" data-i18n="engines.api.btn_buy">Kup / Załóż konto API ↗</button>
                                 </div>
                                 <div class="form-group" style="margin-bottom: 16px;" id="api-key-group">
-                                    <label class="form-label" id="engine-api-key-label">Klucz API</label>
-                                    <input type="password" class="input-field" id="engine-api-key" placeholder="Wklej klucz API">
+                                    <label class="form-label" id="engine-api-key-label" data-i18n="engines.api.key_label">Klucz API</label>
+                                    <input type="password" class="input-field" id="engine-api-key" placeholder="Wklej klucz API" data-i18n="engines.api.key_placeholder" data-i18n-attr="placeholder">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 16px; display: none;" id="azure-region-group">
-                                    <label class="form-label">Region Azure (np. eastus)</label>
+                                    <label class="form-label" data-i18n="engines.azure.region_label">Region Azure (np. eastus)</label>
                                     <input type="text" class="input-field" id="engine-azure-region" placeholder="eastus">
                                 </div>
-                                <button class="btn-primary" id="btn-test-api">Testuj połączenie</button>
+                                <button class="btn-primary" id="btn-test-api" data-i18n="engines.api.btn_test">Testuj połączenie</button>
                             </div>
 
                             <!-- Whisper Configuration Panel -->
@@ -399,13 +399,13 @@
                                 <div style="margin-bottom: 16px;" id="whisper-gpu-container">
                                     <label class="checkbox-container">
                                         <input type="checkbox" id="whisper-use-gpu">
-                                        <span class="checkbox-label">Użyj GPU (wymaga CUDA)</span>
+                                        <span class="checkbox-label" data-i18n="engines.whisper.use_gpu">Użyj GPU (wymaga CUDA)</span>
                                     </label>
                                 </div>
                                 <div class="status-row" style="margin-bottom: 16px;">
-                                    <div class="status-label">Status modelu: <span id="whisper-model-status" class="status-value">Nie pobrany</span></div>
+                                    <div class="status-label"><span data-i18n="engines.vosk.status_label">Status modelu:</span> <span id="whisper-model-status" class="status-value" data-i18n="engines.status.not_installed">Nie pobrany</span></div>
                                 </div>
-                                <button class="btn-primary" id="btn-download-whisper">Pobierz model</button>
+                                <button class="btn-primary" id="btn-download-whisper" data-i18n="downloads.quick.btn">Pobierz model</button>
                             </div>
 
                             <!-- Sherpa-ONNX Configuration Panel -->
@@ -414,9 +414,9 @@
                                     <!-- Opcje modeli Sherpa zostaną wygenerowane dynamicznie -->
                                 </div>
                                 <div class="status-row" style="margin-bottom: 16px;">
-                                    <div class="status-label">Status modelu: <span id="sherpa-model-status" class="status-value">Nie pobrany</span></div>
+                                    <div class="status-label"><span data-i18n="engines.vosk.status_label">Status modelu:</span> <span id="sherpa-model-status" class="status-value" data-i18n="engines.status.not_installed">Nie pobrany</span></div>
                                 </div>
-                                <button class="btn-primary" id="btn-download-sherpa">Pobierz model</button>
+                                <button class="btn-primary" id="btn-download-sherpa" data-i18n="downloads.quick.btn">Pobierz model</button>
                             </div>
 
                             <!-- Progress Bar for Downloads (shared) -->
@@ -434,7 +434,7 @@
                         <!-- Installed Models Manager Card -->
                         <div class="card config-panel" style="margin-top: 24px;" id="installed-models-manager-card">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
-                                <div class="card-title" style="margin-bottom: 0;">Menedżer Pobranych Modeli</div>
+                                <div class="card-title" style="margin-bottom: 0;" data-i18n="models.manager.title">Menedżer Pobranych Modeli</div>
                                 <span id="installed-models-total-badge" style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px; background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-subtle);">Razem: 0 MB</span>
                             </div>
                             <div id="installed-models-container" style="display: flex; flex-direction: column; gap: 16px;">
@@ -569,11 +569,11 @@
             <div class="page" id="page-history">
                 <div style="display: flex; flex-direction: column; gap: 24px; max-width: 800px; padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-primary);" data-i18n="history.title">Historia Transkrypcji</h1>
+                        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-primary);" data-i18n="history.title">Historia dyktowania</h1>
                         <button class="btn-danger" id="btn-clear-history" data-i18n="history.btn.clear">Wyczyść historię</button>
                     </div>
                     <div id="history-container" style="display: flex; flex-direction: column; gap: 24px; margin-top: 10px;">
-                        <div style="color: var(--text-muted); font-size: 14px; font-style: italic;">Brak historii transkrypcji</div>
+                        <div style="color: var(--text-muted); font-size: 14px; font-style: italic;" data-i18n="history.empty">Brak zarejestrowanej historii w tej sesji.</div>
                     </div>
                 </div>
             </div>
@@ -583,28 +583,28 @@
                 <div style="display: flex; flex-direction: column; gap: 24px; max-width: 800px; padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
                         <div>
-                            <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-primary); margin: 0;">Menedżer Pobierania</h1>
-                            <p style="font-size: 13px; color: var(--text-secondary); margin: 4px 0 0 0;">Zarządzaj kolejką pobierania modeli mowy dla silników offline.</p>
+                            <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-primary); margin: 0;" data-i18n="downloads.title">Menedżer Pobierania</h1>
+                            <p style="font-size: 13px; color: var(--text-secondary); margin: 4px 0 0 0;" data-i18n="downloads.subtitle">Zarządzaj kolejką pobierania modeli mowy dla silników offline.</p>
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px; background: var(--bg-elevated); padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border-subtle);">
-                            <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Tryb pobierania:</span>
+                            <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary);" data-i18n="downloads.mode.label">Tryb pobierania:</span>
                             <label class="radio-container" style="font-size: 12px;">
                                 <input type="radio" name="download-mode" value="sequential" checked>
-                                <span class="radio-label">Pobieraj po kolei</span>
+                                <span class="radio-label" data-i18n="downloads.mode.sequential">Pobieraj po kolei</span>
                             </label>
                             <label class="radio-container" style="font-size: 12px;">
                                 <input type="radio" name="download-mode" value="concurrent">
-                                <span class="radio-label">Pobieraj na raz</span>
+                                <span class="radio-label" data-i18n="downloads.mode.concurrent">Pobieraj na raz</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Quick Download Section -->
                     <div class="card" style="background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
-                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">Pobierz nowy model mowy</div>
+                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;" data-i18n="downloads.quick.title">Pobierz nowy model mowy</div>
                         <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
                             <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 150px;">
-                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Silnik mowy</span>
+                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;" data-i18n="downloads.quick.engine_lbl">Silnik mowy</span>
                                 <select id="quick-download-engine" class="input-field" style="width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px;">
                                     <option value="vosk">Vosk Offline</option>
                                     <option value="sherpa_onnx">Sherpa-ONNX</option>
@@ -613,7 +613,7 @@
                                 </select>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 150px;">
-                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Język</span>
+                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;" data-i18n="downloads.quick.lang_lbl">Język</span>
                                 <select id="quick-download-lang" class="input-field" style="width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px;">
                                     <option value="pl">Polski (Polish)</option>
                                     <option value="en">English (Angielski)</option>
@@ -625,7 +625,7 @@
                                 </select>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 6px; flex: 2; min-width: 250px;">
-                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Model mowy</span>
+                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;" data-i18n="downloads.quick.model_lbl">Model mowy</span>
                                 <div style="position: relative; width: 100%;">
                                     <select id="quick-download-model" class="input-field" style="width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px;">
                                         <!-- Dynamic options -->
@@ -637,14 +637,14 @@
                             </div>
                             <button id="quick-download-btn" class="btn-primary" style="height: 38px; padding: 0 24px; font-weight: 800; border-radius: 8px; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                <span>Pobierz model</span>
+                                <span data-i18n="downloads.quick.btn">Pobierz model</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Active Downloads Card -->
                     <div class="card" style="background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
-                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">Aktywne Pobierania</div>
+                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;" data-i18n="downloads.active.title">Aktywne Pobierania</div>
                         <div id="download-active-container" style="display: flex; flex-direction: column; gap: 12px;">
                             <!-- Wygenerowane dynamicznie wstrzymane/pobierane -->
                         </div>
@@ -653,8 +653,8 @@
                     <!-- History Downloads Card -->
                     <div class="card" style="background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0;">Historia Pobierania</div>
-                            <button id="clear-download-history-btn" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600;">Wyczyść historię</button>
+                            <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0;" data-i18n="downloads.history.title">Historia Pobierania</div>
+                            <button id="clear-download-history-btn" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600;" data-i18n="downloads.history.clear">Wyczyść historię</button>
                         </div>
                         <div id="download-history-container" style="display: flex; flex-direction: column; gap: 10px;">
                             <!-- Wygenerowana dynamicznie historia -->
@@ -673,8 +673,8 @@
                                 <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 800; tracking: -0.02em; color: var(--text-primary); margin: 0;">VoiceType</h1>
                                 <span style="background: var(--accent-green); color: #000; font-weight: 800; font-size: 11px; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">v0.1.0-PROD</span>
                             </div>
-                            <p style="font-size: 14px; color: var(--text-secondary); margin: 4px 0 0 0; line-height: 1.5;">
-                                Ultra-niskoniskotłuszczowa, lokalna aplikacja desktopowa do wpisywania tekstu mową w czasie rzeczywistym.
+                            <p style="font-size: 14px; color: var(--text-secondary); margin: 4px 0 0 0; line-height: 1.5;" data-i18n="about.desc">
+                                Ultra-lekka, lokalna aplikacja desktopowa do wpisywania tekstu mową w czasie rzeczywistym.
                             </p>
                         </div>
                         <div style="display: flex; gap: 10px;">
@@ -694,11 +694,11 @@
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                                 </div>
                                 <div>
-                                    <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Rust Core Stack</div>
+                                    <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.tech.rust.title">Rust Core Stack</div>
                                     <div style="font-size: 11px; color: var(--text-muted);">Tauri v2 + Tokio Async</div>
                                 </div>
                             </div>
-                            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+                            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;" data-i18n="about.tech.rust.desc">
                                 Silnik główny napisany w Rust dla maksymalnego bezpieczeństwa pamięci, zoptymalizowanego zużycia CPU oraz natychmiastowego startu bez ciężkiego środowiska Electron.
                             </div>
                         </div>
@@ -710,11 +710,11 @@
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10v4M6 6v12M10 3v18M14 8v8M18 5v14M22 10v4"/></svg>
                                 </div>
                                 <div>
-                                    <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">DSP & Silero VAD v4</div>
+                                    <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.tech.vad.title">DSP & Silero VAD v4</div>
                                     <div style="font-size: 11px; color: var(--text-muted);">16kHz Ring-Buffer Filtering</div>
                                 </div>
                             </div>
-                            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+                            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;" data-i18n="about.tech.vad.desc">
                                 Przetwarzanie audio za pomocą bilblioteki CPAL z wbudowaną filtracją szumów oraz detekcją głosu (Voice Activity Detection) Silero z dokładnością 30ms.
                             </div>
                         </div>
@@ -726,11 +726,11 @@
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3zM6 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3z"/><line x1="6" y1="12" x2="18" y2="12"/></svg>
                                 </div>
                                 <div>
-                                    <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Win32 UI Automation</div>
+                                    <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.tech.win32.title">Win32 UI Automation</div>
                                     <div style="font-size: 11px; color: var(--text-muted);">SendInput + Focus Detector</div>
                                 </div>
                             </div>
-                            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+                            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;" data-i18n="about.tech.win32.desc">
                                 Bezpośrednie wstrzykiwanie znaków Unicode do aktywnego pola tekstowego w dowolnej aplikacji Windows z buforem bezpieczeństwa Clipboard fallback.
                             </div>
                         </div>
@@ -741,22 +741,22 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 10px; margin-bottom: 12px;">
                             <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--accent-green); font-weight: 700;">
                                 <span style="height: 8px; width: 8px; background: var(--accent-green); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px var(--accent-green);"></span>
-                                SYSTEM_TELEMETRY // LIVE RUNTIME STATS
+                                <span data-i18n="about.telemetry.title">TELEMETRIA SYSTEMU // STATYSTYKI NA ŻYWO</span>
                             </div>
-                            <span style="font-size: 11px; color: var(--text-muted);">HOST: WIN_X64</span>
+                            <span style="font-size: 11px; color: var(--text-muted);"><span data-i18n="about.telemetry.host">HOST:</span> WIN_X64</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-size: 12px;">
                             <div>
-                                <span style="color: var(--text-muted);">THREAD_POOL:</span> <span style="color: #60a5fa;">Tokio Worker (4 Tasks)</span>
+                                <span style="color: var(--text-muted);" data-i18n="about.telemetry.thread_pool">PULA WĄTKÓW:</span> <span style="color: #60a5fa;">Tokio Worker (4 Tasks)</span>
                             </div>
                             <div>
-                                <span style="color: var(--text-muted);">AUDIO_LATENCY:</span> <span style="color: var(--accent-green);">11.6 ms</span>
+                                <span style="color: var(--text-muted);" data-i18n="about.telemetry.audio_latency">OPÓŹNIENIE AUDIO:</span> <span style="color: var(--accent-green);">11.6 ms</span>
                             </div>
                             <div>
-                                <span style="color: var(--text-muted);">MEM_FOOTPRINT:</span> <span style="color: #f59e0b;">~42.4 MB RAM</span>
+                                <span style="color: var(--text-muted);" data-i18n="about.telemetry.mem_footprint">ZUŻYCIE PAMIĘCI:</span> <span style="color: #f59e0b;">~42.4 MB RAM</span>
                             </div>
                             <div>
-                                <span style="color: var(--text-muted);">GPU_TENSOR:</span> <span style="color: #a78bfa;">CUDA FP16 Autodetect</span>
+                                <span style="color: var(--text-muted);" data-i18n="about.telemetry.gpu_tensor">AKCELERACJA GPU:</span> <span style="color: #a78bfa;">CUDA FP16 Autodetect</span>
                             </div>
                         </div>
                     </div>
@@ -764,19 +764,19 @@
                     <!-- Installed Addons & System Components Card -->
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px; margin-top: 8px;">
                         <div>
-                            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Zarządzanie Pobranymi Dodatkami</div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">Zarządzaj i usuwaj pobrane środowiska (Python, CUDA), modele mowy oraz tłumacz.</div>
+                            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.addons.title">Zarządzanie Pobranymi Dodatkami</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="about.addons.desc">Zarządzaj i usuwaj pobrane środowiska (Python, CUDA), modele mowy oraz tłumacz.</div>
                         </div>
-                        <button class="btn-primary" id="btn-view-all-addons" style="padding: 10px 20px; background: var(--accent-green); color: #000000; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">Zobacz wszystkie pobrane dodatki</button>
+                        <button class="btn-primary" id="btn-view-all-addons" style="padding: 10px 20px; background: var(--accent-green); color: #000000; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);" data-i18n="about.addons.btn">Zobacz wszystkie pobrane dodatki</button>
                     </div>
 
                     <!-- Reset Config & Actions -->
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px; margin-top: 8px;">
                         <div>
-                            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Reset Ustawień Aplikacji</div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">Przywraca domyślną konfigurację silników i słów wyzwalających.</div>
+                            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.reset.title">Reset Ustawień Aplikacji</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="about.reset.desc">Przywraca domyślną konfigurację silników i fraz aktywujących.</div>
                         </div>
-                        <button class="btn-primary" id="btn-reset-all-config" style="padding: 10px 20px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; font-weight: 700;">Resetuj konfigurację</button>
+                        <button class="btn-primary" id="btn-reset-all-config" style="padding: 10px 20px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; font-weight: 700;" data-i18n="about.reset.btn">Resetuj konfigurację</button>
                     </div>
                 </div>
             </div>
@@ -787,8 +787,8 @@
     <div class="modal-backdrop" id="addons-modal" style="display: none; z-index: 100000;">
         <div class="modal-card" style="max-width: 600px; width: 90%;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px; margin-bottom: 16px;">
-                <div class="modal-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 800; color: var(--text-primary);">Pobrane Dodatki i Komponenty Systemowe</div>
-                <button id="btn-addons-modal-close-x" style="background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 0 4px; line-height: 1;" title="Zamknij">×</button>
+                <div class="modal-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 800; color: var(--text-primary);" data-i18n="about.addons.modal_title">Pobrane Dodatki i Komponenty Systemowe</div>
+                <button id="btn-addons-modal-close-x" style="background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 0 4px; line-height: 1;" data-i18n="btn.close" data-i18n-attr="title" title="Zamknij">×</button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
                 <div id="addons-list-container" style="display: flex; flex-direction: column; gap: 12px;">
@@ -796,7 +796,7 @@
                 </div>
             </div>
             <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
-                <button id="btn-addons-modal-close" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Zamknij</button>
+                <button id="btn-addons-modal-close" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;" data-i18n="btn.close">Zamknij</button>
             </div>
         </div>
     </div>
@@ -804,16 +804,16 @@
     <!-- Python Install Modal -->
     <div class="modal-backdrop" id="python-modal" style="display: none;">
         <div class="modal-card">
-            <div class="modal-title">Wymagana instalacja środowiska Python</div>
+            <div class="modal-title" data-i18n="engines.python.modal_title">Wymagana instalacja środowiska Python</div>
             <div class="modal-body">
-                <p id="python-modal-desc">
-                    Aby korzystać z silników Whisper (lokalna transkrypcja wysokiej jakości), aplikacja potrzebuje zintegrowanego środowiska Python oraz pakietu <code>faster-whisper</code> (pobieranie i instalacja automatyczna w tle). 
+                <p id="python-modal-desc" data-i18n="engines.python.desc">
+                    Aby korzystać z silników Faster-Whisper, aplikacja potrzebuje zintegrowanego środowiska Python.
                     <br><br>
                     Czy chcesz pobrać i zainstalować je teraz automatycznie?
                 </p>
                 <div class="progress-bar-container" id="python-progress-container" style="display: none; margin-top: 20px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
-                        <span id="python-progress-step" style="color: var(--text-secondary); max-width: 80%; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">Inicjalizacja...</span>
+                        <span id="python-progress-step" style="color: var(--text-secondary); max-width: 80%; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" data-i18n="engines.python.initializing">Inicjalizacja...</span>
                         <span id="python-progress-percent" style="font-weight: 600; color: var(--accent-green);">0%</span>
                     </div>
                     <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; position: relative;">
@@ -822,8 +822,8 @@
                 </div>
             </div>
             <div class="modal-footer" id="python-modal-actions" style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
-                <button class="btn-secondary" id="btn-python-modal-close" style="padding: 10px 20px;">Anuluj</button>
-                <button class="btn-primary" id="btn-python-modal-install" style="padding: 10px 20px;">Zainstaluj automatycznie</button>
+                <button class="btn-secondary" id="btn-python-modal-close" style="padding: 10px 20px;" data-i18n="btn.cancel">Anuluj</button>
+                <button class="btn-primary" id="btn-python-modal-install" style="padding: 10px 20px;" data-i18n="engines.python.btn_install">Zainstaluj automatycznie</button>
             </div>
         </div>
     </div>
