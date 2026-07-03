@@ -177,7 +177,8 @@ pub async fn fetch_available_sherpa_models(current_model_path: &str, lang: &str)
 }
 
 pub async fn get_model_info(engine: &str, model_id: &str) -> anyhow::Result<ModelInfo> {
-    match engine {
+    let clean_engine = if engine == "faster_whisper" { "whisper" } else { engine };
+    match clean_engine {
         "vosk" => {
             // Pobieramy listę, żeby wyciągnąć URL i rozmiar dla modelu o id (czyli nazwie np. "vosk-model-small-pl-0.22")
             let client = reqwest::Client::builder()

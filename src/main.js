@@ -1253,6 +1253,7 @@ async function checkActiveEngineAvailability() {
 }
 
 async function renderAvailableModels(engineId) {
+  if (engineId === 'faster_whisper') engineId = 'whisper';
   let container = document.getElementById('config-fields-whisper');
   if (engineId === 'vosk') container = document.getElementById('config-fields-vosk');
   if (engineId === 'sherpa_onnx') container = document.getElementById('config-fields-sherpa');
@@ -1420,7 +1421,8 @@ async function updateModelStatusText(engineId, modelId) {
 
   if (window.__TAURI__) {
     try {
-      const isDownloaded = await window.__TAURI__.core.invoke('check_model_downloaded', { engine: engineId, model: modelId });
+      const checkEngine = engineId === 'faster_whisper' ? 'whisper' : engineId;
+      const isDownloaded = await window.__TAURI__.core.invoke('check_model_downloaded', { engine: checkEngine, model: modelId });
       if (isDownloaded) {
         statusSpan.textContent = t('engines.status.downloaded');
         statusSpan.className = 'status-value highlight';
