@@ -62,11 +62,23 @@ jobs:
           name: "VoiceType ${{ github.ref_name }} (Wersja Beta)"
           prerelease: true
           body: |
-            ⚠️ **UWAGA: Wersja BETA / Pre-release**
-            Ta wersja aplikacji VoiceType jest w fazie testów i rozwoju. Może zawierać błędy lub niedociągnięcia.
+            ⚠️ **UWAGA: Wersja BETA / Pre-release (Wersja testowa)**
+            Ta wersja aplikacji **VoiceType** (v${{ github.ref_name }}) jest w fazie intensywnych testów i rozwoju. Może zawierać błędy, niedociągnięcia lub zachowywać się niestabilnie w specyficznych konfiguracjach. Zachęcamy do zgłaszania wszelkich problemów w sekcji Issues!
+
+            ---
+
+            ### ✨ Kluczowe Funkcje w tej Wersji:
+            - **🗣️ Ciągłe Rozpoznawanie Mowy Offline**: Pełne wsparcie dla lokalnych silników Vosk, Sherpa-ONNX oraz Whisper.cpp (`whisper-rs`) i Faster-Whisper.
+            - **☁️ Szybkie Chmurowe API**: Integracja z Deepgram, AssemblyAI, OpenAI Whisper, Google STT oraz Azure Speech.
+            - **🧠 Inteligentna Detekcja VAD**: Wbudowany model Silero VAD uruchamiany lokalnie przez ONNX Runtime do automatycznego wykrywania mowy i pauz.
+            - **⌨️ Płynne Wprowadzanie Tekstu**: Bezpośrednie wstrzykiwanie tekstu do aktywnego okna przy użyciu Windows UI Automation (UIA) / Win32 z automatycznym rezerwowym schowkiem (clipboard fallback).
+            - **🔄 Dwupoziomowy Auto-Update**: Wsparcie dla natychmiastowych aktualizacji frontendowych (Delta) i binarnych (Core).
+
+            ---
 
             ### 📦 Pobieranie i Instalacja:
-            - **`voicetype.exe`** – Samodzielny plik wykonywalny aplikacji.
+            - **`voicetype.exe`** – Samodzielny, zoptymalizowany plik wykonywalny aplikacji VoiceType.
+            - **`assets-*.zip`** – Pakiet zasobów frontendowych (używany przez mechanizm automatycznych aktualizacji delta).
           files: |
             src-tauri/target/release/voicetype.exe
             assets-*.zip
