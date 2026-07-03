@@ -2483,7 +2483,7 @@ function showTranslationModelDownloadModal(onSuccess) {
 
   card.innerHTML = `
     <div class="modal-title" style="color: var(--accent-green, #10b981); display: flex; align-items: center; gap: 8px;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8l6 6M4 14e1 1 0 011-1h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM2 5h12M9 2v3M14 18l6-6M20 18l-6-6"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3h-9a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-1"/><path d="M2 5h12"/><path d="M9 2v3"/><path d="m19 16-4-4"/><path d="m14 18 6-6"/></svg>
       ${t('settings.translator_modal_title')}
     </div>
     <div class="modal-body" style="margin-top: 14px; margin-bottom: 22px;">
@@ -3692,7 +3692,7 @@ async function renderAddonsManagerUI() {
   pyCard.innerHTML = `
     <div style="display: flex; align-items: center; gap: 12px;">
       <div style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 8px; border-radius: 8px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
       </div>
       <div>
         <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${t('addons.py.title')}</div>

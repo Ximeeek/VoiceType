@@ -115,7 +115,11 @@ body.dual-accent .sidebar-btn.active {
 .sidebar-btn svg {
   width: 20px;
   height: 20px;
-  fill: currentColor;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .sidebar-spacer {
