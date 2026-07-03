@@ -1875,6 +1875,12 @@ function renderDownloadQueue() {
   const activeItems = downloadQueue.filter(q => q.status === 'downloading' || q.status === 'queued' || q.status === 'paused');
   const historyItems = downloadQueue.filter(q => q.status === 'completed' || q.status === 'cancelled' || q.status === 'error');
 
+  // Block the ability to change download mode when downloads are active or queued
+  const isDownloading = activeItems.length > 0;
+  document.querySelectorAll('input[name="download-mode"]').forEach(radio => {
+    radio.disabled = isDownloading;
+  });
+
   // Render Active Downloads
   if (activeItems.length === 0) {
     activeContainer.innerHTML = `<div style="font-size: 13px; color: var(--text-muted); font-style: italic;">${t('downloads.active.empty')}</div>`;
@@ -3290,6 +3296,14 @@ if (applyBtn) {
       });
     }
   });
+}
+
+function formatBytes(bytes) {
+  if (bytes > 1073741824) {
+    return (bytes / 1073741824).toFixed(2) + ' GB';
+  } else {
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
 }
 
 // ==========================================
