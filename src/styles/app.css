@@ -1501,3 +1501,21 @@ body.dual-accent .preset-card.active {
   justify-content: flex-end;
   margin-top: 12px;
 }
+
+/* Custom option styles inside select elements */
+select.input-field option {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+/* Custom spinner loader */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--accent-green);
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+

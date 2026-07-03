@@ -413,6 +413,9 @@ navButtons.forEach(btn => {
       if (targetPageId === 'dashboard') {
         checkActiveEngineAvailability();
       }
+      if (targetPageId === 'downloads') {
+        updateQuickModelOptions();
+      }
     });
   });
 });
@@ -1399,46 +1402,117 @@ if (downloadWhisperBtn) downloadWhisperBtn.addEventListener('click', () => trigg
 if (downloadSherpaBtn) downloadSherpaBtn.addEventListener('click', () => triggerModelDownload('sherpa_onnx'));
 
 const quickEngineSelect = document.getElementById('quick-download-engine');
+const quickLangSelect = document.getElementById('quick-download-lang');
 const quickModelSelect = document.getElementById('quick-download-model');
+const quickModelLoader = document.getElementById('quick-download-model-loader');
 const quickDownloadBtn = document.getElementById('quick-download-btn');
 
 function checkIsDownloading() {
   return downloadQueue.some(q => q.status === 'downloading' || q.status === 'queued');
 }
 
-function updateQuickModelOptions() {
+async function updateQuickModelOptions() {
   if (!quickEngineSelect || !quickModelSelect) return;
   const eng = quickEngineSelect.value;
-  quickModelSelect.innerHTML = '';
-  let models = [];
-  if (eng === 'vosk') {
-    models = [
-      { id: 'vosk-model-small-pl-0.22', name: '[PL] Polski Mały (50 MB)' },
-      { id: 'vosk-model-small-en-us-0.15', name: '[EN] Angielski Mały (40 MB)' }
-    ];
-  } else if (eng === 'sherpa_onnx') {
-    models = [
-      { id: 'sherpa-onnx-whisper-tiny', name: '[MULTI] Whisper Tiny Multilingual (75 MB)' },
-      { id: 'sherpa-onnx-whisper-small', name: '[MULTI] Whisper Small Multilingual (480 MB)' }
-    ];
+  
+  // Show loader and disable select/button
+  if (quickModelLoader) quickModelLoader.style.display = 'block';
+  quickModelSelect.disabled = true;
+  if (quickDownloadBtn) quickDownloadBtn.disabled = true;
+
+  // For Whisper/Faster-Whisper, models are multilingual/universal. Disable the language select.
+  if (eng === 'whisper' || eng === 'faster_whisper') {
+    if (quickLangSelect) {
+      quickLangSelect.innerHTML = '<option value="all">Wszystkie języki (Multilingual)</option>';
+      quickLangSelect.disabled = true;
+    }
   } else {
-    models = [
-      { id: 'tiny', name: '[MULTI] Tiny (77 MB)' },
-      { id: 'base', name: '[MULTI] Base (147 MB)' },
-      { id: 'small', name: '[MULTI] Small (487 MB)' }
-    ];
+    // Restore languages if disabled
+    if (quickLangSelect && quickLangSelect.disabled) {
+      quickLangSelect.disabled = false;
+      quickLangSelect.innerHTML = `
+        <option value="pl">Polski (Polish)</option>
+        <option value="en">English (Angielski)</option>
+        <option value="de">Deutsch (Niemiecki)</option>
+        <option value="fr">Français (Francuski)</option>
+        <option value="es">Español (Hiszpański)</option>
+        <option value="it">Italiano (Włoski)</option>
+        <option value="ru">Русский (Rosyjski)</option>
+      `;
+      // Default to app language
+      if (activeConfig && activeConfig.general) {
+        quickLangSelect.value = activeConfig.general.language;
+      } else if (pendingConfig && pendingConfig.general) {
+        quickLangSelect.value = pendingConfig.general.language;
+      } else {
+        quickLangSelect.value = 'pl';
+      }
+    }
   }
-  models.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.id;
-    opt.textContent = m.name;
-    quickModelSelect.appendChild(opt);
-  });
+
+  const currentLang = (eng === 'whisper' || eng === 'faster_whisper') ? null : (quickLangSelect ? quickLangSelect.value : 'pl');
+  const targetEngine = (eng === 'faster_whisper') ? 'whisper' : eng;
+
+  try {
+    let models = [];
+    if (window.__TAURI__) {
+      models = await window.__TAURI__.core.invoke('get_available_models', { engine: targetEngine, language: currentLang });
+    } else {
+      // Mock options for web development/offline testing
+      if (targetEngine === 'vosk') {
+        if (currentLang === 'pl') {
+          models = [
+            { id: 'vosk-model-small-pl-0.22', name: 'Mikro (small) - vosk-model-small-pl-0.22', size_text: '50 MB', is_downloaded: false },
+            { id: 'vosk-model-pl-0.22-lgraph', name: 'Duży (lgraph) - vosk-model-pl-0.22-lgraph', size_text: '1.2 GB', is_downloaded: false }
+          ];
+        } else {
+          models = [
+            { id: 'vosk-model-small-en-us-0.15', name: 'Mikro (small) - vosk-model-small-en-us-0.15', size_text: '40 MB', is_downloaded: false }
+          ];
+        }
+      } else if (targetEngine === 'sherpa_onnx') {
+        models = [
+          { id: 'sherpa-onnx-whisper-tiny', name: 'Whisper ONNX Tiny (Multilingual)', size_text: '75 MB', is_downloaded: false },
+          { id: 'sherpa-onnx-whisper-small', name: 'Whisper ONNX Small (Multilingual)', size_text: '480 MB', is_downloaded: false }
+        ];
+      } else {
+        models = [
+          { id: 'tiny', name: 'Whisper tiny', size_text: '77 MB', is_downloaded: false },
+          { id: 'base', name: 'Whisper base', size_text: '147 MB', is_downloaded: false },
+          { id: 'small', name: 'Whisper small', size_text: '487 MB', is_downloaded: false }
+        ];
+      }
+    }
+
+    quickModelSelect.innerHTML = '';
+    if (models.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Brak dostępnych modeli';
+      quickModelSelect.appendChild(opt);
+    } else {
+      models.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `${m.name} (${m.size_text})${m.is_downloaded ? ' ✔ (Pobrany)' : ''}`;
+        quickModelSelect.appendChild(opt);
+      });
+      if (quickDownloadBtn) quickDownloadBtn.disabled = false;
+    }
+  } catch (err) {
+    console.error('Error fetching available models:', err);
+    quickModelSelect.innerHTML = '<option value="">Błąd ładowania modeli</option>';
+  } finally {
+    if (quickModelLoader) quickModelLoader.style.display = 'none';
+    quickModelSelect.disabled = false;
+  }
 }
 
 if (quickEngineSelect) {
   quickEngineSelect.addEventListener('change', updateQuickModelOptions);
-  updateQuickModelOptions();
+}
+if (quickLangSelect) {
+  quickLangSelect.addEventListener('change', updateQuickModelOptions);
 }
 
 if (quickDownloadBtn) {
@@ -1541,6 +1615,7 @@ async function startSingleDownload(item) {
       renderDownloadQueue();
       updateDashboardDownloadState(null);
       renderInstalledModelsManager();
+      updateQuickModelOptions();
       setTimeout(() => processDownloadQueue(), 300);
     }
   } else {
@@ -1561,6 +1636,7 @@ async function startSingleDownload(item) {
         clearInterval(interval);
         item.status = 'completed';
         renderDownloadQueue();
+        updateQuickModelOptions();
         setTimeout(() => processDownloadQueue(), 300);
       }
     }, 400);
@@ -2685,6 +2761,10 @@ async function init() {
     renderHistoryUI();
     ToastManager.show({ type: 'info', title: 'Mock Environment', message: 'Running outside Tauri container.' });
   }
+  if (quickLangSelect && activeConfig && activeConfig.general) {
+    quickLangSelect.value = activeConfig.general.language;
+  }
+  updateQuickModelOptions();
   setupUpdateNotificationUI();
 }
 

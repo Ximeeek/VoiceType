@@ -588,30 +588,57 @@
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px; background: var(--bg-elevated); padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border-subtle);">
                             <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Tryb pobierania:</span>
-                            <label class="radio-label" style="font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <label class="radio-container" style="font-size: 12px;">
                                 <input type="radio" name="download-mode" value="sequential" checked>
-                                <span>Pobieraj po kolei</span>
+                                <span class="radio-label">Pobieraj po kolei</span>
                             </label>
-                            <label class="radio-label" style="font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <label class="radio-container" style="font-size: 12px;">
                                 <input type="radio" name="download-mode" value="concurrent">
-                                <span>Pobieraj na raz</span>
+                                <span class="radio-label">Pobieraj na raz</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Quick Download Section -->
                     <div class="card" style="background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
-                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">Pobierz nowy model mowy</div>
-                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                            <select id="quick-download-engine" class="input-field" style="max-width: 180px; padding: 8px 12px; border-radius: 8px; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid var(--border-subtle); font-size: 13px;">
-                                <option value="vosk">Vosk Offline</option>
-                                <option value="sherpa_onnx">Sherpa-ONNX</option>
-                                <option value="whisper">Whisper.cpp</option>
-                            </select>
-                            <select id="quick-download-model" class="input-field" style="max-width: 340px; padding: 8px 12px; border-radius: 8px; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid var(--border-subtle); font-size: 13px;">
-                                <!-- Dynamic options -->
-                            </select>
-                            <button id="quick-download-btn" class="btn-primary" style="padding: 8px 20px; background: var(--accent-green); color: #000000; font-weight: 800; border-radius: 8px; font-size: 13px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">Pobierz model</button>
+                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">Pobierz nowy model mowy</div>
+                        <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+                            <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 150px;">
+                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Silnik mowy</span>
+                                <select id="quick-download-engine" class="input-field" style="width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px;">
+                                    <option value="vosk">Vosk Offline</option>
+                                    <option value="sherpa_onnx">Sherpa-ONNX</option>
+                                    <option value="whisper">Whisper.cpp</option>
+                                    <option value="faster_whisper">Faster-Whisper</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 150px;">
+                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Język</span>
+                                <select id="quick-download-lang" class="input-field" style="width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px;">
+                                    <option value="pl">Polski (Polish)</option>
+                                    <option value="en">English (Angielski)</option>
+                                    <option value="de">Deutsch (Niemiecki)</option>
+                                    <option value="fr">Français (Francuski)</option>
+                                    <option value="es">Español (Hiszpański)</option>
+                                    <option value="it">Italiano (Włoski)</option>
+                                    <option value="ru">Русский (Rosyjski)</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 6px; flex: 2; min-width: 250px;">
+                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Model mowy</span>
+                                <div style="position: relative; width: 100%;">
+                                    <select id="quick-download-model" class="input-field" style="width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px;">
+                                        <!-- Dynamic options -->
+                                    </select>
+                                    <div id="quick-download-model-loader" style="display: none; position: absolute; right: 35px; top: 50%; transform: translateY(-50%); z-index: 10;">
+                                        <span class="spinner"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="quick-download-btn" class="btn-primary" style="height: 38px; padding: 0 24px; font-weight: 800; border-radius: 8px; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                <span>Pobierz model</span>
+                            </button>
                         </div>
                     </div>
 
