@@ -1556,10 +1556,10 @@ select.input-field option {
 }
 
 /* GPU settings warning icon styling */
-#whisper-gpu-warning {
+#whisper-gpu-warning, #dashboard-gpu-warning {
   transition: transform 0.2s ease;
 }
-#whisper-gpu-warning:hover {
+#whisper-gpu-warning:hover, #dashboard-gpu-warning:hover {
   transform: scale(1.15);
 }
 

@@ -1327,6 +1327,36 @@ async function updateDashboardActiveEngineCard() {
     activeEngineBadge.textContent = isStreaming ? 'Streaming' : 'Batch';
   }
 
+  // GPU CUDA warning display check on dashboard
+  const gpuWarningEl = document.getElementById('dashboard-gpu-warning');
+  if (gpuWarningEl) {
+    console.log('[Dashboard] Checking GPU/CUDA warning state for engine:', engineId);
+    if (engineId === 'faster_whisper') {
+      try {
+        if (window.__TAURI__) {
+          const isGpuSupported = await window.__TAURI__.core.invoke('check_gpu_support');
+          const isCudaInstalled = await window.__TAURI__.core.invoke('check_cuda_installed');
+          console.log(`[Dashboard] GPU supported: ${isGpuSupported}, CUDA installed: ${isCudaInstalled}`);
+          if (isGpuSupported && !isCudaInstalled) {
+            gpuWarningEl.style.display = 'inline-flex';
+            gpuWarningEl.setAttribute('title', t('engines.whisper.gpu_slower_warning'));
+          } else {
+            gpuWarningEl.style.display = 'none';
+          }
+        } else {
+          // Web mock demo mode
+          gpuWarningEl.style.display = 'inline-flex';
+          gpuWarningEl.setAttribute('title', t('engines.whisper.gpu_slower_warning'));
+        }
+      } catch (err) {
+        console.error('[Dashboard] Error during active engine card GPU warning check:', err);
+        gpuWarningEl.style.display = 'none';
+      }
+    } else {
+      gpuWarningEl.style.display = 'none';
+    }
+  }
+
   if (langBadge && activeConfig.general) {
     langBadge.textContent = (activeConfig.general.language || 'pl').toUpperCase();
   }
