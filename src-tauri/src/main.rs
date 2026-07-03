@@ -72,8 +72,6 @@ pub struct AppState {
     pub session_stats: Mutex<SessionStats>,
 }
 
-static TRAY_HINT_SHOWN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
 fn main() {
     let (control_tx, control_rx) = mpsc::channel(32);
     let initial_config = load_config();
@@ -208,18 +206,55 @@ fn main() {
             tauri::WindowEvent::CloseRequested { api, .. } => {
                 window.hide().unwrap();
                 api.prevent_close();
-
-                if !TRAY_HINT_SHOWN.swap(true, std::sync::atomic::Ordering::SeqCst) {
-                    use tauri_plugin_notification::NotificationExt;
-                    let _ = window.app_handle().notification()
-                        .builder()
-                        .title("VoiceType")
-                        .body("VoiceType dziala w tle. Kliknij ikone w zasobniku aby wrocic.")
-                        .show();
-                }
+                show_custom_notification(window.app_handle());
             }
             _ => {}
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+pub fn show_custom_notification(app: &tauri::AppHandle) {
+    if let Some(existing) = app.get_webview_window("notification") {
+        let _ = existing.close();
+    }
+
+    let app_clone = app.clone();
+    let _ = tauri::WebviewWindowBuilder::new(
+        app,
+        "notification",
+        tauri::WebviewUrl::App("notification.html".into())
+    )
+    .title("VoiceType Notification")
+    .decorations(false)
+    .transparent(true)
+    .shadow(false)
+    .skip_taskbar(true)
+    .always_on_top(true)
+    .resizable(false)
+    .inner_size(360.0, 96.0)
+    .visible(false)
+    .build()
+    .map(|window| {
+        if let Ok(Some(monitor)) = window.primary_monitor() {
+            let size = monitor.size();
+            let scale_factor = monitor.scale_factor();
+            let width = 360.0;
+            let height = 96.0;
+            let x = (size.width as f64 / scale_factor) - width - 20.0;
+            let y = (size.height as f64 / scale_factor) - height - 60.0;
+            let _ = window.set_position(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
+            let _ = window.show();
+        } else {
+            let _ = window.show();
+        }
+
+        // Auto-close after 3.5 seconds
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(3500)).await;
+            if let Some(w) = app_clone.get_webview_window("notification") {
+                let _ = w.close();
+            }
+        });
+    });
 }

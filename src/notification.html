@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>VoiceType Notification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-elevated: #141a14;
+      --border-accent: rgba(57, 255, 80, 0.25);
+      --accent-green: #39ff50;
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.65);
+    }
+
+    html, body {
+      background: transparent !important;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Inter', system-ui, sans-serif;
+      user-select: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .notification-container {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notification-card {
+      background: rgba(20, 26, 20, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--border-accent);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Left glowing status line */
+    .notification-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .notification-card.fade-out {
+      animation: slideOutRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideOutRight {
+      from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(30px) scale(0.97);
+      }
+    }
+
+    .icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: rgba(57, 255, 80, 0.1);
+      border: 1px solid rgba(57, 255, 80, 0.2);
+      border-radius: 50%;
+      color: var(--accent-green);
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(57, 255, 80, 0.15);
+    }
+
+    .icon-container svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex-grow: 1;
+    }
+
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.2px;
+    }
+
+    .message {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="notification-container">
+    <div class="notification-card" id="card">
+      <div class="icon-container">
+        <!-- Microphone icon with action/info vibe -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+          <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
+          <line x1="12" x2="12" y1="19" y2="22"/>
+        </svg>
+      </div>
+      <div class="content">
+        <div class="title" id="title">VoiceType</div>
+        <div class="message" id="message">Aplikacja działa w tle.<br>Kliknij ikonę w zasobniku, aby powrócić.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const locales = {
+      en: {
+        title: "VoiceType",
+        message: "VoiceType is running in the background.<br>Click the tray icon to restore."
+      },
+      pl: {
+        title: "VoiceType",
+        message: "Aplikacja działa w tle.<br>Kliknij ikonę w zasobniku, aby powrócić."
+      }
+    };
+
+    async function initLocalization() {
+      let lang = "en";
+      try {
+        if (window.__TAURI__) {
+          const config = await window.__TAURI__.core.invoke('get_config');
+          if (config && config.general && config.general.language) {
+            lang = config.general.language;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch language config", e);
+      }
+
+      const locale = locales[lang] || locales.en;
+      document.getElementById('title').textContent = locale.title;
+      document.getElementById('message').innerHTML = locale.message;
+    }
+
+    // Initialize translations
+    initLocalization();
+
+    // Automatically fade out the card before the Rust side closes the window
+    const DISPLAY_DURATION = 3200; // ms to stay visible
+
+    setTimeout(() => {
+      const card = document.getElementById('card');
+      if (card) {
+        card.classList.add('fade-out');
+      }
+    }, DISPLAY_DURATION);
+  </script>
+</body>
+</html>

@@ -13,7 +13,7 @@ pub async fn get_config(state: State<'_, Arc<AppState>>) -> Result<Config, Strin
 }
 
 #[tauri::command]
-pub async fn save_config(state: State<'_, Arc<AppState>>, config: Config) -> Result<(), String> {
+pub async fn save_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle, config: Config) -> Result<(), String> {
     crate::config::save_config(&config).map_err(|e| e.to_string())?;
     *state.config.lock().await = config.clone();
     
@@ -27,11 +27,14 @@ pub async fn save_config(state: State<'_, Arc<AppState>>, config: Config) -> Res
     state.control_tx.send(ControlCommand::SetTriggerTranslate(config.trigger.translate)).await.ok();
     state.control_tx.send(ControlCommand::SetLanguage(config.general.language.clone())).await.ok();
     state.control_tx.send(ControlCommand::SetEngine(config.engine.engine_type.clone())).await.ok();
+
+    let _ = crate::tray::rebuild_tray_menu(&app);
+    
     Ok(())
 }
 
 #[tauri::command]
-pub async fn reset_config(state: State<'_, Arc<AppState>>) -> Result<Config, String> {
+pub async fn reset_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle) -> Result<Config, String> {
     let default = crate::config::default_config();
     crate::config::save_config(&default).map_err(|e| e.to_string())?;
     *state.config.lock().await = default.clone();
@@ -42,6 +45,8 @@ pub async fn reset_config(state: State<'_, Arc<AppState>>) -> Result<Config, Str
     state.control_tx.send(ControlCommand::SetLanguage(default.general.language.clone())).await.ok();
     state.control_tx.send(ControlCommand::SetEngine(default.engine.engine_type.clone())).await.ok();
     
+    let _ = crate::tray::rebuild_tray_menu(&app);
+
     Ok(default)
 }
 
@@ -372,6 +377,7 @@ pub async fn minimize_window(app: tauri::AppHandle) -> Result<(), String> {
 pub async fn hide_window(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         window.hide().map_err(|e| e.to_string())?;
+        crate::show_custom_notification(&app);
     }
     Ok(())
 }
