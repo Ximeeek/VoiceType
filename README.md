@@ -2,7 +2,7 @@
 
 > A Windows system tray application that enables continuous local and cloud-based Speech-to-Text, injecting transcribed text directly into any active application window.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Release: Beta](https://img.shields.io/badge/Release-Beta-blue.svg)](https://github.com/Ximeeek/VoiceType/releases)
 
 ---
@@ -182,4 +182,4 @@ This disables all network calls related to update checks.
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
