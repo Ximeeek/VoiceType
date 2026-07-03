@@ -77,10 +77,9 @@ jobs:
             ---
 
             ### 📦 Pobieranie i Instalacja:
-            - **`voicetype.exe`** – Samodzielny, zoptymalizowany plik wykonywalny aplikacji VoiceType.
+            - **`voicetype-installer.exe`** – Najnowszy, zintegrowany instalator aplikacji VoiceType, zawierający wszystkie zależności, pliki konfiguracyjne i lokalne modele.
             - **`assets-*.zip`** – Pakiet zasobów frontendowych (używany przez mechanizm automatycznych aktualizacji delta).
           files: |
-            src-tauri/target/release/voicetype.exe
             assets-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
