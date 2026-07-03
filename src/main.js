@@ -1608,6 +1608,26 @@ function updateDownloadProgress(progress) {
   }
 }
 
+function removeModelFromDownloadQueue(engine, model) {
+  const normalize = (eng) => (eng === 'faster_whisper' ? 'whisper' : eng);
+  const targetEngine = normalize(engine);
+
+  for (let i = downloadQueue.length - 1; i >= 0; i--) {
+    const item = downloadQueue[i];
+    const itemEngine = normalize(item.engine);
+    if (model) {
+      if (itemEngine === targetEngine && item.model === model) {
+        downloadQueue.splice(i, 1);
+      }
+    } else {
+      if (itemEngine === targetEngine) {
+        downloadQueue.splice(i, 1);
+      }
+    }
+  }
+  renderDownloadQueue();
+}
+
 function addModelToDownloadQueue(engine, model) {
   let existing = downloadQueue.find(q => q.engine === engine && q.model === model);
   if (existing) {
@@ -1817,6 +1837,7 @@ async function renderInstalledModelsManager() {
               try {
                 await window.__TAURI__.core.invoke('delete_installed_model', { engine, model });
                 ToastManager.show({ type: 'success', title: 'Usunięto model', message: `Model ${model} został usunięty z dysku.` });
+                removeModelFromDownloadQueue(engine, model);
                 await renderInstalledModelsManager();
                 const activeEngineId = pendingConfig ? pendingConfig.engine.type : 'vosk';
                 await renderAvailableModels(activeEngineId);
@@ -1839,6 +1860,7 @@ async function renderInstalledModelsManager() {
               try {
                 await window.__TAURI__.core.invoke('delete_installed_model', { engine, model: null });
                 ToastManager.show({ type: 'success', title: 'Usunięto modele', message: `Wszystkie modele silnika zostały usunięte z dysku.` });
+                removeModelFromDownloadQueue(engine, null);
                 await renderInstalledModelsManager();
                 const activeEngineId = pendingConfig ? pendingConfig.engine.type : 'vosk';
                 await renderAvailableModels(activeEngineId);
@@ -3437,6 +3459,7 @@ async function renderAddonsManagerUI() {
           try {
             await window.__TAURI__.core.invoke('delete_installed_model', { engine, model });
             ToastManager.show({ type: 'success', title: 'Usunięto model', message: `Model ${model} usunięty z dysku.` });
+            removeModelFromDownloadQueue(engine, model);
             renderAddonsManagerUI();
             renderInstalledModelsManager();
           } catch (err) {
