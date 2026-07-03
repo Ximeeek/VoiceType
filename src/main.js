@@ -461,6 +461,32 @@ navButtons.forEach(btn => {
         updateDashboardActiveEngineCard();
       }
       if (targetPageId === 'downloads') {
+        console.log('[Navigation] Navigating to downloads section.');
+        if (window.pendingModelHighlight) {
+          const { engineId, modelId } = window.pendingModelHighlight;
+          console.log('[Navigation] Found pending model highlight:', engineId, modelId);
+          if (quickEngineSelect) {
+            quickEngineSelect.value = engineId;
+          }
+          if (quickLangSelect) {
+            let lang = (activeConfig && activeConfig.general && activeConfig.general.language) || 'pl';
+            if (engineId === 'vosk' && modelId) {
+              const knownLangs = ['pl', 'en', 'de', 'fr', 'es', 'it', 'ru'];
+              for (const kl of knownLangs) {
+                if (modelId.includes(`-${kl}-`) || modelId.includes(`-${kl}`)) {
+                  lang = kl;
+                  break;
+                }
+              }
+            } else if (engineId === 'sherpa_onnx' && modelId) {
+              if (modelId.includes('.en') || modelId.includes('-en-') || modelId.includes('-en')) {
+                lang = 'en';
+              }
+            }
+            quickLangSelect.value = lang;
+            console.log('[Navigation] Pre-setting quick download language to:', lang);
+          }
+        }
         updateQuickModelOptions();
       }
     });
@@ -1716,6 +1742,38 @@ async function updateQuickModelOptions() {
         quickModelSelect.appendChild(opt);
       });
       if (quickDownloadBtn) quickDownloadBtn.disabled = false;
+
+      // Handle pending model selection and highlighting
+      if (window.pendingModelHighlight) {
+        try {
+          const { modelId } = window.pendingModelHighlight;
+          console.log(`[QuickDownload] Processing pending model highlight. Target model ID: ${modelId}`);
+          if (quickModelSelect && modelId) {
+            const optionExists = Array.from(quickModelSelect.options).some(opt => opt.value === modelId);
+            if (optionExists) {
+              quickModelSelect.value = modelId;
+              console.log(`[QuickDownload] Selected exact match option: ${modelId}`);
+            } else {
+              const partialOpt = Array.from(quickModelSelect.options).find(opt => opt.value.includes(modelId) || modelId.includes(opt.value));
+              if (partialOpt) {
+                quickModelSelect.value = partialOpt.value;
+                console.log(`[QuickDownload] Selected partial match option: ${partialOpt.value} for target: ${modelId}`);
+              } else {
+                console.warn(`[QuickDownload] Target model ID ${modelId} not found in available options.`);
+              }
+            }
+          }
+
+          if (quickDownloadBtn) {
+            console.log('[QuickDownload] Adding highlighting pulse class to download button.');
+            quickDownloadBtn.classList.add('btn-highlight-pulse');
+          }
+        } catch (err) {
+          console.error('[QuickDownload] Error highlighting target model:', err);
+        } finally {
+          window.pendingModelHighlight = null;
+        }
+      }
     }
   } catch (err) {
     console.error('Error fetching available models:', err);
@@ -1727,18 +1785,42 @@ async function updateQuickModelOptions() {
 }
 
 if (quickEngineSelect) {
-  quickEngineSelect.addEventListener('change', updateQuickModelOptions);
+  quickEngineSelect.addEventListener('change', () => {
+    console.log('[QuickDownload] Engine selection changed. Removing highlighting pulse.');
+    if (quickDownloadBtn) quickDownloadBtn.classList.remove('btn-highlight-pulse');
+    updateQuickModelOptions();
+  });
 }
 if (quickLangSelect) {
-  quickLangSelect.addEventListener('change', updateQuickModelOptions);
+  quickLangSelect.addEventListener('change', () => {
+    console.log('[QuickDownload] Language selection changed. Removing highlighting pulse.');
+    if (quickDownloadBtn) quickDownloadBtn.classList.remove('btn-highlight-pulse');
+    updateQuickModelOptions();
+  });
 }
 
 if (quickDownloadBtn) {
   quickDownloadBtn.addEventListener('click', () => {
+    console.log('[QuickDownload] Download button clicked. Removing highlighting pulse.');
+    quickDownloadBtn.classList.remove('btn-highlight-pulse');
     const eng = quickEngineSelect ? quickEngineSelect.value : 'vosk';
     const mdl = quickModelSelect ? quickModelSelect.value : '';
     if (mdl) {
-      triggerModelDownloadExplicit(eng, mdl);
+      try {
+        triggerModelDownloadExplicit(eng, mdl);
+      } catch (err) {
+        console.error('[QuickDownload] Error triggering model download:', err);
+        throw err;
+      }
+    } else {
+      console.warn('[QuickDownload] No model selected for download.');
+    }
+  });
+
+  quickDownloadBtn.addEventListener('mouseenter', () => {
+    if (quickDownloadBtn.classList.contains('btn-highlight-pulse')) {
+      console.log('[QuickDownload] Mouse entered download button. Removing highlighting pulse.');
+      quickDownloadBtn.classList.remove('btn-highlight-pulse');
     }
   });
 }
@@ -2993,8 +3075,39 @@ async function init() {
       const btnGoToDownloads = document.getElementById('btn-overlay-go-to-downloads');
       if (btnGoToDownloads) {
         btnGoToDownloads.addEventListener('click', () => {
+          console.log('[Dashboard] Go to downloads button clicked due to missing model warning.');
+          try {
+            if (activeConfig && activeConfig.engine) {
+              const engineId = activeConfig.engine.type;
+              let modelId = '';
+              if (engineId === 'vosk') {
+                modelId = (activeConfig.engine.vosk.model_path || '').split(/[/\\]/).pop();
+              } else if (engineId === 'sherpa_onnx') {
+                modelId = (activeConfig.engine.sherpa_onnx.model_path || '').split(/[/\\]/).pop();
+              } else if (engineId === 'whisper' || engineId === 'faster_whisper') {
+                modelId = activeConfig.engine.whisper.model;
+              }
+
+              if (modelId) {
+                console.log(`[Dashboard] Redirecting for missing model. Engine: ${engineId}, Model: ${modelId}`);
+                window.pendingModelHighlight = { engineId, modelId };
+              } else {
+                console.warn('[Dashboard] Could not determine model ID from activeConfig.');
+              }
+            } else {
+              console.warn('[Dashboard] activeConfig or engine config is not defined.');
+            }
+          } catch (err) {
+            console.error('[Dashboard] Error setting pending model highlight:', err);
+          }
+
           const navDownloads = document.getElementById('nav-downloads');
-          if (navDownloads) navDownloads.click();
+          if (navDownloads) {
+            console.log('[Dashboard] Triggering click on navigation downloads button.');
+            navDownloads.click();
+          } else {
+            console.error('[Dashboard] Navigation element nav-downloads not found.');
+          }
         });
       }
 
