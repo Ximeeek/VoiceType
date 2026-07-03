@@ -73,6 +73,9 @@ pub struct AppState {
 }
 
 fn main() {
+    #[cfg(windows)]
+    crate::platform::windows::optimize_process_priority();
+
     let (control_tx, control_rx) = mpsc::channel(32);
     let initial_config = load_config();
     let audio_config_clone = initial_config.audio.clone();

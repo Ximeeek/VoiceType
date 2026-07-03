@@ -28,7 +28,14 @@ pub fn spawn_audio_pipeline(config: &crate::config::settings::AudioConfig) -> an
     let _threshold = config.vad_threshold;
     
     std::thread::spawn(move || {
-        println!("[VAD] Worker thread starting...");
+        #[cfg(windows)]
+        {
+            use windows::Win32::System::Threading::{SetThreadPriority, THREAD_PRIORITY_HIGHEST, GetCurrentThread};
+            unsafe {
+                let _ = SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+            }
+        }
+        println!("[VAD] Worker thread starting with HIGH priority...");
         let mut rb = RingBuffer::new(ring_buffer::CHUNK_SAMPLES * 10);
         let model_path_buf = if std::path::Path::new("models/silero-vad.onnx").exists() {
             std::path::PathBuf::from("models/silero-vad.onnx")

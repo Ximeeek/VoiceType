@@ -57,6 +57,38 @@ pub fn set_autostart(enabled: bool, exe_path: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(windows)]
+pub fn optimize_process_priority() {
+    use windows::Win32::System::Threading::{
+        GetCurrentProcess, SetPriorityClass, HIGH_PRIORITY_CLASS,
+        SetProcessInformation, ProcessPowerThrottling, PROCESS_POWER_THROTTLING_STATE,
+        PROCESS_POWER_THROTTLING_CURRENT_VERSION, PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+    };
+
+    unsafe {
+        let process = GetCurrentProcess();
+        let _ = SetPriorityClass(process, HIGH_PRIORITY_CLASS);
+
+        let mut throttling = PROCESS_POWER_THROTTLING_STATE {
+            Version: PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+            ControlMask: PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+            StateMask: 0,
+        };
+
+        let _ = SetProcessInformation(
+            process,
+            ProcessPowerThrottling,
+            &mut throttling as *mut _ as *mut _,
+            std::mem::size_of::<PROCESS_POWER_THROTTLING_STATE>() as u32,
+        );
+
+        println!("[PLATFORM] Process priority set to HIGH and Power Throttling disabled for background execution.");
+    }
+}
+
+#[cfg(not(windows))]
+pub fn optimize_process_priority() {}
+
 #[cfg(not(windows))]
 pub fn set_autostart(_enabled: bool, _exe_path: &str) -> anyhow::Result<()> {
     Ok(())

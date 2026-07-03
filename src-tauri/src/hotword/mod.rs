@@ -284,7 +284,11 @@ pub async fn run_control_loop(
                 if idle_speech_detected && idle_last_speech_time.elapsed() >= Duration::from_millis(400) {
                     idle_speech_detected = false;
                     if let Ok(final_idle_text) = engine.finalize().await {
-                        if !final_idle_text.trim().is_empty() {
+                        let lower_idle = final_idle_text.to_lowercase();
+                        if lower_idle.contains("amara.org") || lower_idle.contains("dziękuję za uwagę") || lower_idle.contains("subtitles by") || lower_idle.contains("napisy stworzone") {
+                            println!("[IDLE_BATCH_FINALIZE] Ignored Whisper hallucination in idle state: '{}'", final_idle_text);
+                            let _ = engine.start_stream().await;
+                        } else if !final_idle_text.trim().is_empty() {
                             println!("[IDLE_BATCH_FINALIZE] Engine: {} | Finalized text: '{}'", engine.active_type, final_idle_text);
                             if let Some(remaining) = detector.check_trigger(&final_idle_text) {
                                 println!("[STATE] Idle → Dictating (batch trigger matched, remaining: '{}')", remaining);
