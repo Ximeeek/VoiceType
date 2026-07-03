@@ -1566,28 +1566,42 @@ select.input-field option {
 /* Quick download button highlighting pulse */
 @keyframes btn-download-highlight-pulse {
   0% {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15), 0 0 0 0 var(--accent-green);
+    box-shadow: 0 0 0 0 var(--accent-green);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15), 0 0 0 10px rgba(57, 255, 80, 0);
-    transform: scale(1.04);
+    box-shadow: 0 0 0 12px rgba(57, 255, 80, 0);
+    transform: scale(1.05);
   }
   100% {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(57, 255, 80, 0);
+    box-shadow: 0 0 0 0 rgba(57, 255, 80, 0);
     transform: scale(1);
   }
 }
 
 .btn-highlight-pulse {
-  animation: btn-download-highlight-pulse 1.8s infinite ease-in-out;
-  border: 1.5px solid var(--accent-green) !important;
+  position: relative !important;
 }
 
-.btn-highlight-pulse:hover {
-  animation: none !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+.btn-highlight-pulse::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1.5px solid var(--accent-green) !important;
+  animation: btn-download-highlight-pulse 1.8s infinite ease-in-out;
+  transition: opacity 0.3s ease;
+  opacity: 1;
+  z-index: 1;
 }
+
+.btn-highlight-pulse:hover::after {
+  opacity: 0 !important;
+}
+
 
 

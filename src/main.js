@@ -1816,13 +1816,6 @@ if (quickDownloadBtn) {
       console.warn('[QuickDownload] No model selected for download.');
     }
   });
-
-  quickDownloadBtn.addEventListener('mouseenter', () => {
-    if (quickDownloadBtn.classList.contains('btn-highlight-pulse')) {
-      console.log('[QuickDownload] Mouse entered download button. Removing highlighting pulse.');
-      quickDownloadBtn.classList.remove('btn-highlight-pulse');
-    }
-  });
 }
 
 const clearDownloadHistoryBtn = document.getElementById('clear-download-history-btn');
