@@ -175,48 +175,60 @@
       }
     };
 
-    async function initLocalization() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const notifType = urlParams.get('type') || 'tray';
+    let currentLang = "en";
+    let fadeTimeout = null;
 
-      let lang = "en";
-      try {
-        if (window.__TAURI__) {
-          const config = await window.__TAURI__.core.invoke('get_config');
-          if (config && config.general && config.general.language) {
-            lang = config.general.language;
-          }
-        }
-      } catch (e) {
-        console.error("Failed to fetch language config", e);
-      }
-
-      const langLocales = locales[lang] || locales.en;
+    function applyNotificationUI(notifType) {
+      const langLocales = locales[currentLang] || locales.en;
       const locale = langLocales[notifType] || langLocales.tray;
 
       document.getElementById('title').textContent = locale.title;
       document.getElementById('message').innerHTML = locale.message;
 
-      if (notifType === 'no_input') {
-        const iconSvg = document.getElementById('icon-svg');
-        if (iconSvg) {
+      const iconSvg = document.getElementById('icon-svg');
+      if (iconSvg) {
+        if (notifType === 'no_input') {
           iconSvg.innerHTML = `<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>`;
+        } else {
+          iconSvg.innerHTML = `<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" x2="12" y1="19" y2="22"/>`;
         }
       }
+
+      const card = document.getElementById('card');
+      if (card) {
+        card.classList.remove('fade-out');
+      }
+
+      if (fadeTimeout) clearTimeout(fadeTimeout);
+      fadeTimeout = setTimeout(() => {
+        if (card) card.classList.add('fade-out');
+      }, 3300);
+    }
+
+    async function initLocalization() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const notifType = urlParams.get('type') || 'tray';
+
+      try {
+        if (window.__TAURI__) {
+          const config = await window.__TAURI__.core.invoke('get_config');
+          if (config && config.general && config.general.language) {
+            currentLang = config.general.language;
+          }
+          
+          window.__TAURI__.event.listen('show_notification', (event) => {
+            applyNotificationUI(event.payload || 'tray');
+          });
+        }
+      } catch (e) {
+        console.error("Failed to fetch language config", e);
+      }
+
+      applyNotificationUI(notifType);
     }
 
     // Initialize translations
     initLocalization();
-
-    // Automatically fade out the card before the Rust side closes the window
-    const DISPLAY_DURATION = 3200; // ms to stay visible
-
-    setTimeout(() => {
-      const card = document.getElementById('card');
-      if (card) {
-        card.classList.add('fade-out');
-      }
-    }, DISPLAY_DURATION);
   </script>
 </body>
 </html>

@@ -218,12 +218,16 @@ pub fn handle_no_input_notification(app: &tauri::AppHandle) {
     let main_window = app.get_webview_window("main");
     let is_minimized_or_hidden = match main_window {
         Some(ref window) => {
-            window.is_minimized().unwrap_or(false) || !window.is_visible().unwrap_or(true)
+            let is_min = window.is_minimized().unwrap_or(false);
+            let is_vis = window.is_visible().unwrap_or(true);
+            let is_foc = window.is_focused().unwrap_or(true);
+            println!("[NO_INPUT_NOTIF] main_window: is_min={}, is_vis={}, is_foc={}", is_min, is_vis, is_foc);
+            is_min || !is_vis || !is_foc
         }
         None => true,
     };
 
-    println!("[NO_INPUT_NOTIF] Main window state: is_minimized_or_hidden={}", is_minimized_or_hidden);
+    println!("[NO_INPUT_NOTIF] Final decision: is_minimized_or_hidden={}", is_minimized_or_hidden);
 
     if is_minimized_or_hidden {
         show_custom_notification(app, "no_input");
@@ -233,13 +237,29 @@ pub fn handle_no_input_notification(app: &tauri::AppHandle) {
 }
 
 pub fn show_custom_notification(app: &tauri::AppHandle, notif_type: &str) {
+    println!("[NOTIFICATION] Triggering custom system notification: type='{}'", notif_type);
+    let notif_type_string = notif_type.to_string();
+
     if let Some(existing) = app.get_webview_window("notification") {
-        let _ = existing.close();
+        println!("[NOTIFICATION] Reusing existing notification window");
+        let _ = existing.emit("show_notification", notif_type_string);
+        if let Ok(Some(monitor)) = existing.primary_monitor() {
+            let size = monitor.size();
+            let scale_factor = monitor.scale_factor();
+            let width = 360.0;
+            let height = 96.0;
+            let x = (size.width as f64 / scale_factor) - width - 20.0;
+            let y = (size.height as f64 / scale_factor) - height - 60.0;
+            let _ = existing.set_position(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
+        }
+        let _ = existing.show();
+        return;
     }
 
     let app_clone = app.clone();
     let url_str = format!("notification.html?type={}", notif_type);
-    let _ = tauri::WebviewWindowBuilder::new(
+
+    match tauri::WebviewWindowBuilder::new(
         app,
         "notification",
         tauri::WebviewUrl::App(url_str.into())
@@ -253,27 +273,31 @@ pub fn show_custom_notification(app: &tauri::AppHandle, notif_type: &str) {
     .resizable(false)
     .inner_size(360.0, 96.0)
     .visible(false)
-    .build()
-    .map(|window| {
-        if let Ok(Some(monitor)) = window.primary_monitor() {
-            let size = monitor.size();
-            let scale_factor = monitor.scale_factor();
-            let width = 360.0;
-            let height = 96.0;
-            let x = (size.width as f64 / scale_factor) - width - 20.0;
-            let y = (size.height as f64 / scale_factor) - height - 60.0;
-            let _ = window.set_position(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
-            let _ = window.show();
-        } else {
-            let _ = window.show();
-        }
-
-        // Auto-close after 3.5 seconds
-        tauri::async_runtime::spawn(async move {
-            tokio::time::sleep(std::time::Duration::from_millis(3500)).await;
-            if let Some(w) = app_clone.get_webview_window("notification") {
-                let _ = w.close();
+    .build() {
+        Ok(window) => {
+            if let Ok(Some(monitor)) = window.primary_monitor() {
+                let size = monitor.size();
+                let scale_factor = monitor.scale_factor();
+                let width = 360.0;
+                let height = 96.0;
+                let x = (size.width as f64 / scale_factor) - width - 20.0;
+                let y = (size.height as f64 / scale_factor) - height - 60.0;
+                let _ = window.set_position(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
+                let _ = window.show();
+            } else {
+                let _ = window.show();
             }
-        });
-    });
+
+            // Auto-close after 4 seconds
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_millis(4000)).await;
+                if let Some(w) = app_clone.get_webview_window("notification") {
+                    let _ = w.close();
+                }
+            });
+        }
+        Err(err) => {
+            eprintln!("[NOTIFICATION_ERROR] Failed to build notification window: {}", err);
+        }
+    }
 }
