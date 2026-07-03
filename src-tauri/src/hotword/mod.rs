@@ -11,6 +11,25 @@ use tokio::time::{sleep, timeout, Duration, Instant};
 use tokio::sync::mpsc::Receiver;
 use tauri::{AppHandle, Emitter};
 
+pub fn is_hallucination(text: &str) -> bool {
+    let lower = text.to_lowercase();
+    let trimmed = lower.trim();
+    if trimmed.is_empty() {
+        return true;
+    }
+    
+    trimmed.contains("amara.org")
+        || trimmed.contains("subtitles by")
+        || trimmed.contains("napisy stworzone przez")
+        || trimmed.contains("napisy pl")
+        || trimmed == "dziękuję za uwagę."
+        || trimmed == "dziękuję za uwagę"
+        || trimmed == "dziękuję."
+        || trimmed == "dziękuję"
+        || trimmed == "thank you."
+        || trimmed == "thanks for watching."
+}
+
 fn expand_trigger_words(words: &[String], target_lang: &str, translate: bool) -> Vec<String> {
     let mut result = Vec::new();
 
@@ -284,8 +303,7 @@ pub async fn run_control_loop(
                 if idle_speech_detected && idle_last_speech_time.elapsed() >= Duration::from_millis(400) {
                     idle_speech_detected = false;
                     if let Ok(final_idle_text) = engine.finalize().await {
-                        let lower_idle = final_idle_text.to_lowercase();
-                        if lower_idle.contains("amara.org") || lower_idle.contains("dziękuję za uwagę") || lower_idle.contains("subtitles by") || lower_idle.contains("napisy stworzone") {
+                        if is_hallucination(&final_idle_text) {
                             println!("[IDLE_BATCH_FINALIZE] Ignored Whisper hallucination in idle state: '{}'", final_idle_text);
                             let _ = engine.start_stream().await;
                         } else if !final_idle_text.trim().is_empty() {
@@ -327,7 +345,7 @@ pub async fn run_control_loop(
                     app_handle.emit("status_changed", "processing").ok();
 
                     let final_text = engine.finalize().await.unwrap_or_default();
-                    if !final_text.is_empty() {
+                    if !final_text.is_empty() && !is_hallucination(&final_text) {
                         {
                             let mut stats = state.session_stats.lock().await;
                             stats.dictations_count += 1;
@@ -342,6 +360,8 @@ pub async fn run_control_loop(
                             crate::handle_no_input_notification(&app_handle);
                         }
                         app_handle.emit("transcript_final", final_text.clone()).ok();
+                    } else if is_hallucination(&final_text) {
+                        println!("[FLUSH] Ignored Whisper hallucination on flush: '{}'", final_text);
                     }
                     *state.status.lock().await = AppStatus::Idle;
                     app_handle.emit("status_changed", "idle").ok();
@@ -352,33 +372,39 @@ pub async fn run_control_loop(
                     detector.mark_speech();
                     if let Ok(Some(transcript)) = engine.feed_audio(&chunk.samples).await {
                         if transcript.is_partial {
-                            println!("[PARTIAL] [Engine: {}, Lang: {}] Transcript: '{}'", engine.active_type, config.general.language, transcript.text);
-                            _current_partial = transcript.text.clone();
-                            app_handle.emit("transcript_partial", transcript.text.clone()).ok();
-                            
-                            if config.dictation.live_typing {
-                                focus = detect_focused_text_field();
-                                if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
-                                    let _ = live_typing.update_partial(&transcript.text, &focus, config.input.key_delay_ms).await;
+                            if !is_hallucination(&transcript.text) {
+                                println!("[PARTIAL] [Engine: {}, Lang: {}] Transcript: '{}'", engine.active_type, config.general.language, transcript.text);
+                                _current_partial = transcript.text.clone();
+                                app_handle.emit("transcript_partial", transcript.text.clone()).ok();
+                                
+                                if config.dictation.live_typing {
+                                    focus = detect_focused_text_field();
+                                    if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
+                                        let _ = live_typing.update_partial(&transcript.text, &focus, config.input.key_delay_ms).await;
+                                    }
                                 }
                             }
                         } else {
-                            println!("[FINAL] [Engine: {}, Lang: {}] Transcript: '{}'", engine.active_type, config.general.language, transcript.text);
-                            if !transcript.text.is_empty() {
-                                let mut stats = state.session_stats.lock().await;
-                                stats.dictations_count += 1;
-                                stats.words_total += transcript.text.split_whitespace().count() as u32;
-                            }
-                            _current_partial = String::new();
-                            app_handle.emit("transcript_final", transcript.text.clone()).ok();
-                            
-                            focus = detect_focused_text_field();
-                            if !matches!(focus, FocusResult::NoTextField) {
-                                let _ = live_typing.finalize(&transcript.text, &focus, config.input.key_delay_ms).await;
-                            } else if !transcript.text.trim().is_empty() {
-                                println!("[CLIPBOARD] No text field focused - Copied text to clipboard: {}", transcript.text);
-                                let _ = copy_to_clipboard(&transcript.text);
-                                crate::handle_no_input_notification(&app_handle);
+                            if !is_hallucination(&transcript.text) {
+                                println!("[FINAL] [Engine: {}, Lang: {}] Transcript: '{}'", engine.active_type, config.general.language, transcript.text);
+                                if !transcript.text.is_empty() {
+                                    let mut stats = state.session_stats.lock().await;
+                                    stats.dictations_count += 1;
+                                    stats.words_total += transcript.text.split_whitespace().count() as u32;
+                                }
+                                _current_partial = String::new();
+                                app_handle.emit("transcript_final", transcript.text.clone()).ok();
+                                
+                                focus = detect_focused_text_field();
+                                if !matches!(focus, FocusResult::NoTextField) {
+                                    let _ = live_typing.finalize(&transcript.text, &focus, config.input.key_delay_ms).await;
+                                } else if !transcript.text.trim().is_empty() {
+                                    println!("[CLIPBOARD] No text field focused - Copied text to clipboard: {}", transcript.text);
+                                    let _ = copy_to_clipboard(&transcript.text);
+                                    crate::handle_no_input_notification(&app_handle);
+                                }
+                            } else {
+                                println!("[FINAL] Ignored Whisper hallucination on final: '{}'", transcript.text);
                             }
                             
                             if detector.check_stop(&transcript.text) {
