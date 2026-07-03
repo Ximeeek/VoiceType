@@ -1,5 +1,5 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
-#![windows_subsystem = "windows"]
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
 mod config;
@@ -103,6 +103,14 @@ fn main() {
         .plugin(tauri_plugin_fs::init())
         .manage(app_state)
         .setup(move |app| {
+            let handle_ctrlc = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                if let Ok(()) = tokio::signal::ctrl_c().await {
+                    println!("[MAIN] Ctrl+C signal received. Shutting down application...");
+                    handle_ctrlc.exit(0);
+                }
+            });
+
             let handle = app.handle().clone();
             tray::setup_tray(&handle)?;
 
