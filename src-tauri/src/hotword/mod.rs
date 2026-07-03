@@ -332,9 +332,10 @@ pub async fn run_control_loop(
                         focus = detect_focused_text_field();
                         if !matches!(focus, FocusResult::NoTextField) {
                             let _ = live_typing.finalize(&final_text, &focus, config.input.key_delay_ms).await;
-                        } else if config.input.clipboard_fallback {
-                            println!("[CLIPBOARD] Copied: {}", final_text);
+                        } else {
+                            println!("[CLIPBOARD] No text field focused - Copied text to clipboard: {}", final_text);
                             let _ = copy_to_clipboard(&final_text);
+                            crate::handle_no_input_notification(&app_handle);
                         }
                         app_handle.emit("transcript_final", final_text.clone()).ok();
                     }
@@ -370,9 +371,10 @@ pub async fn run_control_loop(
                             focus = detect_focused_text_field();
                             if !matches!(focus, FocusResult::NoTextField) {
                                 let _ = live_typing.finalize(&transcript.text, &focus, config.input.key_delay_ms).await;
-                            } else if config.input.clipboard_fallback {
-                                println!("[CLIPBOARD] Copied: {}", transcript.text);
+                            } else if !transcript.text.trim().is_empty() {
+                                println!("[CLIPBOARD] No text field focused - Copied text to clipboard: {}", transcript.text);
                                 let _ = copy_to_clipboard(&transcript.text);
+                                crate::handle_no_input_notification(&app_handle);
                             }
                             
                             if detector.check_stop(&transcript.text) {

@@ -2868,15 +2868,13 @@ async function init() {
         updateDownloadProgress(event.payload);
       });
       
-      await window.__TAURI__.event.listen('focus_detected', (event) => {
-        const hasField = event.payload;
-        if (!hasField) {
-          ToastManager.show({ 
-            type: 'info', 
-            title: t('toast.no_text_field'), 
-            message: t('toast.clipboard_fallback_msg') 
-          });
-        }
+      await window.__TAURI__.event.listen('no_input_copied', () => {
+        console.log('[NO_INPUT_COPIED] Event received in frontend - showing in-app toast notification');
+        ToastManager.show({ 
+          type: 'warning', 
+          title: t('toast.no_text_field'), 
+          message: t('toast.no_input_copied_msg') 
+        });
       });
 
       // 5. Initial welcome message

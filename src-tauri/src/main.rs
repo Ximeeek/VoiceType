@@ -206,7 +206,7 @@ fn main() {
             tauri::WindowEvent::CloseRequested { api, .. } => {
                 window.hide().unwrap();
                 api.prevent_close();
-                show_custom_notification(window.app_handle());
+                show_custom_notification(window.app_handle(), "tray");
             }
             _ => {}
         })
@@ -214,16 +214,35 @@ fn main() {
         .expect("error while running tauri application");
 }
 
-pub fn show_custom_notification(app: &tauri::AppHandle) {
+pub fn handle_no_input_notification(app: &tauri::AppHandle) {
+    let main_window = app.get_webview_window("main");
+    let is_minimized_or_hidden = match main_window {
+        Some(ref window) => {
+            window.is_minimized().unwrap_or(false) || !window.is_visible().unwrap_or(true)
+        }
+        None => true,
+    };
+
+    println!("[NO_INPUT_NOTIF] Main window state: is_minimized_or_hidden={}", is_minimized_or_hidden);
+
+    if is_minimized_or_hidden {
+        show_custom_notification(app, "no_input");
+    } else {
+        let _ = app.emit("no_input_copied", ());
+    }
+}
+
+pub fn show_custom_notification(app: &tauri::AppHandle, notif_type: &str) {
     if let Some(existing) = app.get_webview_window("notification") {
         let _ = existing.close();
     }
 
     let app_clone = app.clone();
+    let url_str = format!("notification.html?type={}", notif_type);
     let _ = tauri::WebviewWindowBuilder::new(
         app,
         "notification",
-        tauri::WebviewUrl::App("notification.html".into())
+        tauri::WebviewUrl::App(url_str.into())
     )
     .title("VoiceType Notification")
     .decorations(false)

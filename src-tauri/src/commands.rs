@@ -377,7 +377,7 @@ pub async fn minimize_window(app: tauri::AppHandle) -> Result<(), String> {
 pub async fn hide_window(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         window.hide().map_err(|e| e.to_string())?;
-        crate::show_custom_notification(&app);
+        crate::show_custom_notification(&app, "tray");
     }
     Ok(())
 }
