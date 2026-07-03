@@ -589,6 +589,7 @@ function renderTriggerWords(words) {
     container.querySelectorAll('.chip-remove').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const wordToRemove = e.target.getAttribute('data-word');
+        console.log('[TRIGGER_UI] Removing trigger word:', wordToRemove);
         const updatedList = triggerWords.filter(w => w !== wordToRemove);
         
         triggerWords = updatedList;
@@ -604,8 +605,10 @@ function renderTriggerWords(words) {
         if (window.__TAURI__) {
           try {
             await window.__TAURI__.core.invoke('set_trigger_words', { words: updatedList });
+            console.log('[TRIGGER_UI] Updated trigger words on backend:', updatedList);
             ToastManager.show({ type: 'success', title: t('toast.trigger_updated') });
           } catch (err) {
+            console.error('[TRIGGER_UI_ERROR] Failed to update trigger words on backend:', err);
             ToastManager.show({ type: 'error', title: t('toast.update_failed'), message: err.toString() });
           }
         }
@@ -643,6 +646,7 @@ function renderStopWords(words) {
   settingsContainer.querySelectorAll('.chip-remove').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const wordToRemove = e.target.getAttribute('data-word');
+      console.log('[STOP_WORDS_UI] Removing stop word:', wordToRemove);
       const updatedList = stopWords.filter(w => w !== wordToRemove);
       
       stopWords = updatedList;
@@ -658,8 +662,10 @@ function renderStopWords(words) {
       if (window.__TAURI__) {
         try {
           await window.__TAURI__.core.invoke('set_stop_words', { words: updatedList });
+          console.log('[STOP_WORDS_UI] Updated stop words on backend:', updatedList);
           ToastManager.show({ type: 'success', title: t('toast.stop_updated') });
         } catch (err) {
+          console.error('[STOP_WORDS_UI_ERROR] Failed to update stop words on backend:', err);
           ToastManager.show({ type: 'error', title: t('toast.update_failed'), message: err.toString() });
         }
       }
@@ -678,7 +684,10 @@ async function handleAddTrigger(inputEl) {
   const newWord = inputEl.value.trim().toLowerCase();
   if (!newWord) return;
 
+  console.log('[TRIGGER_UI] Adding new trigger word:', newWord);
+
   if (triggerWords.includes(newWord)) {
+    console.log('[TRIGGER_UI] Word already registered:', newWord);
     ToastManager.show({ type: 'info', title: t('toast.word_registered') });
     return;
   }
@@ -698,8 +707,10 @@ async function handleAddTrigger(inputEl) {
   if (window.__TAURI__) {
     try {
       await window.__TAURI__.core.invoke('set_trigger_words', { words: updatedList });
+      console.log('[TRIGGER_UI] Successfully saved new trigger words list to backend:', updatedList);
       ToastManager.show({ type: 'success', title: t('toast.trigger_added') });
     } catch (err) {
+      console.error('[TRIGGER_UI_ERROR] Failed to set trigger words on backend:', err);
       ToastManager.show({ type: 'error', title: t('toast.add_failed'), message: err.toString() });
     }
   }
