@@ -1945,6 +1945,7 @@ async function startSingleDownload(item) {
   item.status = 'downloading';
   renderDownloadQueue();
   updateDashboardDownloadState(null);
+  updateGlobalProcessingBanner(true, t('downloads.status.downloading'), item.model);
 
   if (window.__TAURI__) {
     try {
@@ -1970,6 +1971,10 @@ async function startSingleDownload(item) {
         console.log('[DOWNLOAD_ERROR] Błąd zignorowany, ponieważ status to cancelled.');
       }
     } finally {
+      const isAnyActiveLeft = downloadQueue.some(q => q.status === 'downloading');
+      if (!isAnyActiveLeft) {
+        updateGlobalProcessingBanner(false);
+      }
       renderDownloadQueue();
       updateDashboardDownloadState(null);
       renderInstalledModelsManager();
@@ -2068,27 +2073,50 @@ function updateDashboardDownloadState(progress) {
   }
 }
 
+function updateGlobalProcessingBanner(active, message = null, detail = null) {
+  const banner = document.getElementById('global-processing-banner');
+  const titleEl = document.getElementById('processing-banner-title');
+  const detailEl = document.getElementById('processing-banner-detail');
+
+  if (!banner) return;
+
+  if (active) {
+    banner.style.display = 'flex';
+    if (message && titleEl) {
+      titleEl.textContent = message;
+    }
+    if (detailEl) {
+      detailEl.textContent = detail || '';
+      detailEl.style.display = detail ? 'block' : 'none';
+    }
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
 function updateDownloadProgress(progress) {
-  console.log('[DOWNLOAD_PROGRESS] Otrzymano progres:', progress);
   const queueItem = downloadQueue.find(q => q.model === progress.model);
   if (queueItem) {
     if (queueItem.status === 'cancelled') {
-      console.log('[DOWNLOAD_PROGRESS] Element jest anulowany, ignoruję progres dla modelu:', progress.model);
       return;
     }
     queueItem.percent = progress.percent;
     queueItem.downloaded_mb = progress.downloaded_mb;
     queueItem.total_mb = progress.total_mb;
     if (progress.percent >= 100) {
-      console.log('[DOWNLOAD_PROGRESS] Pobieranie zakończone dla modelu:', progress.model);
       queueItem.status = 'completed';
     }
-  } else {
-    console.warn('[DOWNLOAD_PROGRESS] Nie znaleziono elementu w kolejce dla modelu:', progress.model);
   }
 
-  // Zamiast renderDownloadQueue() na każdy progress chunk, aktualizujemy DOM bezpośrednio.
-  // Dzięki temu przycisk "Anuluj" nie jest stale niszczony i tworzony na nowo, co zapobiega gubieniu kliknięć przez przeglądarkę.
+  const activeStatusText = progress.status_text || (progress.percent >= 99.9 && progress.percent < 100 ? t('downloads.status.unpacking') : t('downloads.status.downloading'));
+
+  if (progress.percent < 100) {
+    const detailMsg = progress.downloaded_mb !== undefined && progress.total_mb !== undefined
+      ? `${progress.model} — ${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB (${Math.round(progress.percent)}%)`
+      : `${progress.model} (${Math.round(progress.percent)}%)`;
+    updateGlobalProcessingBanner(true, activeStatusText, detailMsg);
+  }
+
   let updatedDOM = false;
   if (queueItem) {
     const itemEl = document.getElementById(`download-item-${queueItem.id}`);
@@ -2101,7 +2129,13 @@ function updateDownloadProgress(progress) {
       if (fill) fill.style.width = `${progress.percent}%`;
       if (percentEl) percentEl.textContent = `${Math.round(progress.percent)}%`;
       if (stats) {
-        if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
+        if (progress.status_text && progress.percent < 100) {
+          if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
+            stats.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB (${progress.status_text})`;
+          } else {
+            stats.textContent = progress.status_text;
+          }
+        } else if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
           stats.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB`;
         } else {
           stats.textContent = 'Kończenie pobierania...';
@@ -2110,7 +2144,7 @@ function updateDownloadProgress(progress) {
       if (badge && queueItem.status === 'completed') {
         badge.style.color = 'var(--accent-green)';
         badge.style.background = 'rgba(16,185,129,0.15)';
-        badge.textContent = 'Ukończono';
+        badge.textContent = t('downloads.status.completed');
       }
       updatedDOM = true;
     }
@@ -2125,10 +2159,12 @@ function updateDownloadProgress(progress) {
     container.style.display = 'block';
     fill.style.width = `${progress.percent}%`;
     
-    if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
+    if (progress.status_text) {
+      text.textContent = progress.status_text;
+    } else if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
       text.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB`;
     } else {
-      text.textContent = progress.done ? 'Instalowanie i rozpakowywanie ukończone' : 'Kończenie pobierania...';
+      text.textContent = progress.done ? t('downloads.status.completed') : 'Kończenie pobierania...';
     }
     
     percentEl.textContent = `${Math.round(progress.percent)}%`;
@@ -2136,13 +2172,15 @@ function updateDownloadProgress(progress) {
 
   updateDashboardDownloadState(progress);
 
-  // Wywołujemy pełny renderDownloadQueue() tylko przy pierwszej iteracji (gdy DOM jeszcze nie ma elementu)
-  // albo po zakończeniu pobierania (gdy status zmienia się z downloading na completed) lub w przypadku innych zmian statusu.
   if (!updatedDOM || progress.percent >= 100) {
     renderDownloadQueue();
   }
 
   if (progress.percent >= 100) {
+    const isAnyActiveLeft = downloadQueue.some(q => q.status === 'downloading' && q.model !== progress.model);
+    if (!isAnyActiveLeft) {
+      updateGlobalProcessingBanner(false);
+    }
     setTimeout(() => {
       if (container) container.style.display = 'none';
       const engineId = progress.model.startsWith('vosk-model') ? 'vosk' : (progress.model.startsWith('sherpa') ? 'sherpa_onnx' : 'whisper');

@@ -113,6 +113,11 @@ export const translations = {
     "downloads.history.title": "Download History",
     "downloads.history.clear": "Clear History",
     "downloads.history.empty": "No download history.",
+    "downloads.status.downloading": "Downloading file...",
+    "downloads.status.unpacking": "Unpacking archive (please wait)...",
+    "downloads.status.finalizing": "Finalizing...",
+    "downloads.status.completed": "Completed",
+    "downloads.banner.processing": "Processing task in background... Please wait, app is unpacking model files.",
 
     // History Page
     "history.title": "Dictation History",
@@ -525,6 +530,11 @@ export const translations = {
     "downloads.history.title": "Historia Pobierania",
     "downloads.history.clear": "Wyczyść historię",
     "downloads.history.empty": "Brak historii pobierania.",
+    "downloads.status.downloading": "Pobieranie pliku...",
+    "downloads.status.unpacking": "Rozpakowywanie archiwum (proszę czekać)...",
+    "downloads.status.finalizing": "Finalizowanie...",
+    "downloads.status.completed": "Ukończono",
+    "downloads.banner.processing": "Przetwarzanie w toku... Proszę czekać, aplikacja rozpakowuje pliki w tle.",
 
     // History Page
     "history.title": "Historia dyktowania",

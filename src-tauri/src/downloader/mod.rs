@@ -105,6 +105,9 @@ pub async fn download_model(
     let mut hasher = Sha256::new();
     let mut stream = response.bytes_stream();
     
+    let mut last_emit = std::time::Instant::now();
+    let mut last_percent: f64 = -1.0;
+    
     println!("[DOWNLOAD_RUST] Rozpoczynanie pętli pobierania strumienia danych...");
     while let Some(chunk) = stream.next().await {
         if abort_flag.load(Ordering::SeqCst) {
@@ -120,52 +123,80 @@ pub async fn download_model(
         file.write_all(&chunk)?;
         hasher.update(&chunk);
         downloaded += chunk.len() as u64;
-        let percent = (downloaded as f64 / total as f64) * 100.0;
-        app.emit("download_progress", serde_json::json!({
-            "model": model_id,
-            "downloaded_mb": downloaded as f64 / 1_048_576.0,
-            "total_mb": total as f64 / 1_048_576.0,
-            "percent": percent
-        })).ok();
+        let percent = if total > 0 { (downloaded as f64 / total as f64) * 100.0 } else { 0.0 };
+
+        let now = std::time::Instant::now();
+        if percent >= 100.0 || (percent - last_percent).abs() >= 0.2 || now.duration_since(last_emit).as_millis() >= 150 {
+            last_percent = percent;
+            last_emit = now;
+            app.emit("download_progress", serde_json::json!({
+                "model": model_id,
+                "downloaded_mb": downloaded as f64 / 1_048_576.0,
+                "total_mb": total as f64 / 1_048_576.0,
+                "percent": percent,
+                "status_text": "Pobieranie pliku..."
+            })).ok();
+        }
     }
     
     drop(file);
     remove_abort_flag(&key);
     println!("[DOWNLOAD_RUST] Pobieranie pliku zakończone sukcesem dla klucza: {}", key);
     
-    // Opcjonalnie weryfikacja SHA256:
-    if let Some(expected_hash) = &info.sha256 {
-        let hash = format!("{:x}", hasher.finalize());
-        if &hash != expected_hash { 
-            std::fs::remove_file(&tmp)?; 
-            return Err(anyhow::anyhow!("SHA256 mismatch")); 
-        }
-    }
+    let is_archive = info.engine == "vosk" || info.engine == "sherpa_onnx";
     
-    // Jeśli model to Vosk lub Sherpa-ONNX (zip / tar.bz2) musimy rozpakować
-    if info.engine == "vosk" || info.engine == "sherpa_onnx" {
-        // Windows 10+ ma wbudowane narzędzie tar, które obsługuje .zip oraz .tar.bz2
-        let status = std::process::Command::new("tar")
-            .arg("-xf")
-            .arg(&tmp)
-            .arg("-C")
-            .arg(dest.parent().unwrap())
-            .status();
-            
-        match status {
-            Ok(s) if s.success() => {
-                std::fs::remove_file(&tmp).ok();
-            }
-            _ => {
-                std::fs::remove_file(&tmp).ok();
-                return Err(anyhow::anyhow!("Błąd rozpakowywania archiwum modelu. Plik tymczasowy został usunięty – spróbuj pobrać ponownie."));
+    // Powiadom interfejs o rozpoczęciu przetwarzania/rozpakowywania archiwum
+    app.emit("download_progress", serde_json::json!({
+        "model": model_id,
+        "downloaded_mb": total as f64 / 1_048_576.0,
+        "total_mb": total as f64 / 1_048_576.0,
+        "percent": 99.9,
+        "status_text": if is_archive { "Rozpakowywanie archiwum..." } else { "Finalizowanie zapisu..." }
+    })).ok();
+
+    // Przenosimy ciężkie weryfikacje SHA256 oraz rozpakowywanie pliku (tar) do blokującego wątku, aby nie blokować Tokio runtime
+    let sha_expected = info.sha256.clone();
+    let computed_hash = format!("{:x}", hasher.finalize());
+    let tmp_clone = tmp.clone();
+    let dest_clone = dest.clone();
+
+    tokio::task::spawn_blocking(move || -> anyhow::Result<()> {
+        if let Some(expected_hash) = sha_expected {
+            if computed_hash != expected_hash { 
+                std::fs::remove_file(&tmp_clone)?; 
+                return Err(anyhow::anyhow!("SHA256 mismatch")); 
             }
         }
-    } else {
-        // W przeciwnym razie po prostu zmieniamy nazwę pliku tymczasowego na docelowy
-        std::fs::rename(&tmp, &dest)?;
-    }
+        
+        if is_archive {
+            let parent_dir = dest_clone.parent().ok_or_else(|| anyhow::anyhow!("Brak folderu nadrzędnego"))?;
+            let status = std::process::Command::new("tar")
+                .arg("-xf")
+                .arg(&tmp_clone)
+                .arg("-C")
+                .arg(parent_dir)
+                .status();
+                
+            match status {
+                Ok(s) if s.success() => {
+                    std::fs::remove_file(&tmp_clone).ok();
+                }
+                _ => {
+                    std::fs::remove_file(&tmp_clone).ok();
+                    return Err(anyhow::anyhow!("Błąd rozpakowywania archiwum modelu. Plik tymczasowy został usunięty – spróbuj pobrać ponownie."));
+                }
+            }
+        } else {
+            std::fs::rename(&tmp_clone, &dest_clone)?;
+        }
+        Ok(())
+    }).await.map_err(|e| anyhow::anyhow!("Błąd zadania blokującego: {}", e))??;
     
-    app.emit("download_progress", serde_json::json!({ "model": model_id, "percent": 100.0, "done": true })).ok();
+    app.emit("download_progress", serde_json::json!({
+        "model": model_id,
+        "percent": 100.0,
+        "done": true,
+        "status_text": "Ukończono"
+    })).ok();
     Ok(())
 }
