@@ -486,7 +486,7 @@ async function saveConfigState() {
     try {
       await window.__TAURI__.core.invoke('save_config', { config: activeConfig });
     } catch (err) {
-      ToastManager.show({ type: 'error', title: 'Save Config Failed', message: err.toString() });
+      ToastManager.show({ type: 'error', title: t('toast.save_config_failed'), message: err.toString() });
     }
   }
 }
@@ -604,9 +604,9 @@ function renderTriggerWords(words) {
         if (window.__TAURI__) {
           try {
             await window.__TAURI__.core.invoke('set_trigger_words', { words: updatedList });
-            ToastManager.show({ type: 'success', title: 'Trigger words updated' });
+            ToastManager.show({ type: 'success', title: t('toast.trigger_updated') });
           } catch (err) {
-            ToastManager.show({ type: 'error', title: 'Update failed', message: err.toString() });
+            ToastManager.show({ type: 'error', title: t('toast.update_failed'), message: err.toString() });
           }
         }
       });
@@ -658,9 +658,9 @@ function renderStopWords(words) {
       if (window.__TAURI__) {
         try {
           await window.__TAURI__.core.invoke('set_stop_words', { words: updatedList });
-          ToastManager.show({ type: 'success', title: 'Stop words updated' });
+          ToastManager.show({ type: 'success', title: t('toast.stop_updated') });
         } catch (err) {
-          ToastManager.show({ type: 'error', title: 'Update failed', message: err.toString() });
+          ToastManager.show({ type: 'error', title: t('toast.update_failed'), message: err.toString() });
         }
       }
     });
@@ -679,7 +679,7 @@ async function handleAddTrigger(inputEl) {
   if (!newWord) return;
 
   if (triggerWords.includes(newWord)) {
-    ToastManager.show({ type: 'info', title: 'Word already registered' });
+    ToastManager.show({ type: 'info', title: t('toast.word_registered') });
     return;
   }
 
@@ -698,9 +698,9 @@ async function handleAddTrigger(inputEl) {
   if (window.__TAURI__) {
     try {
       await window.__TAURI__.core.invoke('set_trigger_words', { words: updatedList });
-      ToastManager.show({ type: 'success', title: 'Trigger word added' });
+      ToastManager.show({ type: 'success', title: t('toast.trigger_added') });
     } catch (err) {
-      ToastManager.show({ type: 'error', title: 'Add failed', message: err.toString() });
+      ToastManager.show({ type: 'error', title: t('toast.add_failed'), message: err.toString() });
     }
   }
 }
@@ -719,7 +719,7 @@ async function handleAddStop() {
   if (!newWord) return;
 
   if (stopWords.includes(newWord)) {
-    ToastManager.show({ type: 'info', title: 'Word already registered' });
+    ToastManager.show({ type: 'info', title: t('toast.word_registered') });
     return;
   }
 
@@ -738,9 +738,9 @@ async function handleAddStop() {
   if (window.__TAURI__) {
     try {
       await window.__TAURI__.core.invoke('set_stop_words', { words: updatedList });
-      ToastManager.show({ type: 'success', title: 'Stop word added' });
+      ToastManager.show({ type: 'success', title: t('toast.stop_added') });
     } catch (err) {
-      ToastManager.show({ type: 'error', title: 'Add failed', message: err.toString() });
+      ToastManager.show({ type: 'error', title: t('toast.add_failed'), message: err.toString() });
     }
   }
 }
@@ -844,9 +844,9 @@ function loadConfigGeneralUI(config) {
     if (window.__TAURI__) {
       try {
         await window.__TAURI__.core.invoke('set_audio_device', { deviceId: devId });
-        ToastManager.show({ type: 'success', title: 'Microphone updated' });
+        ToastManager.show({ type: 'success', title: t('toast.mic_updated') });
       } catch (err) {
-        ToastManager.show({ type: 'error', title: 'Failed to update mic', message: err.toString() });
+        ToastManager.show({ type: 'error', title: t('toast.mic_update_failed'), message: err.toString() });
       }
     }
   };
@@ -902,8 +902,8 @@ engineCards.forEach(card => {
     if (engineId === 'whisper') {
       ToastManager.show({
         type: 'warning',
-        title: 'Ostrzeżenie: Whisper.cpp (CPU-only)',
-        message: 'Natywny silnik Whisper.cpp na tym systemie działa w trybie wielowątkowego procesora (CPU). Przetwarzanie (zwłaszcza modeli large) może potrwać kilka sekund po zakończeniu mówienia. Dla pełnej akceleracji GPU wybierz silnik Faster-Whisper.',
+        title: t('toast.whisper_cpu_warning_title'),
+        message: t('toast.whisper_cpu_warning_msg'),
         duration: 10000
       });
     }
@@ -1004,8 +1004,8 @@ function updateActiveEnginePanel(engineId) {
           if (engineId === 'whisper') {
             ToastManager.show({
               type: 'warning',
-              title: 'GPU niedostępne w Whisper.cpp',
-              message: 'Silnik Whisper.cpp nie posiada wkompilowanej obsługi GPU na tym systemie. Zostanie użyty wielowątkowy procesor (CPU). Jeśli chcesz korzystać z karty graficznej (GPU), przełącz na silnik Faster-Whisper.',
+              title: t('toast.whisper_gpu_unavailable_title'),
+              message: t('toast.whisper_gpu_unavailable_msg'),
               duration: 8000
             });
           } else {
@@ -1267,7 +1267,7 @@ async function renderAvailableModels(engineId) {
       radioGroup.innerHTML = `
         <div style="color: var(--text-secondary); font-size: 13px; display: flex; align-items: center; gap: 10px; padding: 5px 0;">
           <span class="spinner" style="width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--accent-green); border-radius: 50%; display: inline-block; animation: spin 0.8s linear infinite;"></span>
-          Ładowanie dostępnych modeli z serwera...
+          ${t('engines.loading_models')}
         </div>
       `;
       
@@ -1362,7 +1362,7 @@ async function renderAvailableModels(engineId) {
               checkEngineDirty();
               updateModelStatusText(engineId, modelId);
             } catch (err) {
-              ToastManager.show({ type: 'error', title: 'Błąd konfiguracji modelu', message: err.toString() });
+              ToastManager.show({ type: 'error', title: t('toast.model_config_error'), message: err.toString() });
             }
           }
         };
@@ -1397,19 +1397,19 @@ async function updateModelStatusText(engineId, modelId) {
     try {
       const isDownloaded = await window.__TAURI__.core.invoke('check_model_downloaded', { engine: engineId, model: modelId });
       if (isDownloaded) {
-        statusSpan.textContent = 'Pobrany';
+        statusSpan.textContent = t('engines.status.downloaded');
         statusSpan.className = 'status-value highlight';
         if (downloadBtn) {
-          downloadBtn.textContent = 'Pobrany';
+          downloadBtn.textContent = t('engines.status.downloaded');
           downloadBtn.disabled = true;
           downloadBtn.style.opacity = '0.5';
           downloadBtn.style.cursor = 'not-allowed';
         }
       } else {
-        statusSpan.textContent = 'Nie pobrany';
+        statusSpan.textContent = t('engines.status.not_downloaded');
         statusSpan.className = 'status-value';
         if (downloadBtn) {
-          downloadBtn.textContent = 'Pobierz model';
+          downloadBtn.textContent = t('engines.status.btn_download');
           downloadBtn.disabled = false;
           downloadBtn.style.opacity = '1';
           downloadBtn.style.cursor = 'pointer';
@@ -1616,7 +1616,7 @@ async function startSingleDownload(item) {
 
   if (window.__TAURI__) {
     try {
-      ToastManager.show({ type: 'info', title: 'Rozpoczęto pobieranie', message: `Pobieranie ${item.model}...` });
+      ToastManager.show({ type: 'info', title: t('toast.download_started'), message: t('toast.download_started_msg', { model: item.model }) });
       const checkEngine = item.engine === 'faster_whisper' ? 'whisper' : item.engine;
       console.log('[DOWNLOAD_START] Wywołanie download_model w Tauri dla silnika:', checkEngine, 'modelu:', item.model);
       await window.__TAURI__.core.invoke('download_model', { engine: checkEngine, model: item.model });
@@ -1625,7 +1625,7 @@ async function startSingleDownload(item) {
       if (item.status !== 'cancelled') {
         item.status = 'completed';
         console.log('[DOWNLOAD_FINISH] Oznaczono pobieranie jako ukończone:', item.model);
-        ToastManager.show({ type: 'success', title: 'Pobieranie ukończone', message: `Model ${item.model} gotowy do użycia.` });
+        ToastManager.show({ type: 'success', title: t('toast.download_finished'), message: t('toast.download_finished_msg', { model: item.model }) });
       } else {
         console.log('[DOWNLOAD_FINISH] Pobieranie było anulowane w trakcie, pomijam oznaczanie jako ukończone.');
       }
@@ -1633,7 +1633,7 @@ async function startSingleDownload(item) {
       console.error('[DOWNLOAD_ERROR] Wystąpił błąd podczas pobierania:', err, 'aktualny status:', item.status);
       if (item.status !== 'cancelled') {
         item.status = 'error';
-        ToastManager.show({ type: 'error', title: 'Błąd pobierania', message: err.toString() });
+        ToastManager.show({ type: 'error', title: t('toast.download_error'), message: err.toString() });
       } else {
         console.log('[DOWNLOAD_ERROR] Błąd zignorowany, ponieważ status to cancelled.');
       }
@@ -1692,7 +1692,7 @@ async function triggerModelDownload(engineId) {
   }
 
   if (!modelName) {
-    ToastManager.show({ type: 'error', title: 'Wybierz model', message: 'Zaznacz najpierw model do pobrania.' });
+    ToastManager.show({ type: 'error', title: t('toast.select_model_title'), message: t('toast.select_model_msg') });
     return;
   }
 
@@ -1845,7 +1845,7 @@ function addModelToDownloadQueue(engine, model) {
   let existing = downloadQueue.find(q => q.engine === engine && q.model === model);
   if (existing) {
     if (existing.status === 'completed') {
-      ToastManager.show({ type: 'info', title: 'Model pobrany', message: 'Ten model jest już pobrany na Twoim dysku.' });
+      ToastManager.show({ type: 'info', title: t('toast.model_downloaded_title'), message: t('toast.model_downloaded_msg') });
       return;
     }
     existing.status = 'queued';
@@ -1898,8 +1898,8 @@ function renderDownloadQueue() {
       el.style.gap = '8px';
 
       const badge = item.status === 'downloading' ? 
-        'Pobieranie...' :
-        'W kolejce';
+        t('downloads.active.downloading') :
+        t('downloads.active.queued');
       const badgeStyle = item.status === 'downloading' ?
         'color: var(--accent-green); background: rgba(16,185,129,0.15);' :
         'color: var(--accent-gold); background: rgba(245,158,11,0.15);';
@@ -1911,13 +1911,13 @@ function renderDownloadQueue() {
             <span style="font-size: 10px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">${item.engine}</span>
             <span class="download-badge" style="${badgeStyle} padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${badge}</span>
           </div>
-          <button class="btn-cancel-queue" data-id="${item.id}" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Anuluj</button>
+          <button class="btn-cancel-queue" data-id="${item.id}" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">${t('btn.cancel')}</button>
         </div>
         <div class="progress-bar-bg" style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px; overflow: hidden;">
           <div class="progress-bar-fill" style="width: ${item.percent}%; height: 100%; background: var(--accent-green); transition: width 0.2s;"></div>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
-          <span class="download-stats">${item.downloaded_mb ? `${item.downloaded_mb.toFixed(1)} MB / ${item.total_mb.toFixed(1)} MB` : 'Inicjalizacja...'}</span>
+          <span class="download-stats">${item.downloaded_mb ? `${item.downloaded_mb.toFixed(1)} MB / ${item.total_mb.toFixed(1)} MB` : t('downloads.active.initializing')}</span>
           <span class="download-percent">${Math.round(item.percent)}%</span>
         </div>
       `;
@@ -1950,7 +1950,7 @@ function renderDownloadQueue() {
         } else {
           console.log('[CANCEL_QUEUE] Brak środowiska Tauri - symulowane czyszczenie.');
         }
-        ToastManager.show({ type: 'info', title: 'Anulowano pobieranie', message: `Pobieranie modelu ${item.model} zostało natychmiast anulowane.` });
+        ToastManager.show({ type: 'info', title: t('toast.download_cancelled'), message: t('toast.download_cancelled_msg', { model: item.model }) });
         updateDashboardDownloadState(null);
         renderDownloadQueue();
         setTimeout(() => processDownloadQueue(), 300);
@@ -1976,8 +1976,8 @@ function renderDownloadQueue() {
       el.style.alignItems = 'center';
 
       const statusBadge = item.status === 'completed' ?
-        '<span style="color: var(--accent-green); background: rgba(16,185,129,0.12); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">Ukończono</span>' :
-        '<span style="color: var(--text-error); background: rgba(239,68,68,0.12); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">Anulowano</span>';
+        `<span style="color: var(--accent-green); background: rgba(16,185,129,0.12); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">${t('downloads.history.completed')}</span>` :
+        `<span style="color: var(--text-error); background: rgba(239,68,68,0.12); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">${t('downloads.history.cancelled')}</span>`;
 
       el.innerHTML = `
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -2062,13 +2062,13 @@ async function renderInstalledModelsManager() {
           const engine = e.currentTarget.getAttribute('data-engine');
           const model = e.currentTarget.getAttribute('data-model');
           showCustomConfirmModal({
-            title: 'Potwierdzenie usunięcia',
-            message: `Czy na pewno chcesz usunąć model "${model}" z dysku? Operacji nie można cofnąć.`,
-            confirmText: 'Usuń model',
+            title: t('models.delete_confirm_title'),
+            message: t('models.delete_confirm_msg', { model, engine }),
+            confirmText: t('models.delete_confirm_btn'),
             onConfirm: async () => {
               try {
                 await window.__TAURI__.core.invoke('delete_installed_model', { engine, model });
-                ToastManager.show({ type: 'success', title: 'Usunięto model', message: `Model ${model} został usunięty z dysku.` });
+                ToastManager.show({ type: 'success', title: t('toast.model_deleted'), message: t('toast.model_deleted_msg', { model }) });
                 removeModelFromDownloadQueue(engine, model);
                 await renderInstalledModelsManager();
                 const activeEngineId = pendingConfig ? pendingConfig.engine.type : 'vosk';
@@ -2076,7 +2076,7 @@ async function renderInstalledModelsManager() {
                 await updateDashboardActiveEngineCard();
                 await checkActiveEngineAvailability();
               } catch (err) {
-                ToastManager.show({ type: 'error', title: 'Błąd usuwania', message: err.toString() });
+                ToastManager.show({ type: 'error', title: t('toast.model_delete_error'), message: err.toString() });
               }
             }
           });
@@ -2087,13 +2087,13 @@ async function renderInstalledModelsManager() {
         btn.onclick = (e) => {
           const engine = e.currentTarget.getAttribute('data-engine');
           showCustomConfirmModal({
-            title: 'Usuwanie wszystkich modeli',
-            message: `Czy na pewno chcesz usunąć WSZYSTKIE pobrane modele dla tego silnika?`,
-            confirmText: 'Usuń wszystkie',
+            title: t('models.delete_all_confirm_title'),
+            message: t('models.delete_all_confirm_msg', { engine }),
+            confirmText: t('models.delete_all_confirm_btn'),
             onConfirm: async () => {
               try {
                 await window.__TAURI__.core.invoke('delete_installed_model', { engine, model: null });
-                ToastManager.show({ type: 'success', title: 'Usunięto modele', message: `Wszystkie modele silnika zostały usunięte z dysku.` });
+                ToastManager.show({ type: 'success', title: t('toast.all_models_deleted'), message: t('toast.all_models_deleted_msg') });
                 removeModelFromDownloadQueue(engine, null);
                 await renderInstalledModelsManager();
                 const activeEngineId = pendingConfig ? pendingConfig.engine.type : 'vosk';
@@ -2101,7 +2101,7 @@ async function renderInstalledModelsManager() {
                 await updateDashboardActiveEngineCard();
                 await checkActiveEngineAvailability();
               } catch (err) {
-                ToastManager.show({ type: 'error', title: 'Błąd usuwania', message: err.toString() });
+                ToastManager.show({ type: 'error', title: t('toast.model_delete_error'), message: err.toString() });
               }
             }
           });
@@ -2162,24 +2162,25 @@ function getEngineChangesDescription() {
   const changes = [];
   if (pendingConfig.engine.type !== activeConfig.engine.type) {
     const names = { vosk: 'Vosk', sherpa_onnx: 'Sherpa-ONNX', whisper: 'Whisper.cpp', faster_whisper: 'Faster-Whisper' };
-    changes.push(`• Zmiana silnika: <b>${names[activeConfig.engine.type] || activeConfig.engine.type}</b> ➔ <b>${names[pendingConfig.engine.type] || pendingConfig.engine.type}</b>`);
+    changes.push(`• ${t('desc.change_engine')}: <b>${names[activeConfig.engine.type] || activeConfig.engine.type}</b> ➔ <b>${names[pendingConfig.engine.type] || pendingConfig.engine.type}</b>`);
   }
   if (pendingConfig.general.language !== activeConfig.general.language) {
-    changes.push(`• Zmiana języka rozpoznawania: <b>${activeConfig.general.language}</b> ➔ <b>${pendingConfig.general.language}</b>`);
+    changes.push(`• ${t('desc.change_language')}: <b>${activeConfig.general.language}</b> ➔ <b>${pendingConfig.general.language}</b>`);
   }
   if (pendingConfig.engine.vosk.model_path !== activeConfig.engine.vosk.model_path) {
     const mName = pendingConfig.engine.vosk.model_path.split(/[/\\]/).pop();
-    changes.push(`• Zmiana modelu Vosk na: <b>${mName}</b>`);
+    changes.push(`• ${t('desc.change_model_vosk')} <b>${mName}</b>`);
   }
   if (pendingConfig.engine.sherpa_onnx.model_path !== activeConfig.engine.sherpa_onnx.model_path) {
     const mName = pendingConfig.engine.sherpa_onnx.model_path.split(/[/\\]/).pop();
-    changes.push(`• Zmiana modelu Sherpa-ONNX na: <b>${mName}</b>`);
+    changes.push(`• ${t('desc.change_model_sherpa')} <b>${mName}</b>`);
   }
   if (pendingConfig.engine.whisper.model !== activeConfig.engine.whisper.model) {
-    changes.push(`• Zmiana rozmiaru modelu Whisper na: <b>${pendingConfig.engine.whisper.model}</b>`);
+    changes.push(`• ${t('desc.change_model_whisper')} <b>${pendingConfig.engine.whisper.model}</b>`);
   }
   if (pendingConfig.engine.whisper.use_gpu !== activeConfig.engine.whisper.use_gpu) {
-    changes.push(`• Akceleracja GPU: <b>${pendingConfig.engine.whisper.use_gpu ? 'Włączona' : 'Wyłączona'}</b>`);
+    const status = pendingConfig.engine.whisper.use_gpu ? t('desc.enabled') : t('desc.disabled');
+    changes.push(`• ${t('desc.gpu_acceleration')}: <b>${status}</b>`);
   }
   return changes.join('<br>');
 }
@@ -2196,14 +2197,14 @@ function showDownloadingNavigationModal() {
   card.innerHTML = `
     <div class="modal-title" style="color: var(--accent-gold, #f59e0b); display: flex; align-items: center; gap: 8px;">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-      Pobieranie w toku
+      ${t('nav.downloading_title')}
     </div>
     <div class="modal-body" style="margin-top: 14px; margin-bottom: 22px;">
-      <p style="margin: 0; font-size: 14px; color: var(--text-secondary); line-height: 1.5;">Nie można zmienić sekcji, ponieważ model jest w trakcie pobierania.</p>
+      <p style="margin: 0; font-size: 14px; color: var(--text-secondary); line-height: 1.5;">${t('nav.downloading_msg')}</p>
     </div>
     <div style="display: flex; justify-content: flex-end; gap: 10px;">
-      <button class="btn-modal-ok" style="background: var(--accent-green); border: none; color: #fff; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700;">OK</button>
-      <button class="btn-modal-delete-download" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Usuń model</button>
+      <button class="btn-modal-ok" style="background: var(--accent-green); border: none; color: #fff; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700;">${t('nav.downloading_btn_ok')}</button>
+      <button class="btn-modal-delete-download" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">${t('nav.downloading_btn_delete')}</button>
     </div>
   `;
 
@@ -2237,7 +2238,7 @@ function showDownloadingNavigationModal() {
     updateActiveEnginePanel(activeConfig.engine.type);
     checkEngineDirty();
     renderDownloadQueue();
-    ToastManager.show({ type: 'info', title: 'Usunięto model', message: 'Anulowano pobieranie i usunięto pliki modelu z dysku. Wrócono do poprzedniego silnika.' });
+    ToastManager.show({ type: 'info', title: t('toast.model_removed_nav_title'), message: t('toast.model_removed_nav_msg') });
   };
 }
 
@@ -2285,7 +2286,7 @@ async function confirmUnsavedChanges(onProceed) {
         updateActiveEnginePanel(activeConfig.engine.type);
         checkEngineDirty();
         renderAvailableModels(activeConfig.engine.type);
-        ToastManager.show({ type: 'info', title: 'Przywrócono konfigurację', message: 'Wrócono do poprzedniego modelu.' });
+        ToastManager.show({ type: 'info', title: t('toast.config_restored_title'), message: t('toast.config_restored_msg') });
         onProceed();
       }
     });
@@ -2308,27 +2309,27 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <div class="modal-title" style="color: var(--accent-gold, #f59e0b); display: flex; align-items: center; gap: 8px;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-        Model nie jest pobrany
+        ${t('nav.missing_model_title')}
       </div>
-      <button class="btn-modal-close-x" style="background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s;" title="Zamknij">×</button>
+      <button class="btn-modal-close-x" style="background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s;" title="${t('btn.close')}">×</button>
     </div>
     <div class="modal-body" style="margin-top: 14px; margin-bottom: 22px;">
-      <p style="margin: 0 0 10px 0; font-size: 14px; color: var(--text-primary); font-weight: 600;">Wymagane pobranie pliku modelu</p>
-      <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Próbujesz opuścić sekcję z wybranym nowym modelem <b>${modelId}</b>. Model ten nie znajduje się jeszcze na Twoim dysku. Musisz go pobrać, aby aktywować zmiany.</p>
+      <p style="margin: 0 0 10px 0; font-size: 14px; color: var(--text-primary); font-weight: 600;">${t('nav.missing_model_subtitle')}</p>
+      <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">${t('nav.missing_model_msg', { model: modelId })}</p>
       <div id="missing-guard-download-status" style="margin-top: 16px; display: none;">
         <div class="progress-bar-bg" style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
           <div id="missing-guard-progress-fill" style="width: 0%; height: 100%; background: var(--accent-green); transition: width 0.2s;"></div>
         </div>
         <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-muted);">
-          <span id="missing-guard-progress-text">Pobieranie...</span>
+          <span id="missing-guard-progress-text">${t('nav.missing_model_downloading')}</span>
           <span id="missing-guard-progress-percent">0%</span>
         </div>
       </div>
     </div>
     <div id="missing-guard-actions" style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
-      <button class="btn-cancel-nav" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Anuluj</button>
-      <button class="btn-discard-nav" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Nie zapisuj</button>
-      <button class="btn-download-nav" style="background: var(--accent-green); border: none; color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">Pobierz i zapisz</button>
+      <button class="btn-cancel-nav" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">${t('nav.missing_model_btn_cancel')}</button>
+      <button class="btn-discard-nav" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">${t('nav.missing_model_btn_discard')}</button>
+      <button class="btn-download-nav" style="background: var(--accent-green); border: none; color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">${t('nav.missing_model_btn_download')}</button>
     </div>
   `;
 
@@ -2355,7 +2356,7 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
       updateActiveEnginePanel(activeConfig.engine.type);
       checkEngineDirty();
       renderAvailableModels(activeConfig.engine.type);
-      ToastManager.show({ type: 'info', title: 'Anulowano pobieranie', message: 'Wrócono do poprzedniego silnika i modelu (anulowano pobieranie).' });
+      ToastManager.show({ type: 'info', title: t('toast.download_cancelled'), message: t('toast.download_cancelled_nav_msg') });
     }
     close();
   };
@@ -2367,7 +2368,7 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
     updateActiveEnginePanel(activeConfig.engine.type);
     checkEngineDirty();
     renderAvailableModels(activeConfig.engine.type);
-    ToastManager.show({ type: 'info', title: 'Przywrócono poprzedni model', message: 'Wrócono do wcześniej zapisanego modelu.' });
+    ToastManager.show({ type: 'info', title: t('toast.model_restored_title'), message: t('toast.model_restored_msg') });
     onProceed();
   };
 
@@ -2379,7 +2380,7 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
     }
     checkEngineDirty();
     updateActiveEnginePanel(activeConfig.engine.type);
-    ToastManager.show({ type: 'info', title: 'Rozpoczęto pobieranie i aktywowano model', message: `Model ${modelId} pobiera się w tle.` });
+    ToastManager.show({ type: 'info', title: t('toast.download_started_activated_title'), message: t('toast.download_started_activated_msg', { model: modelId }) });
     close();
     onProceed();
   };
@@ -2397,18 +2398,18 @@ function showUnsavedChangesModal({ description, onSave, onDiscard }) {
   card.innerHTML = `
     <div class="modal-title" style="color: var(--accent-gold, #f59e0b); display: flex; align-items: center; gap: 8px;">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg>
-      Niezapisane zmiany w konfiguracji
+      ${t('nav.unsaved_changes_title')}
     </div>
     <div class="modal-body" style="margin-top: 14px; margin-bottom: 22px;">
-      <p style="margin: 0 0 12px 0; font-size: 14px; color: var(--text-secondary);">Próbujesz opuścić sekcję, ale masz niezastosowane zmiany w konfiguracji silnika mowy:</p>
+      <p style="margin: 0 0 12px 0; font-size: 14px; color: var(--text-secondary);">${t('nav.unsaved_changes_msg')}</p>
       <div style="background: rgba(255,255,255,0.04); border-left: 3px solid var(--accent-gold, #f59e0b); padding: 10px 14px; border-radius: 6px; font-size: 13px; color: var(--text-primary); line-height: 1.6;">
-        ${description || 'Zmiana parametrów silnika mowy.'}
+        ${description || t('nav.unsaved_changes_default_desc')}
       </div>
     </div>
     <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
-      <button class="btn-cancel" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Anuluj</button>
-      <button class="btn-discard" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Odrzuć zmiany</button>
-      <button class="btn-save" style="background: var(--accent-green, #10b981); border: none; color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">Zapisz i zastosuj</button>
+      <button class="btn-cancel" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">${t('nav.unsaved_changes_btn_cancel')}</button>
+      <button class="btn-discard" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">${t('nav.unsaved_changes_btn_discard')}</button>
+      <button class="btn-save" style="background: var(--accent-green, #10b981); border: none; color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">${t('nav.unsaved_changes_btn_save')}</button>
     </div>
   `;
 
@@ -2433,24 +2434,24 @@ function showTranslationModelDownloadModal(onSuccess) {
   card.innerHTML = `
     <div class="modal-title" style="color: var(--accent-green, #10b981); display: flex; align-items: center; gap: 8px;">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8l6 6M4 14e1 1 0 011-1h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM2 5h12M9 2v3M14 18l6-6M20 18l-6-6"/></svg>
-      Wymagany model tłumaczeniowy
+      ${t('settings.translator_modal_title')}
     </div>
     <div class="modal-body" style="margin-top: 14px; margin-bottom: 22px;">
-      <p style="margin: 0 0 10px 0; font-size: 14px; color: var(--text-primary); font-weight: 600;">Pakiet językowy (OPUS-MT / MarianMT)</p>
-      <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Aby automatycznie tłumaczyć słowa wyzwalające dla wybranego języka, aplikacja musi pobrać dedykowany model tłumaczeniowy (~45 MB). Czy chcesz rozpocząć pobieranie?</p>
+      <p style="margin: 0 0 10px 0; font-size: 14px; color: var(--text-primary); font-weight: 600;">${t('settings.translator_modal_subtitle')}</p>
+      <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">${t('settings.translator_modal_msg')}</p>
       <div id="translator-download-status" style="margin-top: 16px; display: none;">
         <div class="progress-bar-bg" style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
           <div id="translator-progress-fill" style="width: 0%; height: 100%; background: var(--accent-green); transition: width 0.2s;"></div>
         </div>
         <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-muted);">
-          <span id="translator-progress-text">Pobieranie w toku...</span>
+          <span id="translator-progress-text">${t('downloads.active.initializing')}</span>
           <span id="translator-progress-percent">0%</span>
         </div>
       </div>
     </div>
     <div id="translator-modal-actions" style="display: flex; justify-content: flex-end; gap: 12px;">
-      <button class="btn-cancel-trans" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Anuluj</button>
-      <button class="btn-start-download-trans" style="background: var(--accent-green); border: none; color: #fff; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">Pobierz model (45 MB)</button>
+      <button class="btn-cancel-trans" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">${t('btn.cancel')}</button>
+      <button class="btn-start-download-trans" style="background: var(--accent-green); border: none; color: #fff; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">${t('settings.translator_modal_btn')}</button>
     </div>
   `;
 
@@ -2475,12 +2476,12 @@ function showTranslationModelDownloadModal(onSuccess) {
       if (progress > 100) progress = 100;
       fill.style.width = `${progress}%`;
       percent.textContent = `${progress}%`;
-      text.textContent = `Pobrano ${(progress * 0.45).toFixed(1)} MB / 45 MB`;
+      text.textContent = `${t('downloads.active.progress')} ${(progress * 0.45).toFixed(1)} MB / 45 MB`;
 
       if (progress >= 100) {
         clearInterval(interval);
         localStorage.setItem('translator_model_downloaded', 'true');
-        ToastManager.show({ type: 'success', title: 'Model tłumaczeniowy pobrany', message: 'Tłumaczenie słów wyzwalających zostało aktywowane!' });
+        ToastManager.show({ type: 'success', title: t('toast.translation_model_downloaded_title'), message: t('toast.translation_model_downloaded_msg') });
         setTimeout(() => {
           close();
           onSuccess();
@@ -2494,20 +2495,20 @@ function showTranslationModelDownloadModal(onSuccess) {
 const testApiBtn = document.getElementById('btn-test-api');
 if (testApiBtn) {
   testApiBtn.addEventListener('click', async () => {
-    ToastManager.show({ type: 'info', title: 'Testowanie połączenia...' });
+    ToastManager.show({ type: 'info', title: t('toast.testing_connection_title') });
     if (window.__TAURI__) {
       try {
         if (pendingConfig) {
           await window.__TAURI__.core.invoke('save_config', { config: pendingConfig });
         }
         const response = await window.__TAURI__.core.invoke('test_engine', { engineType: pendingConfig ? pendingConfig.engine.type : null });
-        ToastManager.show({ type: 'success', title: 'Test połączenia', message: response });
+        ToastManager.show({ type: 'success', title: t('toast.connection_test_title'), message: response });
       } catch (err) {
-        ToastManager.show({ type: 'error', title: 'Błąd testu połączenia', message: err.toString(), persistent: true });
+        ToastManager.show({ type: 'error', title: t('toast.conn_test_failed'), message: err.toString(), persistent: true });
       }
     } else {
       setTimeout(() => {
-        ToastManager.show({ type: 'success', title: 'Test połączenia', message: 'Test API udany (Mock)' });
+        ToastManager.show({ type: 'success', title: t('toast.connection_test_title'), message: t('toast.api_test_mock_success') });
       }, 1000);
     }
   });
@@ -2518,9 +2519,9 @@ const resetConfigBtn = document.getElementById('btn-reset-all-config');
 if (resetConfigBtn) {
   resetConfigBtn.addEventListener('click', () => {
     showCustomConfirmModal({
-      title: 'Resetuj Konfigurację',
-      message: 'Czy na pewno chcesz zresetować całą konfigurację do wartości domyślnych?',
-      confirmText: 'Zresetuj',
+      title: t('settings.reset_confirm_title'),
+      message: t('settings.reset_confirm_message'),
+      confirmText: t('settings.reset_confirm_btn'),
       isDanger: true,
       onConfirm: async () => {
         if (window.__TAURI__) {
@@ -2537,12 +2538,12 @@ if (resetConfigBtn) {
             const voskCard = document.getElementById('engine-card-vosk');
             if (voskCard) voskCard.click();
 
-            ToastManager.show({ type: 'success', title: 'Przywrócono domyślne ustawienia' });
+            ToastManager.show({ type: 'success', title: t('toast.reset_success') });
           } catch (err) {
-            ToastManager.show({ type: 'error', title: 'Reset failed', message: err.toString() });
+            ToastManager.show({ type: 'error', title: t('toast.reset_failed'), message: err.toString() });
           }
         } else {
-          ToastManager.show({ type: 'success', title: 'Reset (Mock) successful' });
+          ToastManager.show({ type: 'success', title: t('toast.reset_mock_success') });
         }
       }
     });
@@ -2561,16 +2562,16 @@ function updateOrbState(status) {
   
   if (currentStatus === 'idle') {
     orb.classList.add('idle');
-    statusText.textContent = 'Idle';
-    statusSubtext.textContent = 'Waiting for trigger word';
+    statusText.textContent = t('orb.status.idle');
+    statusSubtext.textContent = t('orb.subtext.idle');
   } else if (currentStatus === 'listening') {
     orb.classList.add('listening');
-    statusText.textContent = 'Listening';
-    statusSubtext.textContent = 'Speak to begin dictating';
+    statusText.textContent = t('orb.status.listening');
+    statusSubtext.textContent = t('orb.subtext.listening');
   } else if (currentStatus === 'dictating') {
     orb.classList.add('dictating');
-    statusText.textContent = 'Dictating';
-    statusSubtext.textContent = 'Actively typing into focus field';
+    statusText.textContent = t('orb.status.dictating');
+    statusSubtext.textContent = t('orb.subtext.dictating');
     
     // Clear recent transcripts container for the new session!
     const container = document.getElementById('transcript-container');
@@ -2579,15 +2580,15 @@ function updateOrbState(status) {
     }
   } else if (currentStatus === 'processing') {
     orb.classList.add('processing');
-    statusText.textContent = 'Processing';
-    statusSubtext.textContent = 'Transcribing speech using engine...';
+    statusText.textContent = t('orb.status.processing');
+    statusSubtext.textContent = t('orb.subtext.processing');
   } else if (currentStatus === 'paused') {
     orb.classList.add('paused');
-    statusText.textContent = 'Paused';
-    statusSubtext.textContent = 'Click the orb to resume';
+    statusText.textContent = t('orb.status.paused');
+    statusSubtext.textContent = t('orb.subtext.paused');
   } else if (currentStatus.startsWith('error')) {
     orb.classList.add('error');
-    statusText.textContent = 'Error';
+    statusText.textContent = t('orb.status.error');
     statusSubtext.textContent = status;
   }
 
@@ -2612,13 +2613,13 @@ if (forceDictateBtn) {
     if (window.__TAURI__) {
       try {
         await window.__TAURI__.core.invoke('force_dictate');
-        ToastManager.show({ type: 'success', title: 'Wymuszono dyktowanie', message: 'Zacznij mówić bez słowa kluczowego.' });
+        ToastManager.show({ type: 'success', title: t('toast.force_dictate'), message: t('toast.force_dictate_msg') });
       } catch (err) {
-        ToastManager.show({ type: 'error', title: 'Błąd wymuszenia', message: err.toString() });
+        ToastManager.show({ type: 'error', title: t('toast.force_dictate_failed'), message: err.toString() });
       }
     } else {
       updateOrbState('dictating');
-      ToastManager.show({ type: 'success', title: 'Wymuszono dyktowanie (Mock)' });
+      ToastManager.show({ type: 'success', title: t('toast.force_dictate_mock') });
     }
   });
 }
@@ -2631,13 +2632,13 @@ if (orb) {
       try {
         if (currentStatus === 'paused') {
           await window.__TAURI__.core.invoke('resume_listening');
-          ToastManager.show({ type: 'info', title: 'Listening resumed' });
+          ToastManager.show({ type: 'info', title: t('toast.listening_resumed') });
         } else {
           await window.__TAURI__.core.invoke('pause_listening');
-          ToastManager.show({ type: 'info', title: 'Listening paused' });
+          ToastManager.show({ type: 'info', title: t('toast.listening_paused') });
         }
       } catch (err) {
-        ToastManager.show({ type: 'error', title: 'Command error', message: err.toString() });
+        ToastManager.show({ type: 'error', title: t('toast.command_error'), message: err.toString() });
       }
     } else {
       updateOrbState(currentStatus === 'paused' ? 'idle' : 'paused');
@@ -2765,7 +2766,7 @@ async function init() {
           const badge = c.querySelector('.engine-card-badge');
           if (badge) {
             badge.classList.remove('active');
-            badge.textContent = 'Wybierz';
+            badge.textContent = t('engines.badge.select');
           }
         });
         const activeCard = document.querySelector(`.engine-card[data-engine-id="${active.id}"]`);
@@ -2774,7 +2775,7 @@ async function init() {
           const badge = activeCard.querySelector('.engine-card-badge');
           if (badge) {
             badge.classList.add('active');
-            badge.textContent = 'Aktywny';
+            badge.textContent = t('engines.badge.active');
           }
           updateActiveEnginePanel(active.id);
           await verifyStartupModel();
@@ -2810,7 +2811,7 @@ async function init() {
       });
       
       await window.__TAURI__.event.listen('engine_error', (event) => {
-        ToastManager.show({ type: 'error', title: 'Engine Error', message: event.payload, persistent: true });
+        ToastManager.show({ type: 'error', title: t('toast.engine_error'), message: event.payload, persistent: true });
       });
 
       await window.__TAURI__.event.listen('download_progress', (event) => {
@@ -2822,18 +2823,18 @@ async function init() {
         if (!hasField) {
           ToastManager.show({ 
             type: 'info', 
-            title: 'No text field active', 
-            message: 'Dictated text will fall back to clipboard.' 
+            title: t('toast.no_text_field'), 
+            message: t('toast.clipboard_fallback_msg') 
           });
         }
       });
 
       // 5. Initial welcome message
-      ToastManager.show({ type: 'success', title: 'VoiceType Active', message: 'Listening initialized successfully.' });
+      ToastManager.show({ type: 'success', title: t('toast.voicetype_active_title'), message: t('toast.voicetype_active_msg') });
       renderHistoryUI();
     } catch (err) {
       console.error(err);
-      ToastManager.show({ type: 'error', title: 'Initialization Error', message: err.toString(), persistent: true });
+      ToastManager.show({ type: 'error', title: t('toast.initialization_error'), message: err.toString(), persistent: true });
     }
   } else {
     // Mock configuration for dev environment
@@ -2853,7 +2854,7 @@ async function init() {
     updateActiveEnginePanel('vosk');
     updateOrbState('idle');
     renderHistoryUI();
-    ToastManager.show({ type: 'info', title: 'Mock Environment', message: 'Running outside Tauri container.' });
+    ToastManager.show({ type: 'info', title: t('toast.mock_env_title'), message: t('toast.mock_env_msg') });
   }
   if (quickLangSelect && activeConfig && activeConfig.general) {
     quickLangSelect.value = activeConfig.general.language;
@@ -2919,11 +2920,7 @@ function showPythonModal(targetEngineId) {
   progressContainer.style.display = 'none';
   actions.style.display = 'flex';
   desc.style.display = 'block';
-  desc.innerHTML = `
-    Aby korzystać z silników Whisper (lokalna transkrypcja wysokiej jakości), aplikacja potrzebuje zintegrowanego środowiska Python oraz pakietu <code>faster-whisper</code> (pobieranie i instalacja automatyczna w tle). 
-    <br><br>
-    Czy chcesz pobrać i zainstalować je teraz automatycznie?
-  `;
+  desc.innerHTML = t('addons.py.install_msg');
 
   btnClose.onclick = () => {
     modal.style.display = 'none';
@@ -2943,7 +2940,7 @@ function showPythonModal(targetEngineId) {
         progressPercent.textContent = `${Math.round(payload.percent)}%`;
 
         if (payload.done) {
-          ToastManager.show({ type: 'success', title: 'Python zainstalowany!', message: 'Silniki Whisper są gotowe do pracy.' });
+          ToastManager.show({ type: 'success', title: t('addons.py.installed_success_title'), message: t('addons.py.installed_success_msg') });
           isPythonAvailableGlobal = true;
           updateEngineCardsLockUI();
           
@@ -2955,8 +2952,8 @@ function showPythonModal(targetEngineId) {
             unlisten();
           }, 1500);
         } else if (payload.error) {
-          ToastManager.show({ type: 'error', title: 'Błąd instalacji Pythona', message: payload.error });
-          desc.innerHTML = `<span style="color: var(--text-error); font-weight: 600;">Błąd:</span> ${payload.error}<br><br>Spróbuj ponownie lub zainstaluj Python ręcznie.`;
+          ToastManager.show({ type: 'error', title: t('addons.py.error_title'), message: payload.error });
+          desc.innerHTML = `<span style="color: var(--text-error); font-weight: 600;">${t('addons.py.error_prefix')}:</span> ${payload.error}<br><br>${t('addons.py.manual_tip')}`;
           actions.style.display = 'flex';
           progressContainer.style.display = 'none';
           unlisten();
@@ -2986,20 +2983,16 @@ function showCudaInstallModal() {
 
   if (!modal) return;
 
-  title.textContent = 'Instalacja bibliotek CUDA';
+  title.textContent = t('addons.cuda.modal_title');
   modal.style.display = 'flex';
   progressContainer.style.display = 'none';
   actions.style.display = 'flex';
   desc.style.display = 'block';
-  desc.innerHTML = `
-    Dla przyspieszenia transkrypcji na GPU (karcie graficznej NVIDIA), aplikacja wymaga pakietów CUDA: <code>nvidia-cublas-cu12</code> oraz <code>nvidia-cudnn-cu12</code>. 
-    <br><br>
-    Czy chcesz pobrać i zainstalować je teraz automatycznie przez pip? (Pobieranie zajmuje ok. 350 MB w tle).
-  `;
+  desc.innerHTML = t('addons.cuda.modal_msg');
 
   btnClose.onclick = () => {
     modal.style.display = 'none';
-    title.textContent = 'Wymagana instalacja środowiska Python';
+    title.textContent = t('addons.py.modal_title');
   };
 
   btnInstall.onclick = async () => {
@@ -3014,15 +3007,15 @@ function showCudaInstallModal() {
         progressPercent.textContent = `${Math.round(payload.percent)}%`;
 
         if (payload.done) {
-          ToastManager.show({ type: 'success', title: 'CUDA zainstalowane!', message: 'GPU jest teraz gotowe do pracy.' });
+          ToastManager.show({ type: 'success', title: t('toast.cuda_installed_title'), message: t('toast.cuda_installed_msg') });
           setTimeout(() => {
             modal.style.display = 'none';
-            title.textContent = 'Wymagana instalacja środowiska Python';
+            title.textContent = t('addons.py.modal_title');
             unlisten();
           }, 2000);
         } else if (payload.error) {
-          ToastManager.show({ type: 'error', title: 'Błąd instalacji CUDA', message: payload.error });
-          desc.innerHTML = `<span style="color: var(--text-error); font-weight: 600;">Błąd:</span> ${payload.error}<br><br>Upewnij się, że masz połączenie z internetem i spróbuj ponownie.`;
+          ToastManager.show({ type: 'error', title: t('toast.cuda_install_error'), message: payload.error });
+          desc.innerHTML = `<span style="color: var(--text-error); font-weight: 600;">${t('addons.py.error_prefix')}:</span> ${payload.error}<br><br>${t('addons.py.retry_tip')}`;
           actions.style.display = 'flex';
           progressContainer.style.display = 'none';
           unlisten();
@@ -3082,11 +3075,11 @@ if (applyBtn) {
       if (engineId === 'azure') key = pendingConfig.engine.azure.subscription_key;
 
       if (!key || !key.trim()) {
-        ToastManager.show({ type: 'error', title: 'Brak klucza API', message: `Musisz podać klucz API dla silnika ${engineId}, aby go aktywować.`, persistent: true });
+        ToastManager.show({ type: 'error', title: t('toast.missing_api_key_title'), message: t('toast.missing_api_key_msg', { engine: engineId }), persistent: true });
         return;
       }
 
-      ToastManager.show({ type: 'info', title: 'Weryfikacja połączenia z API...' });
+      ToastManager.show({ type: 'info', title: t('toast.verifying_api_conn') });
       try {
         if (window.__TAURI__) {
           await window.__TAURI__.core.invoke('save_config', { config: pendingConfig });
@@ -3101,7 +3094,7 @@ if (applyBtn) {
             const badge = c.querySelector('.engine-card-badge');
             if (badge) {
               badge.classList.remove('active');
-              badge.textContent = 'Wybierz';
+              badge.textContent = t('engines.badge.select');
             }
           });
           const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
@@ -3110,7 +3103,7 @@ if (applyBtn) {
             const badge = activeCard.querySelector('.engine-card-badge');
             if (badge) {
               badge.classList.add('active');
-              badge.textContent = 'Aktywny';
+              badge.textContent = t('engines.badge.active');
             }
           }
 
@@ -3119,14 +3112,14 @@ if (applyBtn) {
           loadConfigGeneralUI(activeConfig);
           updateActiveEnginePanel(activeConfig.engine.type);
 
-          ToastManager.show({ type: 'success', title: 'Silnik zweryfikowany i aktywowany', message: testRes });
+          ToastManager.show({ type: 'success', title: t('toast.engine_verified_activated'), message: testRes });
           return;
         }
       } catch (err) {
         if (window.__TAURI__) {
           await window.__TAURI__.core.invoke('save_config', { config: activeConfig });
         }
-        ToastManager.show({ type: 'error', title: 'Błąd weryfikacji klucza API', message: `Nie można aktywować silnika. ${err.toString()}`, persistent: true });
+        ToastManager.show({ type: 'error', title: t('toast.api_key_verification_error'), message: t('toast.api_key_verification_msg', { error: err.toString() }), persistent: true });
         return;
       }
     }
@@ -3161,7 +3154,7 @@ if (applyBtn) {
         const badge = c.querySelector('.engine-card-badge');
         if (badge) {
           badge.classList.remove('active');
-          badge.textContent = 'Wybierz';
+          badge.textContent = t('engines.badge.select');
         }
       });
       const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
@@ -3170,7 +3163,7 @@ if (applyBtn) {
         const badge = activeCard.querySelector('.engine-card-badge');
         if (badge) {
           badge.classList.add('active');
-          badge.textContent = 'Aktywny';
+          badge.textContent = t('engines.badge.active');
         }
       }
       
@@ -3179,7 +3172,7 @@ if (applyBtn) {
       loadConfigGeneralUI(activeConfig);
       updateActiveEnginePanel(activeConfig.engine.type);
       
-      ToastManager.show({ type: 'success', title: 'Zastosowano zmiany', message: 'Silnik mowy został zaktualizowany.' });
+      ToastManager.show({ type: 'success', title: t('toast.changes_applied'), message: t('toast.engine_updated_msg') });
     } else {
       const isCurrentlyDownloading = downloadQueue.some(q => q.model === modelId && (q.status === 'downloading' || q.status === 'queued'));
       if (isCurrentlyDownloading) {
@@ -3192,7 +3185,7 @@ if (applyBtn) {
           const badge = c.querySelector('.engine-card-badge');
           if (badge) {
             badge.classList.remove('active');
-            badge.textContent = 'Wybierz';
+            badge.textContent = t('engines.badge.select');
           }
         });
         const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
@@ -3201,7 +3194,7 @@ if (applyBtn) {
           const badge = activeCard.querySelector('.engine-card-badge');
           if (badge) {
             badge.classList.add('active');
-            badge.textContent = 'Aktywny';
+            badge.textContent = t('engines.badge.active');
           }
         }
         
@@ -3212,16 +3205,16 @@ if (applyBtn) {
         
         ToastManager.show({ 
           type: 'info', 
-          title: 'Zastosowano silnik mowy', 
-          message: 'Będzie można zacząć przetwarzać mowę na tekst dopiero gdy pobierze się model.' 
+          title: t('toast.engine_applied_title'), 
+          message: t('toast.engine_applied_msg') 
         });
         return;
       }
 
       showCustomConfirmModal({
-        title: 'Wymagane pobranie modelu',
-        message: `Wybrany model "${modelId}" nie znajduje się jeszcze na Twoim dysku. Czy chcesz go teraz pobrać, aby aktywować zmiany?`,
-        confirmText: 'Pobierz i aktywuj',
+        title: t('engines.missing_model_title'),
+        message: t('engines.missing_model_msg', { engine: engineId, model: modelId }),
+        confirmText: t('engines.missing_model_btn'),
         onConfirm: async () => {
           const checkEngine = engineId === 'faster_whisper' ? 'whisper' : engineId;
           const progressContainer = document.getElementById('download-progress-container');
@@ -3231,7 +3224,7 @@ if (applyBtn) {
           applyBtn.style.opacity = '0.5';
 
           try {
-            ToastManager.show({ type: 'info', title: 'Rozpoczęto pobieranie', message: `Pobieranie ${modelId}...` });
+            ToastManager.show({ type: 'info', title: t('toast.download_started'), message: t('toast.download_started_msg', { model: modelId }) });
             await window.__TAURI__.core.invoke('download_model', { engine: checkEngine, model: modelId });
             
             activeConfig = JSON.parse(JSON.stringify(pendingConfig));
@@ -3243,7 +3236,7 @@ if (applyBtn) {
               const badge = c.querySelector('.engine-card-badge');
               if (badge) {
                 badge.classList.remove('active');
-                badge.textContent = 'Wybierz';
+                badge.textContent = t('engines.badge.select');
               }
             });
             const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
@@ -3252,7 +3245,7 @@ if (applyBtn) {
               const badge = activeCard.querySelector('.engine-card-badge');
               if (badge) {
                 badge.classList.add('active');
-                badge.textContent = 'Aktywny';
+                badge.textContent = t('engines.badge.active');
               }
             }
             
@@ -3261,9 +3254,9 @@ if (applyBtn) {
             loadConfigGeneralUI(activeConfig);
             updateActiveEnginePanel(activeConfig.engine.type);
             
-            ToastManager.show({ type: 'success', title: 'Zastosowano zmiany', message: 'Pobieranie ukończone. Silnik jest aktywny.' });
+            ToastManager.show({ type: 'success', title: t('toast.changes_applied'), message: t('toast.download_finished_active_msg') });
           } catch (err) {
-            ToastManager.show({ type: 'error', title: 'Błąd pobierania', message: err.toString(), persistent: true });
+            ToastManager.show({ type: 'error', title: t('toast.download_error'), message: err.toString(), persistent: true });
           } finally {
             applyBtn.disabled = false;
             applyBtn.style.opacity = '1';
@@ -3278,7 +3271,7 @@ if (applyBtn) {
             const badge = c.querySelector('.engine-card-badge');
             if (badge) {
               badge.classList.remove('active');
-              badge.textContent = 'Wybierz';
+              badge.textContent = t('engines.badge.select');
             }
           });
           const cardEl = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
@@ -3287,7 +3280,7 @@ if (applyBtn) {
             const badge = cardEl.querySelector('.engine-card-badge');
             if (badge) {
               badge.classList.add('active');
-              badge.textContent = 'Aktywny';
+              badge.textContent = t('engines.badge.active');
             }
           }
           updateActiveEnginePanel(activeConfig.engine.type);
@@ -3366,7 +3359,7 @@ function renderHistoryUI() {
           const btnEl = e.currentTarget;
           const text = decodeURIComponent(btnEl.getAttribute('data-text'));
           navigator.clipboard.writeText(text);
-          ToastManager.show({ type: 'success', title: 'Skopiowano', message: 'Tekst skopiowany do schowka.' });
+          ToastManager.show({ type: 'success', title: t('toast.copied_title'), message: t('toast.copied_msg') });
         };
       });
     }
@@ -3473,15 +3466,15 @@ function renderHistoryUI() {
         toggleBtn.style.display = 'flex';
         toggleBtn.style.alignItems = 'center';
         toggleBtn.style.gap = '4px';
-        toggleBtn.textContent = `••• Pokaż więcej (${transcripts.length - maxVisible})`;
+        toggleBtn.textContent = t('history.show_more', { count: transcripts.length - maxVisible });
         
         toggleBtn.onclick = () => {
           if (collapsedContainer.style.display === 'none') {
             collapsedContainer.style.display = 'flex';
-            toggleBtn.textContent = 'Ukryj dodatkowe transkrypcje';
+            toggleBtn.textContent = t('history.hide');
           } else {
             collapsedContainer.style.display = 'none';
-            toggleBtn.textContent = `••• Pokaż więcej (${transcripts.length - maxVisible})`;
+            toggleBtn.textContent = t('history.show_more', { count: transcripts.length - maxVisible });
           }
         };
         groupEl.appendChild(toggleBtn);
@@ -3496,7 +3489,7 @@ function renderHistoryUI() {
         const btnEl = e.currentTarget;
         const text = decodeURIComponent(btnEl.getAttribute('data-text'));
         navigator.clipboard.writeText(text);
-        ToastManager.show({ type: 'success', title: 'Skopiowano', message: 'Tekst skopiowany do schowka.' });
+        ToastManager.show({ type: 'success', title: t('toast.copied_title'), message: t('toast.copied_msg') });
       };
     });
   }
@@ -3507,14 +3500,14 @@ const clearHistoryBtn = document.getElementById('btn-clear-history');
 if (clearHistoryBtn) {
   clearHistoryBtn.addEventListener('click', () => {
     showCustomConfirmModal({
-      title: t('history.title') || 'Historia Transkrypcji',
-      message: t('history.confirm_clear') || 'Czy na pewno chcesz usunąć całą historię transkrypcji?',
-      confirmText: t('history.btn.clear') || 'Wyczyść historię',
+      title: t('history.clear_confirm_title'),
+      message: t('history.confirm_clear'),
+      confirmText: t('history.btn.clear'),
       isDanger: true,
       onConfirm: () => {
         localStorage.removeItem('transcript_history');
         renderHistoryUI();
-        ToastManager.show({ type: 'success', title: 'Historia wyczyszczona' });
+        ToastManager.show({ type: 'success', title: t('toast.history_cleared') });
       }
     });
   });
@@ -3582,20 +3575,20 @@ async function verifyStartupModel() {
         updateActiveEnginePanel(foundEngine);
         ToastManager.show({
           type: 'warning',
-          title: 'Ostatni model nie istnieje',
-          message: `Ostatnio zapisany model (${modelId}) nie istnieje na dysku. Automatycznie przełączono na dostępny model: ${foundModel}.`,
+          title: t('toast.last_model_not_found_title'),
+          message: t('toast.last_model_not_found_msg', { model: modelId, foundModel: foundModel }),
           persistent: true
         });
       } else {
         const modelShortLabel = document.getElementById('engine-model-short');
         if (modelShortLabel) {
-          modelShortLabel.textContent = 'Brak pobranego modelu';
+          modelShortLabel.textContent = t('engines.status.not_downloaded');
           modelShortLabel.style.color = '#ef4444';
         }
         ToastManager.show({
           type: 'error',
-          title: 'Brak pobranego modelu mowy',
-          message: `Ostatnio wybrany model (${modelId}) nie znajduje się na dysku. Pobierz model w Menedżerze Pobierania.`,
+          title: t('toast.missing_model_error_title'),
+          message: t('toast.missing_model_error_msg', { model: modelId }),
           persistent: true
         });
       }
@@ -3671,7 +3664,7 @@ async function renderAddonsManagerUI() {
   const removePyBtn = pyCard.querySelector('#btn-remove-python-env');
   if (removePyBtn) {
     removePyBtn.onclick = () => {
-      ToastManager.show({ type: 'info', title: 'Usuwanie środowiska', message: 'Funkcja usuwania środowiska Python uruchomiona.' });
+      ToastManager.show({ type: 'info', title: t('removing_env_title'), message: t('toast.removing_env_msg') });
     };
   }
 
