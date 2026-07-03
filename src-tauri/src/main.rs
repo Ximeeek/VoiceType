@@ -207,14 +207,26 @@ fn main() {
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {
-                window.hide().unwrap();
-                api.prevent_close();
-                show_custom_notification(window.app_handle(), "tray");
+                if window.label() == "main" {
+                    window.hide().unwrap();
+                    api.prevent_close();
+                    show_custom_notification(window.app_handle(), "tray");
+                }
             }
             _ => {}
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+use std::sync::atomic::{AtomicU64, Ordering};
+static LAST_NO_INPUT_NOTIF_TIME: AtomicU64 = AtomicU64::new(0);
+
+fn get_now_ms() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64
 }
 
 pub fn handle_no_input_notification(app: &tauri::AppHandle) {
@@ -240,11 +252,23 @@ pub fn handle_no_input_notification(app: &tauri::AppHandle) {
 }
 
 pub fn show_custom_notification(app: &tauri::AppHandle, notif_type: &str) {
+    let now = get_now_ms();
+
+    if notif_type == "no_input" {
+        LAST_NO_INPUT_NOTIF_TIME.store(now, Ordering::Relaxed);
+    } else if notif_type == "tray" {
+        let last_no_input = LAST_NO_INPUT_NOTIF_TIME.load(Ordering::Relaxed);
+        if now.saturating_sub(last_no_input) < 3500 {
+            println!("[NOTIFICATION] Suppressing 'tray' notification because 'no_input' was recently shown.");
+            return;
+        }
+    }
+
     println!("[NOTIFICATION] Triggering custom system notification: type='{}'", notif_type);
     let notif_type_string = notif_type.to_string();
 
     if let Some(existing) = app.get_webview_window("notification") {
-        println!("[NOTIFICATION] Reusing existing notification window");
+        println!("[NOTIFICATION] Reusing existing notification window with type: '{}'", notif_type);
         let _ = existing.emit("show_notification", notif_type_string);
         if let Ok(Some(monitor)) = existing.primary_monitor() {
             let size = monitor.size();
