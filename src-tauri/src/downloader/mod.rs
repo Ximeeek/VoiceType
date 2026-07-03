@@ -29,10 +29,14 @@ fn remove_abort_flag(key: &str) {
 
 pub fn abort_download(engine: &str, model_id: &str) {
     let key = format!("{}_{}", engine, model_id);
+    println!("[DOWNLOAD_RUST] abort_download wywołane dla klucza: {}", key);
     let mut guard = ABORT_FLAGS.lock().unwrap();
     if let Some(map) = guard.as_mut() {
         if let Some(flag) = map.get(&key) {
+            println!("[DOWNLOAD_RUST] Zapisywanie flagi abort = true dla klucza: {}", key);
             flag.store(true, Ordering::SeqCst);
+        } else {
+            println!("[DOWNLOAD_RUST] Nie znaleziono aktywnego pobierania dla klucza: {} przy próbie anulowania", key);
         }
     }
 }
@@ -44,6 +48,7 @@ pub async fn download_model(
     models_dir: &Path,
 ) -> anyhow::Result<()> {
     let key = format!("{}_{}", engine, model_id);
+    println!("[DOWNLOAD_RUST] Rejestrowanie flagi i rozpoczynanie pobierania dla klucza: {}", key);
     let abort_flag = register_abort_flag(&key);
 
     let info = model_registry::get_model_info(engine, model_id).await?;
@@ -54,6 +59,7 @@ pub async fn download_model(
     let tmp = std::path::PathBuf::from(tmp_path_str);
     
     if dest.exists() {
+        println!("[DOWNLOAD_RUST] Docelowy plik modelu już istnieje: {:?}. Kończenie.", dest);
         remove_abort_flag(&key);
         app.emit("download_progress", serde_json::json!({ "model": model_id, "percent": 100.0, "done": true })).ok();
         return Ok(());
@@ -64,13 +70,17 @@ pub async fn download_model(
     }
     
     let start_byte = if tmp.exists() { std::fs::metadata(&tmp)?.len() } else { 0 };
+    println!("[DOWNLOAD_RUST] Ścieżka docelowa: {:?}, start_byte={}", tmp, start_byte);
     
     let client = Client::new();
     let mut req = client.get(&info.url);
     if start_byte > 0 { req = req.header("Range", format!("bytes={}-", start_byte)); }
+    
+    println!("[DOWNLOAD_RUST] Wysyłanie zapytania HTTP do: {}", info.url);
     let response = req.send().await?;
     
     if !response.status().is_success() {
+        println!("[DOWNLOAD_RUST] Serwer zwrócił status błędu: {}", response.status());
         remove_abort_flag(&key);
         return Err(anyhow::anyhow!("Błąd pobierania: serwer zwrócił status {}", response.status()));
     }
@@ -83,6 +93,7 @@ pub async fn download_model(
     } else {
         info.size_bytes
     };
+    println!("[DOWNLOAD_RUST] Rozmiar pliku: total_bytes={}, is_partial={}", total, is_partial);
     
     let mut file = std::fs::OpenOptions::new()
         .create(true)
@@ -94,8 +105,10 @@ pub async fn download_model(
     let mut hasher = Sha256::new();
     let mut stream = response.bytes_stream();
     
+    println!("[DOWNLOAD_RUST] Rozpoczynanie pętli pobierania strumienia danych...");
     while let Some(chunk) = stream.next().await {
         if abort_flag.load(Ordering::SeqCst) {
+            println!("[DOWNLOAD_RUST] Wykryto flagę abort = true. Usuwanie pliku tymczasowego {:?} i przerywanie.", tmp);
             drop(file);
             std::fs::remove_file(&tmp).ok();
             remove_abort_flag(&key);
@@ -118,6 +131,7 @@ pub async fn download_model(
     
     drop(file);
     remove_abort_flag(&key);
+    println!("[DOWNLOAD_RUST] Pobieranie pliku zakończone sukcesem dla klucza: {}", key);
     
     // Opcjonalnie weryfikacja SHA256:
     if let Some(expected_hash) = &info.sha256 {

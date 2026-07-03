@@ -1609,6 +1609,7 @@ async function processDownloadQueue() {
 }
 
 async function startSingleDownload(item) {
+  console.log('[DOWNLOAD_START] Uruchomienie pobierania dla elementu:', item);
   item.status = 'downloading';
   renderDownloadQueue();
   updateDashboardDownloadState(null);
@@ -1617,9 +1618,13 @@ async function startSingleDownload(item) {
     try {
       ToastManager.show({ type: 'info', title: 'Rozpoczęto pobieranie', message: `Pobieranie ${item.model}...` });
       const checkEngine = item.engine === 'faster_whisper' ? 'whisper' : item.engine;
+      console.log('[DOWNLOAD_START] Wywołanie download_model w Tauri dla silnika:', checkEngine, 'modelu:', item.model);
       await window.__TAURI__.core.invoke('download_model', { engine: checkEngine, model: item.model });
+      
+      console.log('[DOWNLOAD_FINISH] Zakończono invoke download_model, status elementu:', item.status);
       if (item.status !== 'cancelled') {
         item.status = 'completed';
+        console.log('[DOWNLOAD_FINISH] Oznaczono pobieranie jako ukończone:', item.model);
         ToastManager.show({ type: 'success', title: 'Pobieranie ukończone', message: `Model ${item.model} gotowy do użycia.` });
         if (pendingConfig && pendingConfig.engine) {
           if (item.engine === 'vosk') {
@@ -1634,17 +1639,23 @@ async function startSingleDownload(item) {
           checkEngineDirty();
           updateActiveEnginePanel(activeConfig.engine.type);
         }
+      } else {
+        console.log('[DOWNLOAD_FINISH] Pobieranie było anulowane w trakcie, pomijam oznaczanie jako ukończone.');
       }
     } catch (err) {
+      console.error('[DOWNLOAD_ERROR] Wystąpił błąd podczas pobierania:', err, 'aktualny status:', item.status);
       if (item.status !== 'cancelled') {
         item.status = 'error';
         ToastManager.show({ type: 'error', title: 'Błąd pobierania', message: err.toString() });
+      } else {
+        console.log('[DOWNLOAD_ERROR] Błąd zignorowany, ponieważ status to cancelled.');
       }
     } finally {
       renderDownloadQueue();
       updateDashboardDownloadState(null);
       renderInstalledModelsManager();
       updateQuickModelOptions();
+      console.log('[DOWNLOAD_CLEANUP] Pobieranie zakończone lub przerwane dla:', item.model, 'Przejście do kolejnego elementu.');
       setTimeout(() => processDownloadQueue(), 300);
     }
   } else {
@@ -1739,13 +1750,51 @@ function updateDashboardDownloadState(progress) {
 }
 
 function updateDownloadProgress(progress) {
+  console.log('[DOWNLOAD_PROGRESS] Otrzymano progres:', progress);
   const queueItem = downloadQueue.find(q => q.model === progress.model);
   if (queueItem) {
-    if (queueItem.status === 'cancelled') return;
+    if (queueItem.status === 'cancelled') {
+      console.log('[DOWNLOAD_PROGRESS] Element jest anulowany, ignoruję progres dla modelu:', progress.model);
+      return;
+    }
     queueItem.percent = progress.percent;
     queueItem.downloaded_mb = progress.downloaded_mb;
     queueItem.total_mb = progress.total_mb;
-    if (progress.percent >= 100) queueItem.status = 'completed';
+    if (progress.percent >= 100) {
+      console.log('[DOWNLOAD_PROGRESS] Pobieranie zakończone dla modelu:', progress.model);
+      queueItem.status = 'completed';
+    }
+  } else {
+    console.warn('[DOWNLOAD_PROGRESS] Nie znaleziono elementu w kolejce dla modelu:', progress.model);
+  }
+
+  // Zamiast renderDownloadQueue() na każdy progress chunk, aktualizujemy DOM bezpośrednio.
+  // Dzięki temu przycisk "Anuluj" nie jest stale niszczony i tworzony na nowo, co zapobiega gubieniu kliknięć przez przeglądarkę.
+  let updatedDOM = false;
+  if (queueItem) {
+    const itemEl = document.getElementById(`download-item-${queueItem.id}`);
+    if (itemEl) {
+      const fill = itemEl.querySelector('.progress-bar-fill');
+      const stats = itemEl.querySelector('.download-stats');
+      const percentEl = itemEl.querySelector('.download-percent');
+      const badge = itemEl.querySelector('.download-badge');
+
+      if (fill) fill.style.width = `${progress.percent}%`;
+      if (percentEl) percentEl.textContent = `${Math.round(progress.percent)}%`;
+      if (stats) {
+        if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
+          stats.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB`;
+        } else {
+          stats.textContent = 'Kończenie pobierania...';
+        }
+      }
+      if (badge && queueItem.status === 'completed') {
+        badge.style.color = 'var(--accent-green)';
+        badge.style.background = 'rgba(16,185,129,0.15)';
+        badge.textContent = 'Ukończono';
+      }
+      updatedDOM = true;
+    }
   }
 
   const container = document.getElementById('download-progress-container');
@@ -1767,7 +1816,12 @@ function updateDownloadProgress(progress) {
   }
 
   updateDashboardDownloadState(progress);
-  renderDownloadQueue();
+
+  // Wywołujemy pełny renderDownloadQueue() tylko przy pierwszej iteracji (gdy DOM jeszcze nie ma elementu)
+  // albo po zakończeniu pobierania (gdy status zmienia się z downloading na completed) lub w przypadku innych zmian statusu.
+  if (!updatedDOM || progress.percent >= 100) {
+    renderDownloadQueue();
+  }
 
   if (progress.percent >= 100) {
     setTimeout(() => {
@@ -1841,6 +1895,7 @@ function renderDownloadQueue() {
     activeContainer.innerHTML = '';
     activeItems.forEach(item => {
       const el = document.createElement('div');
+      el.id = `download-item-${item.id}`;
       el.style.background = 'rgba(255,255,255,0.02)';
       el.style.border = '1px solid var(--border-subtle)';
       el.style.borderRadius = '8px';
@@ -1850,36 +1905,44 @@ function renderDownloadQueue() {
       el.style.gap = '8px';
 
       const badge = item.status === 'downloading' ? 
-        '<span style="color: var(--accent-green); background: rgba(16,185,129,0.15); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">Pobieranie...</span>' :
-        '<span style="color: var(--accent-gold); background: rgba(245,158,11,0.15); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">W kolejce</span>';
+        'Pobieranie...' :
+        'W kolejce';
+      const badgeStyle = item.status === 'downloading' ?
+        'color: var(--accent-green); background: rgba(16,185,129,0.15);' :
+        'color: var(--accent-gold); background: rgba(245,158,11,0.15);';
 
       el.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-weight: 700; font-size: 13px; color: var(--text-primary);">${item.model}</span>
             <span style="font-size: 10px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">${item.engine}</span>
-            ${badge}
+            <span class="download-badge" style="${badgeStyle} padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${badge}</span>
           </div>
           <button class="btn-cancel-queue" data-id="${item.id}" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Anuluj</button>
         </div>
         <div class="progress-bar-bg" style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px; overflow: hidden;">
-          <div style="width: ${item.percent}%; height: 100%; background: var(--accent-green); transition: width 0.2s;"></div>
+          <div class="progress-bar-fill" style="width: ${item.percent}%; height: 100%; background: var(--accent-green); transition: width 0.2s;"></div>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
-          <span>${item.downloaded_mb ? `${item.downloaded_mb.toFixed(1)} MB / ${item.total_mb.toFixed(1)} MB` : 'Inicjalizacja...'}</span>
-          <span>${Math.round(item.percent)}%</span>
+          <span class="download-stats">${item.downloaded_mb ? `${item.downloaded_mb.toFixed(1)} MB / ${item.total_mb.toFixed(1)} MB` : 'Inicjalizacja...'}</span>
+          <span class="download-percent">${Math.round(item.percent)}%</span>
         </div>
       `;
       activeContainer.appendChild(el);
     });
 
     activeContainer.onclick = async (e) => {
+      console.log('[DOWNLOAD_ACTIVE_CONTAINER] Kliknięcie wykryte w kontenerze aktywnych pobierań:', e.target);
       const btn = e.target.closest('.btn-cancel-queue');
-      if (!btn) return;
+      if (!btn) {
+        console.log('[DOWNLOAD_ACTIVE_CONTAINER] Kliknięcie nie było w przycisk anulowania.');
+        return;
+      }
       const id = btn.getAttribute('data-id');
       console.log('[CANCEL_QUEUE] Kliknięto anuluj dla pobierania ID:', id);
       const item = downloadQueue.find(q => q.id === id);
       if (item) {
+        console.log('[CANCEL_QUEUE] Znaleziono element w kolejce pobierania:', item);
         item.status = 'cancelled';
         item.percent = 0;
         if (window.__TAURI__) {
@@ -1891,11 +1954,15 @@ function renderDownloadQueue() {
           } catch (err) {
             console.error('[CANCEL_QUEUE] Błąd podczas czyszczenia:', err);
           }
+        } else {
+          console.log('[CANCEL_QUEUE] Brak środowiska Tauri - symulowane czyszczenie.');
         }
         ToastManager.show({ type: 'info', title: 'Anulowano pobieranie', message: `Pobieranie modelu ${item.model} zostało natychmiast anulowane.` });
         updateDashboardDownloadState(null);
         renderDownloadQueue();
         setTimeout(() => processDownloadQueue(), 300);
+      } else {
+        console.warn('[CANCEL_QUEUE] Nie znaleziono elementu o ID:', id, 'w kolejce pobierania:', downloadQueue);
       }
     };
   }
