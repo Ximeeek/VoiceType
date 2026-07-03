@@ -86,6 +86,10 @@ impl Default for TriggerConfig {
     }
 }
 
+fn default_live_typing_interval_ms() -> u64 {
+    2000
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DictationConfig {
     pub stop_words: Vec<String>,
@@ -93,6 +97,8 @@ pub struct DictationConfig {
     pub stop_word_remove_from_text: bool,
     pub start_delay_ms: u64,
     pub live_typing: bool,
+    #[serde(default = "default_live_typing_interval_ms")]
+    pub live_typing_interval_ms: u64,
 }
 
 impl Default for DictationConfig {
@@ -103,6 +109,7 @@ impl Default for DictationConfig {
             stop_word_remove_from_text: true,
             start_delay_ms: 0,
             live_typing: false,
+            live_typing_interval_ms: 2000,
         }
     }
 }

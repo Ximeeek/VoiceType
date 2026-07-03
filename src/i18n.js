@@ -153,6 +153,11 @@ export const translations = {
 
     // Speech Engine Settings Tab
     "settings.engine.lang_title": "Speech Recognition Language",
+    "settings.engine.live_typing_title": "Live Typing (Text generation while speaking)",
+    "settings.engine.live_typing_desc": "Stream and type recognized text live into focused application fields while speaking.",
+    "settings.engine.live_typing_warning_title": "Simulated Streaming Mode (Higher resource usage)",
+    "settings.engine.live_typing_warning_desc": "This engine processes speech in batches. Live typing re-transcribes the growing audio buffer every ~1.5s, which increases CPU/GPU load and API costs.",
+    "settings.engine.live_typing_interval_title": "Interim refresh interval (Simulated)",
     "settings.engine.test_btn": "Test Engine Connection",
     "settings.engine.save_btn": "Save Engine Settings",
 
@@ -570,6 +575,11 @@ export const translations = {
 
     // Speech Engine Settings Tab
     "settings.engine.lang_title": "Język rozpoznawania mowy",
+    "settings.engine.live_typing_title": "Pisanie na żywo (Wpisowanie tekstu w trakcie mówienia)",
+    "settings.engine.live_typing_desc": "Przesyłaj i wpisuj rozpoznawany tekst na żywo do aktywnego pola tekstowego w trakcie mówienia.",
+    "settings.engine.live_typing_warning_title": "Tryb symulowany (Większe zużycie zasobów)",
+    "settings.engine.live_typing_warning_desc": "Ten silnik przetwarza mowę wsadowo. Pisanie na żywo przesyła nagranie co ~1.5s, co zwiększa zużycie CPU/GPU i koszt API.",
+    "settings.engine.live_typing_interval_title": "Częstotliwość odświeżania w locie (Symulowana)",
     "settings.engine.test_btn": "Testuj połączenie silnika",
     "settings.engine.save_btn": "Zapisz ustawienia silnika",
 

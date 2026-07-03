@@ -130,7 +130,40 @@ impl SpeechEngine for SherpaOnnxEngine {
         Ok(text)
     }
 
-    fn supports_streaming(&self) -> bool { true }
+    async fn get_interim_transcript(&mut self) -> anyhow::Result<Option<String>> {
+        if self.buffer.is_empty() {
+            return Ok(None);
+        }
+        let snapshot = self.buffer.clone();
+        let tmp_wav = tempfile::NamedTempFile::new()?.into_temp_path();
+        write_wav(&tmp_wav, &snapshot, 16000)?;
+
+        let wav_path_str = tmp_wav.to_string_lossy().to_string();
+        let mut text = String::new();
+
+        if let (Some(writer), Some(reader)) = (&mut self.stdin, &mut self.stdout) {
+            writeln!(writer, "{}", wav_path_str)?;
+            writer.flush()?;
+
+            let mut response = String::new();
+            reader.read_line(&mut response)?;
+
+            if let Ok(val) = serde_json::from_str::<serde_json::Value>(&response) {
+                if let Some(err) = val.get("error") {
+                    eprintln!("[Sherpa-ONNX Interim Error]: {}", err);
+                } else {
+                    text = val["text"].as_str().unwrap_or("").trim().to_string();
+                }
+            }
+        }
+        if text.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(text))
+        }
+    }
+
+    fn supports_streaming(&self) -> bool { false }
     fn engine_name(&self) -> &str { "sherpa_onnx" }
     async fn start_stream(&mut self) -> anyhow::Result<()> { Ok(()) }
 }

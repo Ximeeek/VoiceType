@@ -158,6 +158,14 @@ impl EngineManager {
         }
     }
 
+    pub async fn get_interim_transcript(&mut self) -> anyhow::Result<Option<String>> {
+        if let Some(engine) = &mut self.active {
+            engine.get_interim_transcript().await
+        } else {
+            Ok(None)
+        }
+    }
+
     pub fn supports_streaming(&self) -> bool {
         if let Some(engine) = &self.active {
             engine.supports_streaming()
@@ -184,7 +192,7 @@ impl EngineManager {
             EngineInfo {
                 id: "sherpa_onnx".to_string(),
                 name: "Sherpa-ONNX".to_string(),
-                supports_streaming: true,
+                supports_streaming: false,
                 is_available: true,
                 is_active: config.engine_type == "sherpa_onnx",
             },

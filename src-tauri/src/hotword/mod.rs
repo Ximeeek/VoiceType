@@ -151,6 +151,7 @@ pub async fn run_control_loop(
     let mut idle_speech_start_time: Option<Instant> = None;
     let mut idle_last_speech_time = Instant::now();
     let mut batch_remaining_text: Option<String> = None;
+    let mut dictating_last_interim_time = Instant::now();
 
     loop {
         while let Ok(cmd) = control_rx.try_recv() {
@@ -407,6 +408,15 @@ pub async fn run_control_loop(
             }
 
             AppStatus::Dictating => {
+                // Drain any queued audio chunks to update VAD and engine buffer without delay
+                while let Ok(chunk) = pipeline.speech_rx.try_recv() {
+                    let max_vol = chunk.samples.iter().map(|v| v.abs()).fold(0.0f32, |a, b| a.max(b));
+                    if chunk.speech_prob >= 0.01 || max_vol > 0.015 {
+                        detector.mark_speech();
+                    }
+                    let _ = engine.feed_audio(&chunk.samples).await;
+                }
+
                 if detector.is_silence_timeout() {
                     println!("[FLUSH] Silence timeout - flushing text");
                     *state.status.lock().await = AppStatus::Processing;
@@ -448,7 +458,10 @@ pub async fn run_control_loop(
                 }
 
                 if let Ok(Some(chunk)) = chunk_opt {
-                    detector.mark_speech();
+                    let max_vol = chunk.samples.iter().map(|v| v.abs()).fold(0.0f32, |a, b| a.max(b));
+                    if chunk.speech_prob >= 0.01 || max_vol > 0.015 {
+                        detector.mark_speech();
+                    }
                     if let Ok(Some(transcript)) = engine.feed_audio(&chunk.samples).await {
                         if transcript.is_partial {
                             if !is_hallucination(&transcript.text) {
@@ -502,6 +515,39 @@ pub async fn run_control_loop(
                                 app_handle.emit("status_changed", "idle").ok();
                                 idle_speech_detected = false;
                                 idle_speech_start_time = None;
+                            }
+                        }
+                    }
+
+                    // Simulated streaming for non-native streaming engines (periodic interim transcription pass)
+                    if !engine.supports_streaming() && dictating_last_interim_time.elapsed() >= Duration::from_millis(config.dictation.live_typing_interval_ms) {
+                        dictating_last_interim_time = Instant::now();
+                        if let Ok(Some(interim_text)) = engine.get_interim_transcript().await {
+                            // Immediately drain queued chunks after inference to refresh VAD timestamp!
+                            while let Ok(chunk) = pipeline.speech_rx.try_recv() {
+                                let max_vol = chunk.samples.iter().map(|v| v.abs()).fold(0.0f32, |a, b| a.max(b));
+                                if chunk.speech_prob >= 0.01 || max_vol > 0.015 {
+                                    detector.mark_speech();
+                                }
+                                let _ = engine.feed_audio(&chunk.samples).await;
+                            }
+
+                            if !interim_text.trim().is_empty() && !is_hallucination(&interim_text) {
+                                let display_text = if let Some(ref remaining) = batch_remaining_text {
+                                    format!("{} {}", remaining, interim_text)
+                                } else {
+                                    interim_text
+                                };
+                                println!("[SIMULATED_STREAMING] [Engine: {}] Interim text: '{}'", engine.active_type, display_text);
+                                _current_partial = display_text.clone();
+                                app_handle.emit("transcript_partial", display_text.clone()).ok();
+
+                                if config.dictation.live_typing {
+                                    focus = detect_focused_text_field();
+                                    if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
+                                        let _ = live_typing.update_partial(&display_text, &focus, config.input.key_delay_ms).await;
+                                    }
+                                }
                             }
                         }
                     }

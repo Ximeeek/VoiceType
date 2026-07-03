@@ -16,6 +16,7 @@ pub trait SpeechEngine: Send + Sync {
     async fn start_stream(&mut self) -> anyhow::Result<()>;
     async fn feed_audio(&mut self, samples: &[f32]) -> anyhow::Result<Option<Transcript>>;
     async fn finalize(&mut self) -> anyhow::Result<String>;
+    async fn get_interim_transcript(&mut self) -> anyhow::Result<Option<String>> { Ok(None) }
     fn supports_streaming(&self) -> bool;
     fn engine_name(&self) -> &str;
 }

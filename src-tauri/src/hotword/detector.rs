@@ -109,6 +109,13 @@ impl VoiceDetector {
                 let trig_norm = Self::normalize(word);
                 let trig_no_dia = Self::remove_diacritics(&trig_norm);
 
+                let trig_len = trig_norm.chars().count();
+                let max_allowed_dist = if trig_len <= 5 {
+                    1
+                } else {
+                    self.fuzzy_threshold as usize
+                };
+
                 for (idx, spoken_word) in spoken_words.iter().enumerate() {
                     let norm_spoken = Self::normalize(spoken_word);
                     let norm_spoken_no_dia = Self::remove_diacritics(&norm_spoken);
@@ -116,8 +123,8 @@ impl VoiceDetector {
                     let dist1 = strsim::levenshtein(&norm_spoken, &trig_norm);
                     let dist2 = strsim::levenshtein(&norm_spoken_no_dia, &trig_no_dia);
 
-                    if (!norm_spoken.is_empty() && dist1 <= self.fuzzy_threshold as usize) 
-                        || (!norm_spoken_no_dia.is_empty() && dist2 <= self.fuzzy_threshold as usize) 
+                    if (!norm_spoken.is_empty() && dist1 <= max_allowed_dist) 
+                        || (!norm_spoken_no_dia.is_empty() && dist2 <= max_allowed_dist) 
                     {
                         println!("[TRIGGER_MATCHED] Fuzzy match for trigger '{}' on spoken word '{}' (dist: min({}, {}))", 
                             word, spoken_word, dist1, dist2);

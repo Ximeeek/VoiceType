@@ -848,6 +848,39 @@ function loadConfigGeneralUI(config) {
   document.getElementById('settings-clipboard-toast').checked = config.input.clipboard_toast;
   document.getElementById('settings-start-delay').value = config.dictation.start_delay_ms;
   document.getElementById('start-delay-val').textContent = `${config.dictation.start_delay_ms} ms`;
+  
+  const liveTypingCheck = document.getElementById('settings-live-typing');
+  if (liveTypingCheck) {
+    liveTypingCheck.checked = config.dictation ? !!config.dictation.live_typing : false;
+    liveTypingCheck.onchange = (e) => {
+      if (activeConfig && activeConfig.dictation) {
+        activeConfig.dictation.live_typing = e.target.checked;
+      }
+      if (pendingConfig && pendingConfig.dictation) {
+        pendingConfig.dictation.live_typing = e.target.checked;
+      }
+      saveConfigState();
+    };
+  }
+
+  const liveTypingIntervalSlider = document.getElementById('settings-live-typing-interval');
+  if (liveTypingIntervalSlider) {
+    const intervalVal = config.dictation ? config.dictation.live_typing_interval_ms || 2000 : 2000;
+    liveTypingIntervalSlider.value = intervalVal;
+    document.getElementById('live-typing-interval-val').textContent = `${intervalVal} ms`;
+    
+    liveTypingIntervalSlider.oninput = (e) => {
+      const val = parseInt(e.target.value, 10);
+      document.getElementById('live-typing-interval-val').textContent = `${val} ms`;
+      if (activeConfig && activeConfig.dictation) {
+        activeConfig.dictation.live_typing_interval_ms = val;
+      }
+      if (pendingConfig && pendingConfig.dictation) {
+        pendingConfig.dictation.live_typing_interval_ms = val;
+      }
+      debouncedSaveConfig();
+    };
+  }
 
   // Bind change listeners to trigger immediate save config
   document.getElementById('settings-trigger-fuzzy').onchange = (e) => {
@@ -1026,11 +1059,34 @@ function updateActiveEnginePanel(engineId) {
   const whisperFields = document.getElementById('config-fields-whisper');
   const sherpaFields = document.getElementById('config-fields-sherpa');
   const progressContainer = document.getElementById('download-progress-container');
+  const liveTypingContainer = document.getElementById('engine-live-typing-container');
 
   renderInstalledModelsManager();
 
   if (!panel || !title) return;
   
+  // Toggle Live Typing container and warning badge visibility
+  const liveTypingWarning = document.getElementById('engine-live-typing-warning');
+  const liveTypingIntervalContainer = document.getElementById('engine-live-typing-interval-container');
+  const streamingSupportedEngines = ['vosk', 'deepgram', 'assemblyai', 'azure'];
+  if (liveTypingContainer) {
+    liveTypingContainer.style.display = 'block';
+  }
+  if (liveTypingWarning) {
+    if (!streamingSupportedEngines.includes(engineId)) {
+      liveTypingWarning.style.display = 'flex';
+    } else {
+      liveTypingWarning.style.display = 'none';
+    }
+  }
+  if (liveTypingIntervalContainer) {
+    if (!streamingSupportedEngines.includes(engineId)) {
+      liveTypingIntervalContainer.style.display = 'block';
+    } else {
+      liveTypingIntervalContainer.style.display = 'none';
+    }
+  }
+
   // Reset fields display
   if (voskFields) voskFields.style.display = 'none';
   if (apiFields) apiFields.style.display = 'none';
@@ -3254,7 +3310,7 @@ async function init() {
     // Mock configuration for dev environment
     activeConfig = {
       trigger: { words: ['zaczynamy', 'start'], fuzzy_match: true },
-      dictation: { stop_words: ['stop', 'done'], silence_timeout_ms: 1500, stop_word_remove_from_text: true, start_delay_ms: 0 },
+      dictation: { stop_words: ['stop', 'done'], silence_timeout_ms: 1500, stop_word_remove_from_text: true, start_delay_ms: 0, live_typing_interval_ms: 2000 },
       general: { autostart: false },
       input: { clipboard_fallback: true, clipboard_toast: true },
       audio: { input_device: 'default' },

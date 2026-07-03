@@ -558,6 +558,31 @@
                                 <button class="btn-primary" id="btn-download-sherpa" data-i18n="downloads.quick.btn">Pobierz model</button>
                             </div>
 
+                            <!-- Live Typing Option (Available for all engines, with warning for non-streaming) -->
+                            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-subtle); display: block;" id="engine-live-typing-container">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="settings-live-typing">
+                                    <span class="checkbox-label" data-i18n="settings.engine.live_typing_title">Pisanie na żywo (Wpisowanie tekstu w trakcie mówienia)</span>
+                                </label>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; margin-left: 26px;" data-i18n="settings.engine.live_typing_desc">
+                                    Przesyłaj i wpisuj rozpoznawany tekst na żywo do aktywnego pola tekstowego w trakcie mówienia.
+                                </div>
+                                <div style="margin-top: 12px; margin-left: 26px; display: none;" id="engine-live-typing-interval-container">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <span style="font-size: 12px; font-weight: 500; color: var(--text-secondary);" data-i18n="settings.engine.live_typing_interval_title">Częstotliwość odświeżania w locie (Symulowana)</span>
+                                        <span style="font-size: 12px; font-weight: 600; color: var(--text-primary);" id="live-typing-interval-val">2000 ms</span>
+                                    </div>
+                                    <input type="range" id="settings-live-typing-interval" min="1000" max="4000" step="100" value="2000" style="width: 100%;">
+                                </div>
+                                <div id="engine-live-typing-warning" style="display: none; align-items: flex-start; gap: 8px; color: #f59e0b; font-size: 12px; margin-top: 10px; margin-left: 26px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); padding: 10px 14px; border-radius: 8px; font-weight: 500;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-triangle" style="flex-shrink: 0; margin-top: 2px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>
+                                    <div>
+                                        <div style="font-weight: 600;" data-i18n="settings.engine.live_typing_warning_title">Tryb symulowany (Większe zużycie zasobów)</div>
+                                        <div style="font-size: 11px; opacity: 0.9; margin-top: 2px;" data-i18n="settings.engine.live_typing_warning_desc">Ten silnik przetwarza mowę wsadowo. Pisanie na żywo przesyła nagranie co ~1.5s, co zwiększa zużycie CPU/GPU i koszt API.</div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Progress Bar for Downloads (shared) -->
                             <div class="download-progress-container" id="download-progress-container" style="display: none; margin-top: 16px;">
                                 <div class="progress-bar-bg">

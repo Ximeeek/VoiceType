@@ -59,6 +59,38 @@ impl SpeechEngine for WhisperEngine {
         println!("[Whisper.cpp] Inference done. Result: '{}'", result);
         Ok(result)
     }
+
+    async fn get_interim_transcript(&mut self) -> anyhow::Result<Option<String>> {
+        if self.buffer.is_empty() {
+            return Ok(None);
+        }
+        let snapshot = self.buffer.clone();
+        let mut state = self.ctx.create_state()?;
+        let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
+        params.set_language(Some(&self.language));
+        params.set_print_progress(false);
+        params.set_print_realtime(false);
+        
+        let avail = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+        let num_threads = std::cmp::min(6, avail) as i32;
+        params.set_n_threads(num_threads);
+        
+        state.full(params, &snapshot)?;
+        
+        let mut text = String::new();
+        for segment in state.as_iter() {
+            text.push_str(segment.to_string().trim());
+            text.push(' ');
+        }
+        let result = text.trim().to_string();
+        if result.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(result))
+        }
+    }
     
     fn supports_streaming(&self) -> bool { false }
     fn engine_name(&self) -> &str { "whisper" }
