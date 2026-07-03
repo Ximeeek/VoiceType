@@ -158,6 +158,14 @@ impl EngineManager {
         }
     }
 
+    pub fn supports_streaming(&self) -> bool {
+        if let Some(engine) = &self.active {
+            engine.supports_streaming()
+        } else {
+            false
+        }
+    }
+
     pub fn list_engines(config: &crate::config::settings::EngineConfig) -> Vec<EngineInfo> {
         let small_path = Path::new("..").join("models").join("vosk").join("vosk-model-small-pl-0.22");
         let std_path = Path::new("..").join("models").join("vosk").join("vosk-model-pl-0.22");

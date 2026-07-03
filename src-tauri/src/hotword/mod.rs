@@ -148,6 +148,7 @@ pub async fn run_control_loop(
     let mut focus;
 
     let mut idle_speech_detected = false;
+    let mut idle_speech_start_time: Option<Instant> = None;
     let mut idle_last_speech_time = Instant::now();
     let mut batch_remaining_text: Option<String> = None;
 
@@ -158,12 +159,16 @@ pub async fn run_control_loop(
                     println!("[CONTROL_COMMAND] Pause");
                     *state.status.lock().await = AppStatus::Paused;
                     app_handle.emit("status_changed", "paused").ok();
+                    idle_speech_detected = false;
+                    idle_speech_start_time = None;
                 }
                 ControlCommand::Resume => {
                     println!("[CONTROL_COMMAND] Resume");
                     if engine.has_active_engine() {
                         *state.status.lock().await = AppStatus::Idle;
                         app_handle.emit("status_changed", "idle").ok();
+                        idle_speech_detected = false;
+                        idle_speech_start_time = None;
                     } else {
                         *state.status.lock().await = AppStatus::Paused;
                         app_handle.emit("status_changed", "paused").ok();
@@ -207,6 +212,8 @@ pub async fn run_control_loop(
                         if engine.has_active_engine() {
                             *state.status.lock().await = AppStatus::Idle;
                             app_handle.emit("status_changed", "idle").ok();
+                            idle_speech_detected = false;
+                            idle_speech_start_time = None;
                         }
                     }
                 }
@@ -241,6 +248,8 @@ pub async fn run_control_loop(
                             
                             detector.mark_speech();
                             _current_partial = String::new();
+                            idle_speech_detected = false;
+                            idle_speech_start_time = None;
                             
                             focus = detect_focused_text_field();
                             app_handle.emit("focus_detected", !matches!(focus, FocusResult::NoTextField)).ok();
@@ -262,7 +271,10 @@ pub async fn run_control_loop(
                     let is_speech = chunk.speech_prob >= 0.01 || max_vol > 0.015;
                     
                     if is_speech {
-                        idle_speech_detected = true;
+                        if !idle_speech_detected {
+                            idle_speech_detected = true;
+                            idle_speech_start_time = Some(Instant::now());
+                        }
                         idle_last_speech_time = Instant::now();
                     }
 
@@ -283,6 +295,7 @@ pub async fn run_control_loop(
                                 detector.mark_speech();
                                 _current_partial = String::new();
                                 idle_speech_detected = false;
+                                idle_speech_start_time = None;
                                 
                                 focus = detect_focused_text_field();
                                 app_handle.emit("focus_detected", !matches!(focus, FocusResult::NoTextField)).ok();
@@ -300,9 +313,10 @@ pub async fn run_control_loop(
                 }
 
                 // Handling non-streaming / batch engines in Idle state:
-                // When speech was detected and silence follows (400ms), finalize idle buffer to check for trigger words
+                // 1. When speech was detected and silence follows (400ms), finalize idle buffer to check for trigger words
                 if idle_speech_detected && idle_last_speech_time.elapsed() >= Duration::from_millis(400) {
                     idle_speech_detected = false;
+                    idle_speech_start_time = None;
                     if let Ok(final_idle_text) = engine.finalize().await {
                         if is_hallucination(&final_idle_text) {
                             println!("[IDLE_BATCH_FINALIZE] Ignored Whisper hallucination in idle state: '{}'", final_idle_text);
@@ -318,6 +332,8 @@ pub async fn run_control_loop(
                                 
                                 detector.mark_speech();
                                 _current_partial = String::new();
+                                idle_speech_detected = false;
+                                idle_speech_start_time = None;
                                 
                                 focus = detect_focused_text_field();
                                 app_handle.emit("focus_detected", !matches!(focus, FocusResult::NoTextField)).ok();
@@ -333,6 +349,56 @@ pub async fn run_control_loop(
                                     }
                                 } else {
                                     batch_remaining_text = None;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 2. When speech is active and has been continuous for a while (1.5s), finalize idle buffer to check for trigger words
+                if !engine.supports_streaming() && idle_speech_detected {
+                    if let Some(start_time) = idle_speech_start_time {
+                        if start_time.elapsed() >= Duration::from_millis(1500) {
+                            println!("[IDLE_BATCH_PERIODIC] Continuous speech for 1.5s, finalizing buffer to check trigger");
+                            idle_speech_start_time = Some(Instant::now());
+                            if let Ok(final_idle_text) = engine.finalize().await {
+                                if is_hallucination(&final_idle_text) {
+                                    println!("[IDLE_BATCH_PERIODIC] Ignored Whisper hallucination in idle state: '{}'", final_idle_text);
+                                    let _ = engine.start_stream().await;
+                                } else if !final_idle_text.trim().is_empty() {
+                                    println!("[IDLE_BATCH_PERIODIC] Engine: {} | Finalized text: '{}'", engine.active_type, final_idle_text);
+                                    if let Some(remaining) = detector.check_trigger(&final_idle_text) {
+                                        println!("[STATE] Idle → Dictating (periodic batch trigger matched, remaining: '{}')", remaining);
+                                        let _ = engine.start_stream().await;
+                                        
+                                        *state.status.lock().await = AppStatus::Dictating;
+                                        app_handle.emit("status_changed", "dictating").ok();
+                                        
+                                        detector.mark_speech();
+                                        _current_partial = String::new();
+                                        idle_speech_detected = false;
+                                        idle_speech_start_time = None;
+                                        
+                                        focus = detect_focused_text_field();
+                                        app_handle.emit("focus_detected", !matches!(focus, FocusResult::NoTextField)).ok();
+                                        live_typing = LiveTypingState::new();
+
+                                        if !remaining.is_empty() {
+                                            batch_remaining_text = Some(remaining.clone());
+                                            if config.dictation.live_typing {
+                                                _current_partial = remaining.clone();
+                                                if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
+                                                    let _ = live_typing.update_partial(&remaining, &focus, config.input.key_delay_ms).await;
+                                                }
+                                            }
+                                        } else {
+                                            batch_remaining_text = None;
+                                        }
+                                    } else {
+                                        let _ = engine.start_stream().await;
+                                    }
+                                } else {
+                                    let _ = engine.start_stream().await;
                                 }
                             }
                         }
@@ -377,6 +443,8 @@ pub async fn run_control_loop(
                     *state.status.lock().await = AppStatus::Idle;
                     app_handle.emit("status_changed", "idle").ok();
                     _current_partial = String::new();
+                    idle_speech_detected = false;
+                    idle_speech_start_time = None;
                 }
 
                 if let Ok(Some(chunk)) = chunk_opt {
@@ -432,6 +500,8 @@ pub async fn run_control_loop(
                                 println!("[STATE] Dictating → Idle (stop word)");
                                 *state.status.lock().await = AppStatus::Idle;
                                 app_handle.emit("status_changed", "idle").ok();
+                                idle_speech_detected = false;
+                                idle_speech_start_time = None;
                             }
                         }
                     }
