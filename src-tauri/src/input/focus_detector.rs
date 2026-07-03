@@ -39,6 +39,13 @@ pub fn detect_focused_text_field() -> FocusResult {
                     class_name, elem_name, control_type
                 );
 
+                let name_lower = elem_name.to_string().to_lowercase();
+                let class_lower = class_name.to_string().to_lowercase();
+                if name_lower.contains("voicetype") || class_lower.contains("voicetype") {
+                    println!("[FOCUS_DETECTOR] Focused element belongs to VoiceType -> NoTextField");
+                    return Some(FocusResult::NoTextField);
+                }
+
                 // Control types:
                 // UIA_EditControlTypeId = 30004
                 // UIA_DocumentControlTypeId = 30030 (Web pages, code editors, Word)
@@ -82,6 +89,16 @@ pub fn detect_focused_text_field() -> FocusResult {
         unsafe {
             let hwnd = GetForegroundWindow();
             if hwnd.0 != std::ptr::null_mut() {
+                let mut title = [0u16; 256];
+                let title_len = windows::Win32::UI::WindowsAndMessaging::GetWindowTextW(hwnd, &mut title);
+                if title_len > 0 {
+                    let title_str = String::from_utf16_lossy(&title[..title_len as usize]).to_lowercase();
+                    if title_str.contains("voicetype") {
+                        println!("[FOCUS_DETECTOR] Win32 foreground window is VoiceType -> NoTextField");
+                        return FocusResult::NoTextField;
+                    }
+                }
+
                 let thread_id = GetWindowThreadProcessId(hwnd, None);
                 let mut gui_info = GUITHREADINFO {
                     cbSize: std::mem::size_of::<GUITHREADINFO>() as u32,

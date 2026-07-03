@@ -149,6 +149,7 @@ pub async fn run_control_loop(
 
     let mut idle_speech_detected = false;
     let mut idle_last_speech_time = Instant::now();
+    let mut batch_remaining_text: Option<String> = None;
 
     loop {
         while let Ok(cmd) = control_rx.try_recv() {
@@ -322,17 +323,18 @@ pub async fn run_control_loop(
                                 app_handle.emit("focus_detected", !matches!(focus, FocusResult::NoTextField)).ok();
                                 live_typing = LiveTypingState::new();
 
-                                if !remaining.is_empty() && config.dictation.live_typing {
-                                    _current_partial = remaining.clone();
-                                    if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
-                                        let _ = live_typing.update_partial(&remaining, &focus, config.input.key_delay_ms).await;
+                                if !remaining.is_empty() {
+                                    batch_remaining_text = Some(remaining.clone());
+                                    if config.dictation.live_typing {
+                                        _current_partial = remaining.clone();
+                                        if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
+                                            let _ = live_typing.update_partial(&remaining, &focus, config.input.key_delay_ms).await;
+                                        }
                                     }
+                                } else {
+                                    batch_remaining_text = None;
                                 }
-                            } else {
-                                let _ = engine.start_stream().await;
                             }
-                        } else {
-                            let _ = engine.start_stream().await;
                         }
                     }
                 }
@@ -344,7 +346,16 @@ pub async fn run_control_loop(
                     *state.status.lock().await = AppStatus::Processing;
                     app_handle.emit("status_changed", "processing").ok();
 
-                    let final_text = engine.finalize().await.unwrap_or_default();
+                    let mut final_text = engine.finalize().await.unwrap_or_default();
+                    if let Some(ref remaining) = batch_remaining_text {
+                        if final_text.trim().is_empty() || is_hallucination(&final_text) {
+                            final_text = remaining.clone();
+                        } else {
+                            final_text = format!("{} {}", remaining, final_text);
+                        }
+                    }
+                    batch_remaining_text = None;
+
                     if !final_text.is_empty() && !is_hallucination(&final_text) {
                         {
                             let mut stats = state.session_stats.lock().await;
@@ -385,26 +396,36 @@ pub async fn run_control_loop(
                                 }
                             }
                         } else {
-                            if !is_hallucination(&transcript.text) {
-                                println!("[FINAL] [Engine: {}, Lang: {}] Transcript: '{}'", engine.active_type, config.general.language, transcript.text);
-                                if !transcript.text.is_empty() {
+                            let mut final_text = transcript.text.clone();
+                            if let Some(ref remaining) = batch_remaining_text {
+                                if final_text.trim().is_empty() || is_hallucination(&final_text) {
+                                    final_text = remaining.clone();
+                                } else {
+                                    final_text = format!("{} {}", remaining, final_text);
+                                }
+                            }
+                            batch_remaining_text = None;
+
+                            if !is_hallucination(&final_text) {
+                                println!("[FINAL] [Engine: {}, Lang: {}] Transcript: '{}'", engine.active_type, config.general.language, final_text);
+                                if !final_text.is_empty() {
                                     let mut stats = state.session_stats.lock().await;
                                     stats.dictations_count += 1;
-                                    stats.words_total += transcript.text.split_whitespace().count() as u32;
+                                    stats.words_total += final_text.split_whitespace().count() as u32;
                                 }
                                 _current_partial = String::new();
-                                app_handle.emit("transcript_final", transcript.text.clone()).ok();
+                                app_handle.emit("transcript_final", final_text.clone()).ok();
                                 
                                 focus = detect_focused_text_field();
                                 if !matches!(focus, FocusResult::NoTextField) {
-                                    let _ = live_typing.finalize(&transcript.text, &focus, config.input.key_delay_ms).await;
-                                } else if !transcript.text.trim().is_empty() {
-                                    println!("[CLIPBOARD] No text field focused - Copied text to clipboard: {}", transcript.text);
-                                    let _ = copy_to_clipboard(&transcript.text);
+                                    let _ = live_typing.finalize(&final_text, &focus, config.input.key_delay_ms).await;
+                                } else if !final_text.trim().is_empty() {
+                                    println!("[CLIPBOARD] No text field focused - Copied text to clipboard: {}", final_text);
+                                    let _ = copy_to_clipboard(&final_text);
                                     crate::handle_no_input_notification(&app_handle);
                                 }
                             } else {
-                                println!("[FINAL] Ignored Whisper hallucination on final: '{}'", transcript.text);
+                                println!("[FINAL] Ignored Whisper hallucination on final: '{}'", final_text);
                             }
                             
                             if detector.check_stop(&transcript.text) {

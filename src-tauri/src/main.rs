@@ -300,8 +300,23 @@ pub fn show_custom_notification(app: &tauri::AppHandle, notif_type: &str) {
     .resizable(false)
     .inner_size(360.0, 96.0)
     .visible(false)
+    .focused(false)
     .build() {
         Ok(window) => {
+            #[cfg(windows)]
+            {
+                use windows::Win32::UI::WindowsAndMessaging::{
+                    GetWindowLongW, SetWindowLongW, GWL_EXSTYLE, WS_EX_NOACTIVATE
+                };
+                if let Ok(hwnd) = window.hwnd() {
+                    unsafe {
+                        let our_hwnd = windows::Win32::Foundation::HWND(hwnd.0 as *mut _);
+                        let ex_style = GetWindowLongW(our_hwnd, GWL_EXSTYLE);
+                        let _ = SetWindowLongW(our_hwnd, GWL_EXSTYLE, ex_style | WS_EX_NOACTIVATE.0 as i32);
+                    }
+                }
+            }
+
             if let Ok(Some(monitor)) = window.primary_monitor() {
                 let size = monitor.size();
                 let scale_factor = monitor.scale_factor();
