@@ -412,6 +412,7 @@ navButtons.forEach(btn => {
       }
       if (targetPageId === 'dashboard') {
         checkActiveEngineAvailability();
+        updateDashboardActiveEngineCard();
       }
       if (targetPageId === 'downloads') {
         updateQuickModelOptions();
@@ -971,57 +972,7 @@ function updateActiveEnginePanel(engineId) {
   title.textContent = `Konfiguracja: ${prettyName}`;
 
   // Dashboard active display
-  const activeEngineLabel = document.getElementById('engine-name');
-  const activeEngineBadge = document.getElementById('engine-badge');
-  const langBadge = document.getElementById('engine-lang-badge');
-  const modelShortLabel = document.getElementById('engine-model-short');
-
-  if (activeEngineLabel && activeEngineBadge) {
-    activeEngineLabel.textContent = prettyName;
-    const isStreaming = ['vosk', 'sherpa_onnx', 'deepgram', 'assemblyai', 'azure'].includes(engineId);
-    activeEngineBadge.textContent = isStreaming ? 'Streaming' : 'Batch';
-  }
-
-  if (langBadge && activeConfig && activeConfig.general) {
-    langBadge.textContent = (activeConfig.general.language || 'pl').toUpperCase();
-  }
-
-  if (modelShortLabel && activeConfig && activeConfig.engine) {
-    let rawModel = '';
-    const activeType = activeConfig.engine.type;
-    if (activeType === 'vosk') {
-      const parts = (activeConfig.engine.vosk.model_path || '').split(/[/\\]/);
-      rawModel = parts[parts.length - 1] || 'vosk-model';
-    } else if (activeType === 'sherpa_onnx') {
-      const parts = (activeConfig.engine.sherpa_onnx.model_path || '').split(/[/\\]/);
-      rawModel = parts[parts.length - 1] || 'sherpa-model';
-    } else {
-      rawModel = activeConfig.engine.whisper.model || 'base';
-    }
-    let shortName = rawModel
-      .replace(/^sherpa-onnx-/, '')
-      .replace(/^vosk-model-/, '')
-      .replace(/-0\.\d+$/, '')
-      .replace(/-lgraph$/, '');
-
-    if (window.__TAURI__ && ['vosk', 'sherpa_onnx', 'whisper', 'faster_whisper'].includes(activeType)) {
-      const checkEngine = activeType === 'faster_whisper' ? 'whisper' : activeType;
-      window.__TAURI__.core.invoke('check_model_downloaded', { engine: checkEngine, model: rawModel }).then(isDownloaded => {
-        if (isDownloaded) {
-          modelShortLabel.textContent = shortName;
-          modelShortLabel.style.color = 'var(--text-muted)';
-        } else {
-          modelShortLabel.textContent = `${shortName} (Brak pliku)`;
-          modelShortLabel.style.color = '#ef4444';
-        }
-      }).catch(() => {
-        modelShortLabel.textContent = shortName;
-      });
-    } else {
-      modelShortLabel.textContent = shortName;
-      modelShortLabel.style.color = 'var(--text-muted)';
-    }
-  }
+  updateDashboardActiveEngineCard();
 
   if (['vosk', 'whisper', 'faster_whisper', 'sherpa_onnx'].includes(engineId)) {
     let fields = whisperFields;
@@ -1156,6 +1107,84 @@ function updateActiveEnginePanel(engineId) {
     }
   }
   checkActiveEngineAvailability();
+}
+
+async function updateDashboardActiveEngineCard() {
+  if (!activeConfig || !activeConfig.engine) return;
+  const engineId = activeConfig.engine.type;
+
+  let nameMap = {
+    vosk: 'Vosk Offline',
+    sherpa_onnx: 'Sherpa-ONNX',
+    whisper: 'Whisper.cpp',
+    faster_whisper: 'Faster-Whisper',
+    deepgram: 'Deepgram Online',
+    assemblyai: 'AssemblyAI Online',
+    openai: 'OpenAI Whisper',
+    google: 'Google STT',
+    azure: 'Azure Speech'
+  };
+  
+  const prettyName = nameMap[engineId] || engineId;
+
+  // Dashboard active display
+  const activeEngineLabel = document.getElementById('engine-name');
+  const activeEngineBadge = document.getElementById('engine-badge');
+  const langBadge = document.getElementById('engine-lang-badge');
+  const modelShortLabel = document.getElementById('engine-model-short');
+
+  if (activeEngineLabel && activeEngineBadge) {
+    activeEngineLabel.textContent = prettyName;
+    const isStreaming = ['vosk', 'sherpa_onnx', 'deepgram', 'assemblyai', 'azure'].includes(engineId);
+    activeEngineBadge.textContent = isStreaming ? 'Streaming' : 'Batch';
+  }
+
+  if (langBadge && activeConfig.general) {
+    langBadge.textContent = (activeConfig.general.language || 'pl').toUpperCase();
+  }
+
+  if (modelShortLabel) {
+    if (['vosk', 'sherpa_onnx', 'whisper', 'faster_whisper'].includes(engineId)) {
+      let rawModel = '';
+      if (engineId === 'vosk') {
+        const parts = (activeConfig.engine.vosk.model_path || '').split(/[/\\]/);
+        rawModel = parts[parts.length - 1] || 'vosk-model';
+      } else if (engineId === 'sherpa_onnx') {
+        const parts = (activeConfig.engine.sherpa_onnx.model_path || '').split(/[/\\]/);
+        rawModel = parts[parts.length - 1] || 'sherpa-model';
+      } else {
+        rawModel = activeConfig.engine.whisper.model || 'base';
+      }
+      let shortName = rawModel
+        .replace(/^sherpa-onnx-/, '')
+        .replace(/^vosk-model-/, '')
+        .replace(/-0\.\d+$/, '')
+        .replace(/-lgraph$/, '');
+
+      if (window.__TAURI__) {
+        const checkEngine = engineId === 'faster_whisper' ? 'whisper' : engineId;
+        try {
+          const isDownloaded = await window.__TAURI__.core.invoke('check_model_downloaded', { engine: checkEngine, model: rawModel });
+          if (isDownloaded) {
+            modelShortLabel.textContent = shortName;
+            modelShortLabel.style.color = 'var(--text-muted)';
+          } else {
+            modelShortLabel.textContent = `${shortName} (Brak pliku)`;
+            modelShortLabel.style.color = '#ef4444';
+          }
+        } catch (e) {
+          modelShortLabel.textContent = shortName;
+          modelShortLabel.style.color = 'var(--text-muted)';
+        }
+      } else {
+        modelShortLabel.textContent = shortName;
+        modelShortLabel.style.color = 'var(--text-muted)';
+      }
+    } else {
+      modelShortLabel.textContent = 'Chmura';
+      modelShortLabel.style.color = 'var(--text-muted)';
+    }
+  }
 }
 
 async function checkActiveEngineAvailability() {
@@ -1691,6 +1720,7 @@ function updateDashboardDownloadState(progress) {
   const isDownloading = checkIsDownloading();
 
   checkActiveEngineAvailability();
+  updateDashboardActiveEngineCard();
 
   if (dashStatus && dashFill && dashText && dashPercent) {
     if (isDownloading && progress && progress.percent < 100) {
@@ -1983,6 +2013,8 @@ async function renderInstalledModelsManager() {
                 await renderInstalledModelsManager();
                 const activeEngineId = pendingConfig ? pendingConfig.engine.type : 'vosk';
                 await renderAvailableModels(activeEngineId);
+                await updateDashboardActiveEngineCard();
+                await checkActiveEngineAvailability();
               } catch (err) {
                 ToastManager.show({ type: 'error', title: 'Błąd usuwania', message: err.toString() });
               }
@@ -2006,6 +2038,8 @@ async function renderInstalledModelsManager() {
                 await renderInstalledModelsManager();
                 const activeEngineId = pendingConfig ? pendingConfig.engine.type : 'vosk';
                 await renderAvailableModels(activeEngineId);
+                await updateDashboardActiveEngineCard();
+                await checkActiveEngineAvailability();
               } catch (err) {
                 ToastManager.show({ type: 'error', title: 'Błąd usuwania', message: err.toString() });
               }
@@ -3620,6 +3654,8 @@ async function renderAddonsManagerUI() {
             removeModelFromDownloadQueue(engine, model);
             renderAddonsManagerUI();
             renderInstalledModelsManager();
+            await updateDashboardActiveEngineCard();
+            await checkActiveEngineAvailability();
           } catch (err) {
             ToastManager.show({ type: 'error', title: 'Błąd usuwania', message: err.toString() });
           }
