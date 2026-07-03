@@ -31,6 +31,9 @@ export const translations = {
     "dash.stat.accuracy": "VAD Detections",
     "dash.live_preview": "Live Text Preview",
     "dash.placeholder_preview": "Dictated text will appear here in real-time...",
+    "dash.overlay.downloading_model": "Dictation is unavailable until the model is downloaded.",
+    "dash.overlay.missing_model": "Selected speech engine is unavailable. You need to download the speech model file first.",
+    "dash.overlay.btn_download": "Go to Downloads",
 
     // Speech Engines Page
     "engines.title": "Speech Recognition Engines",
@@ -171,6 +174,9 @@ export const translations = {
     "dash.stat.accuracy": "Wykrycia VAD",
     "dash.live_preview": "Podgląd na żywo",
     "dash.placeholder_preview": "Podyktowany tekst pojawi się tutaj w czasie rzeczywistym...",
+    "dash.overlay.downloading_model": "Nie można używać dyktowania, dopóki model się nie pobierze.",
+    "dash.overlay.missing_model": "Wybrany silnik mowy jest niedostępny. Musisz pobrać plik mowy silnikowej (model), aby dyktować.",
+    "dash.overlay.btn_download": "Przejdź do Pobierania",
 
     // Speech Engines Page
     "engines.title": "Silniki rozpoznawania mowy",

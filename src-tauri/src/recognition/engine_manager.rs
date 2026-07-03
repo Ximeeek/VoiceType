@@ -24,6 +24,10 @@ pub struct EngineManager {
 }
 
 impl EngineManager {
+    pub fn has_active_engine(&self) -> bool {
+        self.active.is_some()
+    }
+
     pub async fn new(config: &Config) -> anyhow::Result<Self> {
         println!(
             "[ENGINE_MANAGER] Starting up. Active Engine: {}, Language: {}, Vosk model path: {}, Whisper model: {}, use_gpu: {}",

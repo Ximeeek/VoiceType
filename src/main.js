@@ -410,6 +410,9 @@ navButtons.forEach(btn => {
       if (targetPage) {
         targetPage.classList.add('active');
       }
+      if (targetPageId === 'dashboard') {
+        checkActiveEngineAvailability();
+      }
     });
   });
 });
@@ -1149,6 +1152,72 @@ function updateActiveEnginePanel(engineId) {
       azureRegionInput.onchange = handleRegionInput;
     }
   }
+  checkActiveEngineAvailability();
+}
+
+async function checkActiveEngineAvailability() {
+  const overlay = document.getElementById('dictation-disabled-overlay');
+  const textEl = document.getElementById('dictation-disabled-text');
+  const btnGoToDownloads = document.getElementById('btn-overlay-go-to-downloads');
+  if (!overlay || !textEl) return;
+
+  const isDownloading = checkIsDownloading();
+  if (isDownloading) {
+    overlay.style.display = 'flex';
+    textEl.textContent = t('dash.overlay.downloading_model');
+    if (btnGoToDownloads) btnGoToDownloads.style.display = 'none';
+    return;
+  }
+
+  if (!activeConfig || !activeConfig.engine) return;
+  const engineId = activeConfig.engine.type;
+
+  // Cloud/online engines don't need local models
+  if (!['vosk', 'sherpa_onnx', 'whisper', 'faster_whisper'].includes(engineId)) {
+    overlay.style.display = 'none';
+    return;
+  }
+
+  let modelId = '';
+  if (engineId === 'vosk') {
+    modelId = (activeConfig.engine.vosk.model_path || '').split(/[/\\]/).pop();
+  } else if (engineId === 'sherpa_onnx') {
+    modelId = (activeConfig.engine.sherpa_onnx.model_path || '').split(/[/\\]/).pop();
+  } else {
+    modelId = activeConfig.engine.whisper.model;
+  }
+
+  if (!modelId) {
+    overlay.style.display = 'flex';
+    textEl.textContent = t('dash.overlay.missing_model');
+    if (btnGoToDownloads) {
+      btnGoToDownloads.style.display = 'block';
+      btnGoToDownloads.textContent = t('dash.overlay.btn_download');
+    }
+    return;
+  }
+
+  if (window.__TAURI__) {
+    const checkEngine = engineId === 'faster_whisper' ? 'whisper' : engineId;
+    try {
+      const isDownloaded = await window.__TAURI__.core.invoke('check_model_downloaded', { engine: checkEngine, model: modelId });
+      if (isDownloaded) {
+        overlay.style.display = 'none';
+      } else {
+        overlay.style.display = 'flex';
+        textEl.textContent = t('dash.overlay.missing_model');
+        if (btnGoToDownloads) {
+          btnGoToDownloads.style.display = 'block';
+          btnGoToDownloads.textContent = t('dash.overlay.btn_download');
+        }
+      }
+    } catch (e) {
+      console.error('Error checking active engine availability:', e);
+    }
+  } else {
+    // Mock environment
+    overlay.style.display = 'none';
+  }
 }
 
 async function renderAvailableModels(engineId) {
@@ -1538,7 +1607,6 @@ async function triggerModelDownload(engineId) {
 }
 
 function updateDashboardDownloadState(progress) {
-  const overlay = document.getElementById('dictation-disabled-overlay');
   const dashStatus = document.getElementById('dashboard-engine-download-status');
   const dashFill = document.getElementById('dashboard-engine-progress-fill');
   const dashText = document.getElementById('dashboard-engine-progress-text');
@@ -1546,9 +1614,7 @@ function updateDashboardDownloadState(progress) {
 
   const isDownloading = checkIsDownloading();
 
-  if (overlay) {
-    overlay.style.display = isDownloading ? 'flex' : 'none';
-  }
+  checkActiveEngineAvailability();
 
   if (dashStatus && dashFill && dashText && dashPercent) {
     if (isDownloading && progress && progress.percent < 100) {
@@ -2547,6 +2613,18 @@ async function init() {
 
       // Populate audio devices
       await populateAudioDevices();
+
+      // Bind missing model downloads shortcut button
+      const btnGoToDownloads = document.getElementById('btn-overlay-go-to-downloads');
+      if (btnGoToDownloads) {
+        btnGoToDownloads.addEventListener('click', () => {
+          const navDownloads = document.getElementById('nav-downloads');
+          if (navDownloads) navDownloads.click();
+        });
+      }
+
+      // Check active engine availability immediately on startup
+      await checkActiveEngineAvailability();
 
       // 4. Register IPC event listeners
       await window.__TAURI__.event.listen('status_changed', (event) => {

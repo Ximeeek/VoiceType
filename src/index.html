@@ -66,7 +66,8 @@
                             <!-- Disabled overlay during model download -->
                             <div id="dictation-disabled-overlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(4px); border-radius: 12px; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; z-index: 10;">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="margin-bottom: 12px;"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                                <span style="font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.5;">Nie można używać dyktowania, dopóki model się nie pobierze.</span>
+                                <span id="dictation-disabled-text" style="font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.5; margin-bottom: 15px;">Nie można używać dyktowania, dopóki model się nie pobierze.</span>
+                                <button class="btn-primary" id="btn-overlay-go-to-downloads" style="display: none; font-size: 12px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; width: auto; max-width: 220px; margin-top: 5px;">Pobierz model</button>
                             </div>
                         </div>
 

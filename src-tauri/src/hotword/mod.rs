@@ -75,6 +75,12 @@ pub async fn run_control_loop(
         config.trigger.fuzzy_threshold,
     );
 
+    if !engine.has_active_engine() {
+        println!("[ENGINE] Speech engine unavailable on startup. Pausing listening.");
+        *state.status.lock().await = AppStatus::Paused;
+        app_handle.emit("status_changed", "paused").ok();
+    }
+
     let mut _current_partial = String::new();
     let mut live_typing = LiveTypingState::new();
     let mut focus;
@@ -87,8 +93,14 @@ pub async fn run_control_loop(
                     app_handle.emit("status_changed", "paused").ok();
                 }
                 ControlCommand::Resume => {
-                    *state.status.lock().await = AppStatus::Idle;
-                    app_handle.emit("status_changed", "idle").ok();
+                    if engine.has_active_engine() {
+                        *state.status.lock().await = AppStatus::Idle;
+                        app_handle.emit("status_changed", "idle").ok();
+                    } else {
+                        *state.status.lock().await = AppStatus::Paused;
+                        app_handle.emit("status_changed", "paused").ok();
+                        app_handle.emit("engine_error", "Speech engine unavailable. Please download the engine model file first.").ok();
+                    }
                 }
                 ControlCommand::SetTriggerWords(words) => {
                     config.trigger.words = words.clone();
@@ -120,8 +132,14 @@ pub async fn run_control_loop(
                     let app_config = state.config.lock().await.clone();
                     if let Err(e) = engine.switch_engine(&engine_type, &app_config).await {
                         app_handle.emit("engine_error", e.to_string()).ok();
+                        *state.status.lock().await = AppStatus::Paused;
+                        app_handle.emit("status_changed", "paused").ok();
                     } else {
                         let _ = engine.start_stream().await;
+                        if engine.has_active_engine() {
+                            *state.status.lock().await = AppStatus::Idle;
+                            app_handle.emit("status_changed", "idle").ok();
+                        }
                     }
                 }
                 ControlCommand::SetTriggerTranslate(val) => {
@@ -149,21 +167,25 @@ pub async fn run_control_loop(
                     detector.update_config(detector_words, config.dictation.stop_words.clone(), config.dictation.silence_timeout_ms, config.trigger.fuzzy_match, config.trigger.fuzzy_threshold);
                 }
                 ControlCommand::ForceDictate => {
-                    let status = state.status.lock().await.clone();
-                    if matches!(status, AppStatus::Idle | AppStatus::Listening) {
-                        println!("[STATE] Idle → Dictating (forced by user)");
-                        let _ = engine.finalize().await;
-                        let _ = engine.start_stream().await;
-                        
-                        *state.status.lock().await = AppStatus::Dictating;
-                        app_handle.emit("status_changed", "dictating").ok();
-                        
-                        detector.mark_speech();
-                        _current_partial = String::new();
-                        
-                        focus = detect_focused_text_field();
-                        app_handle.emit("focus_detected", !matches!(focus, FocusResult::NoTextField)).ok();
-                        live_typing = LiveTypingState::new();
+                    if !engine.has_active_engine() {
+                        app_handle.emit("engine_error", "Speech engine unavailable. Please download the engine model file first.").ok();
+                    } else {
+                        let status = state.status.lock().await.clone();
+                        if matches!(status, AppStatus::Idle | AppStatus::Listening) {
+                            println!("[STATE] Idle → Dictating (forced by user)");
+                            let _ = engine.finalize().await;
+                            let _ = engine.start_stream().await;
+                            
+                            *state.status.lock().await = AppStatus::Dictating;
+                            app_handle.emit("status_changed", "dictating").ok();
+                            
+                            detector.mark_speech();
+                            _current_partial = String::new();
+                            
+                            focus = detect_focused_text_field();
+                            app_handle.emit("focus_detected", !matches!(focus, FocusResult::NoTextField)).ok();
+                            live_typing = LiveTypingState::new();
+                        }
                     }
                 }
                 ControlCommand::Quit => return,
