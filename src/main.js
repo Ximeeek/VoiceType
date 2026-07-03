@@ -1816,6 +1816,44 @@ if (quickDownloadBtn) {
       console.warn('[QuickDownload] No model selected for download.');
     }
   });
+
+  quickDownloadBtn.addEventListener('mouseenter', () => {
+    if (quickDownloadBtn.classList.contains('btn-highlight-pulse')) {
+      console.log('[QuickDownload] Mouse entered download button. Freezing and transitioning pulse smoothly.');
+      try {
+        // Capture computed styles of current animation frame
+        const computedStyle = window.getComputedStyle(quickDownloadBtn);
+        const currentTransform = computedStyle.transform;
+        const currentBoxShadow = computedStyle.boxShadow;
+
+        // Apply captured states inline and remove animation class immediately (avoids keyframe override)
+        quickDownloadBtn.style.transform = currentTransform;
+        quickDownloadBtn.style.boxShadow = currentBoxShadow;
+        quickDownloadBtn.style.animation = 'none';
+        
+        quickDownloadBtn.classList.remove('btn-highlight-pulse');
+
+        // Force browser layout reflow to register style changes
+        void quickDownloadBtn.offsetHeight;
+
+        // Apply transition and target hover state styles
+        quickDownloadBtn.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        quickDownloadBtn.style.transform = 'translateY(-1px) scale(1)';
+        quickDownloadBtn.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.25)';
+
+        // Cleanup inline overrides so natural CSS takes over
+        setTimeout(() => {
+          quickDownloadBtn.style.transform = '';
+          quickDownloadBtn.style.boxShadow = '';
+          quickDownloadBtn.style.animation = '';
+          quickDownloadBtn.style.transition = '';
+        }, 300);
+      } catch (err) {
+        console.error('[QuickDownload] Error in smooth hover transition:', err);
+        quickDownloadBtn.classList.remove('btn-highlight-pulse');
+      }
+    }
+  });
 }
 
 const clearDownloadHistoryBtn = document.getElementById('clear-download-history-btn');
