@@ -1626,19 +1626,6 @@ async function startSingleDownload(item) {
         item.status = 'completed';
         console.log('[DOWNLOAD_FINISH] Oznaczono pobieranie jako ukończone:', item.model);
         ToastManager.show({ type: 'success', title: 'Pobieranie ukończone', message: `Model ${item.model} gotowy do użycia.` });
-        if (pendingConfig && pendingConfig.engine) {
-          if (item.engine === 'vosk') {
-            pendingConfig.engine.vosk.model_path = `models/vosk/${item.model}`;
-          } else if (item.engine === 'sherpa_onnx') {
-            pendingConfig.engine.sherpa_onnx.model_path = `models/sherpa/${item.model}`;
-          } else {
-            pendingConfig.engine.whisper.model = item.model;
-          }
-          activeConfig = JSON.parse(JSON.stringify(pendingConfig));
-          await saveConfigState();
-          checkEngineDirty();
-          updateActiveEnginePanel(activeConfig.engine.type);
-        }
       } else {
         console.log('[DOWNLOAD_FINISH] Pobieranie było anulowane w trakcie, pomijam oznaczanie jako ukończone.');
       }
