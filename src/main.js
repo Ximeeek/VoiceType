@@ -1298,17 +1298,42 @@ async function renderAvailableModels(engineId) {
       // Jeśli żaden model nie jest aktywny w aktualnej konfiguracji (np. po zmianie języka),
       // automatycznie zaznaczamy pierwszy z listy i aktualizujemy pendingConfig
       if (!hasActive && models.length > 0) {
-        models[0].is_active = true;
-        const modelId = models[0].id;
-        if (pendingConfig) {
+        let shouldAutoSelect = false;
+        if (pendingConfig && activeConfig) {
+          let currentModelId = '';
           if (engineId === 'vosk') {
-            pendingConfig.engine.vosk.model_path = `models/vosk/${modelId}`;
+            currentModelId = (pendingConfig.engine.vosk.model_path || '').split(/[/\\]/).pop();
           } else if (engineId === 'sherpa_onnx') {
-            pendingConfig.engine.sherpa_onnx.model_path = `models/sherpa/${modelId}`;
+            currentModelId = (pendingConfig.engine.sherpa_onnx.model_path || '').split(/[/\\]/).pop();
           } else {
-            pendingConfig.engine.whisper.model = modelId;
+            currentModelId = pendingConfig.engine.whisper.model;
           }
-          checkEngineDirty();
+          
+          if (!currentModelId || 
+              pendingConfig.general.language !== activeConfig.general.language ||
+              pendingConfig.engine.type !== activeConfig.engine.type) {
+            shouldAutoSelect = true;
+          }
+        } else {
+          shouldAutoSelect = true;
+        }
+
+        if (shouldAutoSelect) {
+          console.log(`[renderAvailableModels] Auto-selecting first model for engine '${engineId}' (no active model & change detected).`);
+          models[0].is_active = true;
+          const modelId = models[0].id;
+          if (pendingConfig) {
+            if (engineId === 'vosk') {
+              pendingConfig.engine.vosk.model_path = `models/vosk/${modelId}`;
+            } else if (engineId === 'sherpa_onnx') {
+              pendingConfig.engine.sherpa_onnx.model_path = `models/sherpa/${modelId}`;
+            } else {
+              pendingConfig.engine.whisper.model = modelId;
+            }
+            checkEngineDirty();
+          }
+        } else {
+          console.log(`[renderAvailableModels] Not auto-selecting model for engine '${engineId}' because we are not editing/switching language/engine.`);
         }
       }
 
@@ -2243,8 +2268,10 @@ function showDownloadingNavigationModal() {
 }
 
 async function confirmUnsavedChanges(onProceed) {
+  console.log("[confirmUnsavedChanges] Checking for unsaved changes before page transition...");
   const applyBtn = document.getElementById('btn-engine-apply');
   if (applyBtn && applyBtn.style.display !== 'none') {
+    console.log("[confirmUnsavedChanges] Unsaved changes detected (apply button is visible).");
     const engineId = pendingConfig.engine.type;
     let modelId = '';
     if (engineId === 'vosk') {
@@ -2262,8 +2289,10 @@ async function confirmUnsavedChanges(onProceed) {
     }
 
     if (!isDownloaded) {
+      console.log(`[confirmUnsavedChanges] Target model '${modelId}' is not downloaded.`);
       const isCurrentlyDownloading = downloadQueue.some(q => q.model === modelId && (q.status === 'downloading' || q.status === 'queued'));
       if (!isCurrentlyDownloading) {
+        console.log("[confirmUnsavedChanges] Showing missing model navigation guard modal.");
         showMissingModelNavigationGuardModal({
           engine: engineId,
           modelId,
@@ -2273,14 +2302,17 @@ async function confirmUnsavedChanges(onProceed) {
       }
     }
 
+    console.log("[confirmUnsavedChanges] Showing unsaved changes modal.");
     const desc = getEngineChangesDescription();
     showUnsavedChangesModal({
       description: desc,
       onSave: async () => {
+        console.log("[confirmUnsavedChanges] User elected to SAVE changes.");
         applyBtn.click();
         onProceed();
       },
       onDiscard: () => {
+        console.log("[confirmUnsavedChanges] User elected to DISCARD changes.");
         pendingConfig = JSON.parse(JSON.stringify(activeConfig));
         loadConfigGeneralUI(activeConfig);
         updateActiveEnginePanel(activeConfig.engine.type);
@@ -2292,6 +2324,7 @@ async function confirmUnsavedChanges(onProceed) {
     });
     return false;
   }
+  console.log("[confirmUnsavedChanges] No unsaved changes. Proceeding with transition.");
   onProceed();
   return true;
 }
@@ -2342,12 +2375,14 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
   const closeX = card.querySelector('.btn-modal-close-x');
   if (closeX) {
     closeX.onclick = () => {
+      console.log("[showMissingModelNavigationGuardModal] Close (x) clicked. Proceeding with page transition.");
       close();
       onProceed();
     };
   }
 
   card.querySelector('.btn-cancel-nav').onclick = async () => {
+    console.log("[showMissingModelNavigationGuardModal] 'Cancel' clicked. Staying on current section.");
     if (isDownloading && window.__TAURI__) {
       const checkEngine = engine === 'faster_whisper' ? 'whisper' : engine;
       await window.__TAURI__.core.invoke('cleanup_model_tmp_files', { engine: checkEngine, model: modelId });
@@ -2362,6 +2397,7 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
   };
 
   card.querySelector('.btn-discard-nav').onclick = () => {
+    console.log("[showMissingModelNavigationGuardModal] 'Don't Save' clicked. Discarding changes and proceeding with transition.");
     close();
     pendingConfig = JSON.parse(JSON.stringify(activeConfig));
     loadConfigGeneralUI(activeConfig);
@@ -2373,6 +2409,7 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
   };
 
   card.querySelector('.btn-download-nav').onclick = async () => {
+    console.log("[showMissingModelNavigationGuardModal] 'Download and Save' clicked. Initiating download and proceeding with transition.");
     addModelToDownloadQueue(engine, modelId);
     activeConfig = JSON.parse(JSON.stringify(pendingConfig));
     if (window.__TAURI__) {
