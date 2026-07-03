@@ -10,8 +10,131 @@
     <link rel="stylesheet" href="./styles/reset.css">
     <link rel="stylesheet" href="./styles/variables.css">
     <link rel="stylesheet" href="./styles/app.css">
+    <style>
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, var(--bg-secondary, #0e130e) 0%, var(--bg-primary, #080c08) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+            opacity: 1;
+            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.4s;
+            visibility: visible;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #loading-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transform: translateY(-20px);
+        }
+        .loading-orb-container {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .loading-orb {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, var(--accent-green, #39ff50) 0%, var(--accent-magenta, #e0147a) 70%, #000000 100%);
+            box-shadow: 0 0 35px var(--accent-green-dim, rgba(57,255,80,0.25)), 0 0 70px rgba(224,20,122,0.15);
+            animation: loading-orb-morph 4s ease-in-out infinite alternate, loading-orb-pulse 2s ease-in-out infinite alternate;
+            position: relative;
+            z-index: 2;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .loading-orb-glow {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            filter: blur(25px);
+            opacity: 0.25;
+            background: linear-gradient(135deg, var(--accent-green, #39ff50), var(--accent-magenta, #e0147a));
+            animation: loading-glow-pulse 2s ease-in-out infinite alternate;
+        }
+        .loading-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+            margin: 0 0 4px 0;
+            background: linear-gradient(135deg, var(--accent-green, #39ff50), #ffffff 50%, var(--accent-magenta, #e0147a));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 10px rgba(57,255,80,0.15));
+        }
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            border-top: 2px solid var(--accent-green, #39ff50);
+            border-radius: 50%;
+            animation: loading-spin 1s linear infinite;
+            margin: 16px 0;
+        }
+        .loading-status {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary, rgba(255, 255, 255, 0.55));
+            text-transform: uppercase;
+            margin: 0;
+        }
+        @keyframes loading-orb-morph {
+            0% { border-radius: 50%; }
+            50% { border-radius: 55% 45% 65% 35% / 45% 55% 35% 65%; }
+            100% { border-radius: 45% 55% 35% 65% / 55% 45% 65% 35%; }
+        }
+        @keyframes loading-orb-pulse {
+            0% { transform: scale(0.96); }
+            100% { transform: scale(1.04); }
+        }
+        @keyframes loading-glow-pulse {
+            0% { opacity: 0.15; transform: scale(0.9); }
+            100% { opacity: 0.35; transform: scale(1.15); }
+        }
+        @keyframes loading-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
+    <!-- Loading Screen Overlay -->
+    <div id="loading-screen" data-tauri-drag-region>
+        <div class="loading-content" data-tauri-drag-region>
+            <div class="loading-orb-container" data-tauri-drag-region>
+                <div class="loading-orb"></div>
+                <div class="loading-orb-glow"></div>
+            </div>
+            <h1 class="loading-title" data-i18n="loading.title" data-tauri-drag-region>VoiceType</h1>
+            <div class="loading-spinner"></div>
+            <p class="loading-status" data-i18n="loading.status" data-tauri-drag-region>Initializing...</p>
+        </div>
+    </div>
+
     <!-- Titlebar -->
     <div class="titlebar" data-tauri-drag-region>
         <div class="titlebar-title" style="pointer-events: none;">VoiceType</div>

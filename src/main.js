@@ -2909,6 +2909,16 @@ async function init() {
   }
   updateQuickModelOptions();
   setupUpdateNotificationUI();
+
+  // Dismiss loading screen
+  const loadingScreen = document.getElementById('loading-screen');
+  if (loadingScreen) {
+    console.log('[VoiceType] Initialization complete, dismissing loading screen.');
+    loadingScreen.classList.add('fade-out');
+    setTimeout(() => {
+      loadingScreen.remove();
+    }, 450);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

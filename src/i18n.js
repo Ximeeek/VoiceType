@@ -10,6 +10,10 @@ export const translations = {
     "nav.about": "About",
     "app.title": "VoiceType Pro",
 
+    // Loading Screen
+    "loading.title": "VoiceType",
+    "loading.status": "Initializing voice system...",
+
     // Dashboard Page
     "dash.dictation_control": "Dictation Control",
     "dash.status.idle": "Ready to dictate",
@@ -407,6 +411,10 @@ export const translations = {
     "nav.settings": "Ustawienia",
     "nav.about": "O programie",
     "app.title": "VoiceType Pro",
+
+    // Loading Screen
+    "loading.title": "VoiceType",
+    "loading.status": "Uruchamianie systemu...",
 
     // Dashboard Page
     "dash.dictation_control": "Sterowanie dyktowaniem",
