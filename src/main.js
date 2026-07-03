@@ -348,13 +348,57 @@ class ToastManager {
     }
 
     if (!persistent) {
-      let duration = 3000;
-      if (type === 'success') duration = 2000;
-      if (type === 'error') duration = 5000;
+      const timerBar = document.createElement('div');
+      timerBar.className = 'toast-timer';
+      toast.appendChild(timerBar);
 
-      setTimeout(() => {
-        ToastManager.hide(id);
-      }, duration);
+      const totalDuration = 3000; // 3 seconds
+      let remainingTime = totalDuration;
+      let lastTick = Date.now();
+      let isHovered = false;
+      let frameId = null;
+
+      toast.addEventListener('mouseenter', () => {
+        isHovered = true;
+        remainingTime = totalDuration;
+        toast.style.opacity = '1';
+        timerBar.style.transform = 'scaleX(1)';
+      });
+
+      toast.addEventListener('mouseleave', () => {
+        isHovered = false;
+        lastTick = Date.now();
+      });
+
+      const tick = () => {
+        if (!toast.parentNode) {
+          if (frameId) cancelAnimationFrame(frameId);
+          return;
+        }
+
+        if (isHovered) {
+          lastTick = Date.now();
+          frameId = requestAnimationFrame(tick);
+          return;
+        }
+
+        const now = Date.now();
+        const delta = now - lastTick;
+        lastTick = now;
+
+        remainingTime -= delta;
+        if (remainingTime <= 0) {
+          if (frameId) cancelAnimationFrame(frameId);
+          toast.remove();
+        } else {
+          const ratio = Math.max(0, remainingTime / totalDuration);
+          timerBar.style.transform = `scaleX(${ratio})`;
+          toast.style.opacity = `${ratio}`;
+          frameId = requestAnimationFrame(tick);
+        }
+      };
+
+      frameId = requestAnimationFrame(tick);
     }
   }
 
@@ -363,7 +407,9 @@ class ToastManager {
     if (toast) {
       toast.style.animation = 'toast-out 0.2s ease forwards';
       setTimeout(() => {
-        toast.remove();
+        if (toast.parentNode) {
+          toast.remove();
+        }
       }, 200);
     }
   }
@@ -1008,20 +1054,125 @@ function updateActiveEnginePanel(engineId) {
       if (pendingConfig && pendingConfig.engine && pendingConfig.engine.whisper) {
         gpuCheck.checked = pendingConfig.engine.whisper.use_gpu;
       }
-      gpuCheck.onchange = (e) => {
-        pendingConfig.engine.whisper.use_gpu = e.target.checked;
-        checkEngineDirty();
-        if (e.target.checked) {
-          if (engineId === 'whisper') {
-            ToastManager.show({
-              type: 'warning',
-              title: t('toast.whisper_gpu_unavailable_title'),
-              message: t('toast.whisper_gpu_unavailable_msg'),
-              duration: 8000
-            });
+
+      const updateGpuCheckboxUI = async () => {
+        try {
+          console.log("[GPU] Checking hardware GPU support...");
+          const isGpuSupported = await window.__TAURI__.core.invoke('check_gpu_support');
+          console.log(`[GPU] Hardware GPU support: ${isGpuSupported}`);
+          
+          if (!isGpuSupported) {
+            gpuCheck.disabled = true;
+            gpuCheck.checked = false;
+            pendingConfig.engine.whisper.use_gpu = false;
+            gpuContainer.style.opacity = '0.5';
+            gpuContainer.style.pointerEvents = 'none';
+            gpuCheck.setAttribute('title', t('engines.whisper.gpu_unsupported_tooltip'));
+            gpuContainer.setAttribute('title', t('engines.whisper.gpu_unsupported_tooltip'));
           } else {
-            showCudaInstallModal();
+            gpuCheck.disabled = false;
+            gpuContainer.style.opacity = '1';
+            gpuContainer.style.pointerEvents = 'auto';
+            gpuCheck.removeAttribute('title');
+            gpuContainer.removeAttribute('title');
           }
+          
+          const gpuWarningText = document.getElementById('whisper-gpu-warning-text');
+          if (gpuWarningText) {
+            if (engineId === 'faster_whisper') {
+              const isCudaInstalled = await window.__TAURI__.core.invoke('check_cuda_installed');
+              if (!isCudaInstalled || !isGpuSupported) {
+                gpuWarningText.style.display = 'flex';
+              } else {
+                gpuWarningText.style.display = 'none';
+              }
+            } else {
+              gpuWarningText.style.display = 'none';
+            }
+          }
+        } catch (err) {
+          console.error("[GPU] Failed to update GPU UI:", err);
+        }
+      };
+
+      updateGpuCheckboxUI();
+
+      gpuCheck.onchange = async (e) => {
+        const checked = e.target.checked;
+        console.log(`[GPU Log] Checkbox click event triggered. New visual checked status: ${checked}`);
+        
+        try {
+          if (checked) {
+            console.log("[GPU Log] User clicked to ENABLE GPU.");
+            if (engineId === 'whisper') {
+              console.log("[GPU Log] Engine is Whisper.cpp (CPU only on this system). Setting use_gpu to true and showing warning toast.");
+              pendingConfig.engine.whisper.use_gpu = true;
+              checkEngineDirty();
+              ToastManager.show({
+                type: 'warning',
+                title: t('toast.whisper_gpu_unavailable_title'),
+                message: t('toast.whisper_gpu_unavailable_msg'),
+                duration: 8000
+              });
+            } else {
+              console.log("[GPU Log] Engine is Faster-Whisper. Invoking check_cuda_installed...");
+              const isCudaInstalled = await window.__TAURI__.core.invoke('check_cuda_installed');
+              console.log(`[GPU Log] check_cuda_installed returned: ${isCudaInstalled}`);
+              
+              if (isCudaInstalled) {
+                console.log("[GPU Log] CUDA is already fully installed. Enabling GPU directly and updating UI.");
+                pendingConfig.engine.whisper.use_gpu = true;
+                checkEngineDirty();
+                await updateGpuCheckboxUI();
+              } else {
+                console.log("[GPU Log] CUDA is NOT installed. Visual checkbox reset to false. Showing showCudaInstallModal.");
+                gpuCheck.checked = false;
+                showCudaInstallModal(gpuCheck);
+              }
+            }
+          } else {
+            console.log("[GPU Log] User clicked to DISABLE GPU.");
+            console.log("[GPU Log] Invoking check_cuda_installed to determine if we should warn about package deletion...");
+            const isCudaInstalled = await window.__TAURI__.core.invoke('check_cuda_installed');
+            console.log(`[GPU Log] check_cuda_installed returned: ${isCudaInstalled}`);
+            
+            if (isCudaInstalled) {
+              console.log("[GPU Log] CUDA is installed. Reverting checkbox visually to checked, showing warning confirm modal.");
+              gpuCheck.checked = true;
+              
+              showCustomConfirmModal({
+                title: t('addons.cuda.uninstall_warning_title'),
+                message: t('addons.cuda.uninstall_warning_msg'),
+                confirmText: t('addons.cuda.uninstall_confirm_btn'),
+                cancelText: t('btn.cancel'),
+                isDanger: true,
+                onConfirm: async () => {
+                  console.log("[GPU Log] User confirmed uninstallation in modal. Launching showCudaUninstallProgress.");
+                  try {
+                    showCudaUninstallProgress(gpuCheck);
+                  } catch (err) {
+                    console.error("[GPU Log] Exception starting CUDA uninstall:", err);
+                    ToastManager.show({ type: 'error', title: t('toast.cuda_uninstall_error'), message: err.toString() });
+                    throw err;
+                  }
+                },
+                onCancel: () => {
+                  console.log("[GPU Log] User cancelled uninstallation. Reverting checkbox visually to checked.");
+                  gpuCheck.checked = true;
+                }
+              });
+            } else {
+              console.log("[GPU Log] CUDA is NOT installed anyway. Disabling GPU directly and updating UI.");
+              pendingConfig.engine.whisper.use_gpu = false;
+              checkEngineDirty();
+              await updateGpuCheckboxUI();
+            }
+          }
+        } catch (err) {
+          console.error("[GPU Log] Exception in checkbox onchange handler:", err);
+          ToastManager.show({ type: 'error', title: t('toast.cuda_uninstall_error'), message: err.toString() });
+          gpuCheck.checked = !checked;
+          throw err;
         }
       };
     }
@@ -2152,7 +2303,7 @@ async function renderInstalledModelsManager() {
   }
 }
 
-function showCustomConfirmModal({ title, message, confirmText, cancelText, isDanger = true, onConfirm }) {
+function showCustomConfirmModal({ title, message, confirmText, cancelText, isDanger = true, onConfirm, onCancel }) {
   const cancelBtnText = cancelText || t('btn.cancel');
   const confirmBtnText = confirmText || (isDanger ? t('models.btn.delete') : t('btn.apply'));
   const headerColor = isDanger ? '#ff4d4d' : 'var(--accent-green)';
@@ -2188,7 +2339,10 @@ function showCustomConfirmModal({ title, message, confirmText, cancelText, isDan
   document.body.appendChild(backdrop);
 
   const close = () => backdrop.remove();
-  card.querySelector('.btn-cancel').onclick = close;
+  card.querySelector('.btn-cancel').onclick = () => {
+    close();
+    if (onCancel) onCancel();
+  };
   card.querySelector('.btn-confirm-action').onclick = () => {
     close();
     if (onConfirm) onConfirm();
@@ -3027,7 +3181,7 @@ function showPythonModal(targetEngineId) {
   };
 }
 
-function showCudaInstallModal() {
+function showCudaInstallModal(gpuCheck = null) {
   const modal = document.getElementById('python-modal');
   const btnClose = document.getElementById('btn-python-modal-close');
   const btnInstall = document.getElementById('btn-python-modal-install');
@@ -3051,6 +3205,11 @@ function showCudaInstallModal() {
   btnClose.onclick = () => {
     modal.style.display = 'none';
     title.textContent = t('addons.py.modal_title');
+    if (gpuCheck) {
+      gpuCheck.checked = false;
+      pendingConfig.engine.whisper.use_gpu = false;
+      checkEngineDirty();
+    }
   };
 
   btnInstall.onclick = async () => {
@@ -3066,6 +3225,13 @@ function showCudaInstallModal() {
 
         if (payload.done) {
           ToastManager.show({ type: 'success', title: t('toast.cuda_installed_title'), message: t('toast.cuda_installed_msg') });
+          if (gpuCheck) {
+            gpuCheck.checked = true;
+            pendingConfig.engine.whisper.use_gpu = true;
+            checkEngineDirty();
+            const warningEl = document.getElementById('whisper-gpu-warning-text');
+            if (warningEl) warningEl.style.display = 'none';
+          }
           setTimeout(() => {
             modal.style.display = 'none';
             title.textContent = t('addons.py.modal_title');
@@ -3073,6 +3239,11 @@ function showCudaInstallModal() {
           }, 2000);
         } else if (payload.error) {
           ToastManager.show({ type: 'error', title: t('toast.cuda_install_error'), message: payload.error });
+          if (gpuCheck) {
+            gpuCheck.checked = false;
+            pendingConfig.engine.whisper.use_gpu = false;
+            checkEngineDirty();
+          }
           desc.innerHTML = `<span style="color: var(--text-error); font-weight: 600;">${t('addons.py.error_prefix')}:</span> ${payload.error}<br><br>${t('addons.py.retry_tip')}`;
           actions.style.display = 'flex';
           progressContainer.style.display = 'none';
@@ -3087,6 +3258,83 @@ function showCudaInstallModal() {
       }
     }
   };
+}
+
+function showCudaUninstallProgress(gpuCheck = null) {
+  const modal = document.getElementById('python-modal');
+  const btnClose = document.getElementById('btn-python-modal-close');
+  const progressContainer = document.getElementById('python-progress-container');
+  const progressBar = document.getElementById('python-progress-bar');
+  const progressStep = document.getElementById('python-progress-step');
+  const progressPercent = document.getElementById('python-progress-percent');
+  const actions = document.getElementById('python-modal-actions');
+  const desc = document.getElementById('python-modal-desc');
+  const title = modal ? modal.querySelector('.modal-title') : null;
+
+  if (!modal) return;
+
+  title.textContent = t('addons.cuda.uninstall_modal_title') || "Odinstalowywanie bibliotek CUDA";
+  modal.style.display = 'flex';
+  actions.style.display = 'none';
+  desc.style.display = 'none';
+  progressContainer.style.display = 'block';
+  progressBar.style.width = '0%';
+  progressStep.textContent = t('addons.cuda.uninstalling') || "Odinstalowywanie...";
+  progressPercent.textContent = '0%';
+
+  if (window.__TAURI__) {
+    (async () => {
+      const unlisten = await window.__TAURI__.event.listen('python_install_progress', (event) => {
+        const payload = event.payload;
+        progressBar.style.width = `${payload.percent}%`;
+        progressStep.textContent = payload.step;
+        progressPercent.textContent = `${Math.round(payload.percent)}%`;
+
+        if (payload.done) {
+          ToastManager.show({ type: 'success', title: t('toast.cuda_uninstalled_title'), message: t('toast.cuda_uninstalled_msg') });
+          if (gpuCheck) {
+            gpuCheck.checked = false;
+            pendingConfig.engine.whisper.use_gpu = false;
+            checkEngineDirty();
+            const warningEl = document.getElementById('whisper-gpu-warning-text');
+            if (warningEl) warningEl.style.display = 'flex';
+          }
+          setTimeout(() => {
+            modal.style.display = 'none';
+            title.textContent = t('addons.py.modal_title');
+            unlisten();
+          }, 2000);
+        } else if (payload.error) {
+          ToastManager.show({ type: 'error', title: t('toast.cuda_uninstall_error'), message: payload.error });
+          if (gpuCheck) {
+            gpuCheck.checked = true;
+            pendingConfig.engine.whisper.use_gpu = true;
+            checkEngineDirty();
+          }
+          setTimeout(() => {
+            modal.style.display = 'none';
+            title.textContent = t('addons.py.modal_title');
+            unlisten();
+          }, 2000);
+        }
+      });
+
+      try {
+        await window.__TAURI__.core.invoke('uninstall_cuda_libs');
+      } catch (err) {
+        console.error("Tauri CUDA uninstall invoke error", err);
+        ToastManager.show({ type: 'error', title: t('toast.cuda_uninstall_error'), message: err.toString() });
+        if (gpuCheck) {
+          gpuCheck.checked = true;
+          pendingConfig.engine.whisper.use_gpu = true;
+          checkEngineDirty();
+        }
+        modal.style.display = 'none';
+        title.textContent = t('addons.py.modal_title');
+        unlisten();
+      }
+    })();
+  }
 }
 
 function checkEngineDirty() {

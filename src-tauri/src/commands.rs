@@ -312,6 +312,147 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn check_cuda_installed() -> bool {
+    let dev_site_packages = std::path::Path::new("..")
+        .join("python_embed")
+        .join("Lib")
+        .join("site-packages");
+    
+    let rel_site_packages = std::path::Path::new("python_embed")
+        .join("Lib")
+        .join("site-packages");
+
+    let site_packages = if dev_site_packages.exists() {
+        dev_site_packages
+    } else {
+        rel_site_packages
+    };
+
+    if !site_packages.exists() {
+        return false;
+    }
+
+    let mut has_cublas = false;
+    let mut has_cudnn = false;
+
+    if let Ok(entries) = std::fs::read_dir(site_packages) {
+        for entry in entries.flatten() {
+            if let Ok(file_type) = entry.file_type() {
+                if file_type.is_dir() {
+                    let name = entry.file_name().to_string_lossy().to_lowercase();
+                    if name.starts_with("nvidia_cublas_cu12-") {
+                        has_cublas = true;
+                    }
+                    if name.starts_with("nvidia_cudnn_cu12-") {
+                        has_cudnn = true;
+                    }
+                }
+            }
+        }
+    }
+
+    has_cublas && has_cudnn
+}
+
+#[tauri::command]
+pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
+    let dev_python = std::path::Path::new("..").join("python_embed").join("python.exe");
+    let rel_python = std::path::Path::new("python_embed").join("python.exe");
+    let python_exe = if dev_python.exists() {
+        dev_python
+    } else {
+        rel_python
+    };
+
+    if !python_exe.exists() {
+        return Err("Python environment not installed.".into());
+    }
+    
+    app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
+        step: "Odinstalowywanie bibliotek CUDA ze środowiska Python...".to_string(),
+        percent: 50.0,
+        done: false,
+        error: None,
+    }).ok();
+
+    #[cfg(windows)]
+    let mut cmd = std::process::Command::new(&python_exe);
+    #[cfg(not(windows))]
+    let mut cmd = std::process::Command::new("python3");
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+
+    let output = cmd
+        .args(["-m", "pip", "uninstall", "-y", "nvidia-cublas-cu12", "nvidia-cudnn-cu12"])
+        .output();
+
+    match output {
+        Ok(out) => {
+            if out.status.success() {
+                app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
+                    step: "Biblioteki CUDA zostały pomyślnie usunięte!".to_string(),
+                    percent: 100.0,
+                    done: true,
+                    error: None,
+                }).ok();
+                Ok(())
+            } else {
+                let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+                let err = format!("Błąd pip: {}", stderr);
+                app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
+                    step: "Usuwanie bibliotek CUDA nie powiodło się".to_string(),
+                    percent: 0.0,
+                    done: false,
+                    error: Some(err.clone()),
+                }).ok();
+                Err(err)
+            }
+        }
+        Err(e) => {
+            let err = format!("Failed to run pip: {}", e);
+            app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
+                step: "Błąd uruchomienia deinstalacji".to_string(),
+                percent: 0.0,
+                done: false,
+                error: Some(err.clone()),
+            }).ok();
+            Err(err)
+        }
+    }
+}
+
+#[tauri::command]
+pub fn check_gpu_support() -> bool {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        let output = std::process::Command::new("powershell")
+            .args([
+                "-NoProfile",
+                "-Command",
+                "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name"
+            ])
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW
+            .output();
+
+        if let Ok(out) = output {
+            let stdout = String::from_utf8_lossy(&out.stdout).to_string();
+            stdout.to_lowercase().contains("nvidia")
+        } else {
+            false
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
+}
+
+#[tauri::command]
 pub async fn list_audio_devices() -> Result<Vec<AudioDevice>, String> {
     Ok(crate::audio::capture::list_audio_devices())
 }

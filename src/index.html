@@ -525,6 +525,10 @@
                                         <span class="checkbox-label" data-i18n="engines.whisper.use_gpu">Użyj GPU (wymaga CUDA)</span>
                                     </label>
                                 </div>
+                                <div id="whisper-gpu-warning-text" style="display: none; align-items: center; gap: 8px; color: #f59e0b; font-size: 12px; margin-bottom: 16px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); padding: 10px 14px; border-radius: 8px; font-weight: 500;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-triangle" style="flex-shrink: 0;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>
+                                    <span data-i18n="engines.whisper.gpu_slower_warning">Faster-Whisper bez CUDA/GPU działa wolniej</span>
+                                </div>
                                 <div class="status-row" style="margin-bottom: 16px;">
                                     <div class="status-label"><span data-i18n="engines.vosk.status_label">Status modelu:</span> <span id="whisper-model-status" class="status-value" data-i18n="engines.status.not_installed">Nie pobrany</span></div>
                                 </div>
