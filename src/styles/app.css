@@ -503,7 +503,7 @@ body.dual-accent .sidebar-btn.active {
 
 .input-field:focus {
   border-color: var(--border-accent);
-  box-shadow: 0 0 10px rgba(57, 255, 80, 0.1);
+  box-shadow: 0 0 10px var(--accent-green-dim, rgba(57, 255, 80, 0.1));
 }
 
 .btn-primary {
@@ -610,7 +610,7 @@ body.dual-accent .btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(57, 255, 80, 0.08);
+  background: var(--accent-green-dim, rgba(57, 255, 80, 0.08));
   border: 1px solid var(--border-accent);
   color: var(--accent-green);
   font-family: 'Space Grotesk', sans-serif;
@@ -626,7 +626,7 @@ body.dual-accent .btn-primary {
 .btn-provider-link:hover {
   background: var(--accent-green);
   color: var(--bg-primary);
-  box-shadow: 0 0 15px rgba(57, 255, 80, 0.25);
+  box-shadow: 0 0 15px var(--border-accent, rgba(57, 255, 80, 0.25));
   transform: translateY(-1px);
 }
 
@@ -930,7 +930,7 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 50%;
   background: var(--accent-green);
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(57, 255, 80, 0.4);
+  box-shadow: 0 0 10px var(--accent-green-pulse, rgba(57, 255, 80, 0.4));
   transition: transform 0.1s ease;
 }
 
@@ -1151,7 +1151,7 @@ body.dual-accent .engine-card-badge.active {
   border-radius: 4px;
   width: 0%;
   transition: width 0.3s ease;
-  box-shadow: 0 0 10px rgba(57, 255, 80, 0.3);
+  box-shadow: 0 0 10px var(--accent-green-pulse, rgba(57, 255, 80, 0.3));
 }
 
 .status-value.highlight {
@@ -1570,7 +1570,7 @@ select.input-field option {
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15), 0 0 0 12px rgba(57, 255, 80, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15), 0 0 0 12px var(--accent-green-pulse, rgba(57, 255, 80, 0.4));
     transform: scale(1.04);
   }
   100% {

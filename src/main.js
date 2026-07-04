@@ -58,11 +58,13 @@ function applyAppearanceSettings(config) {
   }
 
   const contrastText = getContrastTextColor(mainColor);
+  const pulseColor = hexToRgba(mainColor, 0.4);
 
   document.documentElement.style.setProperty('--accent-green', mainColor);
   document.documentElement.style.setProperty('--accent-magenta', secColor);
   document.documentElement.style.setProperty('--accent-green-dim', dimColor);
   document.documentElement.style.setProperty('--border-accent', borderColor);
+  document.documentElement.style.setProperty('--accent-green-pulse', pulseColor);
   document.documentElement.style.setProperty('--accent-contrast-text', contrastText);
 
   const orb = document.getElementById('status-orb');

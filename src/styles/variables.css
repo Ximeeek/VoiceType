@@ -8,6 +8,7 @@
   --accent-green:   #39ff50;
   --accent-magenta: #e0147a;
   --accent-green-dim: rgba(57,255,80,0.12);
+  --accent-green-pulse: rgba(57,255,80,0.4);
   --text-primary:   #ffffff;
   --text-secondary: rgba(255,255,255,0.55);
   --text-muted:     rgba(255,255,255,0.25);
