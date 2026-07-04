@@ -574,6 +574,13 @@ async function populateAudioDevices() {
     try {
       const devices = await window.__TAURI__.core.invoke('list_audio_devices');
       select.innerHTML = '';
+      
+      // Prepend Default Device option
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = 'default';
+      defaultOpt.textContent = t('settings.mic.default') || 'Default Device';
+      select.appendChild(defaultOpt);
+
       devices.forEach(device => {
         const opt = document.createElement('option');
         opt.value = device.id;
@@ -582,7 +589,10 @@ async function populateAudioDevices() {
       });
       
       if (activeConfig && activeConfig.audio) {
-        select.value = activeConfig.audio.input_device;
+        const targetVal = activeConfig.audio.input_device || 'default';
+        select.value = targetVal;
+      } else {
+        select.value = 'default';
       }
     } catch (err) {
       console.error('Failed to query audio devices:', err);
@@ -2072,7 +2082,7 @@ async function triggerModelDownloadExplicit(engineId, modelName) {
   if (progressContainer) progressContainer.style.display = 'block';
   if (fill) fill.style.width = '0%';
   if (percentEl) percentEl.textContent = '0%';
-  if (text) text.textContent = 'Inicjalizacja pobierania...';
+  if (text) text.textContent = t('downloads.active.initializing');
 
   addModelToDownloadQueue(engineId, modelName);
 }
@@ -2097,7 +2107,7 @@ async function triggerModelDownload(engineId) {
   if (progressContainer) progressContainer.style.display = 'block';
   if (fill) fill.style.width = '0%';
   if (percentEl) percentEl.textContent = '0%';
-  if (text) text.textContent = 'Inicjalizacja pobierania...';
+  if (text) text.textContent = t('downloads.active.initializing');
 
   addModelToDownloadQueue(engineId, modelName);
 }

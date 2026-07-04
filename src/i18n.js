@@ -271,6 +271,13 @@ export const translations = {
     "toast.engine.google_key_invalid": "Invalid Google STT API key",
     "toast.engine.unavailable": "{engine} unavailable — check model/API key",
     "toast.engine.no_active": "No active engine",
+    "lang.pl": "Polish (Polski)",
+    "lang.en": "English",
+    "lang.de": "German (Deutsch)",
+    "lang.fr": "French (Français)",
+    "lang.es": "Spanish (Español)",
+    "lang.it": "Italian (Italiano)",
+    "lang.ru": "Russian (Русский)",
     "toast.save_config_failed": "Save Config Failed",
     "toast.add_failed": "Add failed",
     "toast.mic_update_failed": "Failed to update microphone",
@@ -717,6 +724,13 @@ export const translations = {
     "toast.engine.google_key_invalid": "Nieprawidłowy klucz API Google STT",
     "toast.engine.unavailable": "{engine} niedostępny — sprawdź model/klucz API",
     "toast.engine.no_active": "Brak aktywnego silnika",
+    "lang.pl": "Polski",
+    "lang.en": "Angielski (English)",
+    "lang.de": "Niemiecki (Deutsch)",
+    "lang.fr": "Francuski (Français)",
+    "lang.es": "Hiszpański (Español)",
+    "lang.it": "Włoski (Italiano)",
+    "lang.ru": "Rosyjski (Русский)",
     "toast.save_config_failed": "Błąd zapisu konfiguracji",
     "toast.add_failed": "Błąd dodawania",
     "toast.mic_update_failed": "Błąd aktualizacji mikrofonu",
@@ -944,6 +958,31 @@ export function updateDOMTranslations() {
       el.setAttribute(attr, translated);
     } else {
       el.textContent = translated;
+    }
+  });
+
+  // Dynamically translate the 'Default Device' option in the microphone dropdown
+  const micSelect = document.getElementById('settings-audio-device');
+  if (micSelect) {
+    const defaultOpt = Array.from(micSelect.options).find(opt => opt.value === 'default');
+    if (defaultOpt) {
+      defaultOpt.textContent = t('settings.mic.default') || 'Default Device';
+    }
+  }
+
+  // Translate language options in select elements
+  const langSelects = ['settings-app-language', 'settings-engine-language', 'quick-download-lang'];
+  langSelects.forEach(id => {
+    const selectEl = document.getElementById(id);
+    if (selectEl) {
+      Array.from(selectEl.options).forEach(opt => {
+        const val = opt.value;
+        const translationKey = `lang.${val}`;
+        const translated = t(translationKey);
+        if (translated && translated !== translationKey) {
+          opt.textContent = translated;
+        }
+      });
     }
   });
 }
