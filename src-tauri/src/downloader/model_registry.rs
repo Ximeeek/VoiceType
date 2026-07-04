@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, Clone, Serialize)]
 pub struct ModelInfo {
     pub engine: String,
-    pub model_id: String, // Używamy oryginalnej nazwy jako ID, np. "vosk-model-small-pl-0.22"
+    pub model_id: String, // Use original name as ID, e.g. "vosk-model-small-pl-0.22"
     pub url: String,
     pub sha256: Option<String>,
     pub size_bytes: u64,
@@ -27,9 +27,9 @@ struct VoskModelJson {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct AvailableModel {
-    pub id: String,         // np. "vosk-model-small-pl-0.22"
-    pub name: String,       // Przyjazna nazwa
-    pub size_text: String,  // np. "50.5 MiB"
+    pub id: String,         // e.g. "vosk-model-small-pl-0.22"
+    pub name: String,       // Friendly name
+    pub size_text: String,  // e.g. "50.5 MiB"
     pub is_downloaded: bool,
     pub is_active: bool,
     pub size_bytes: u64,
@@ -43,13 +43,13 @@ pub fn get_models_dir() -> PathBuf {
     p
 }
 
-// Pobiera listę modeli Vosk dla wybranego języka z internetu, albo zwraca fallback jeśli brak sieci
+// Fetches Vosk model list for selected language from internet, or returns fallback if offline
 pub async fn fetch_available_vosk_models(current_model_path: &str, lang: &str) -> Vec<AvailableModel> {
     let models_dir = get_models_dir().join("vosk");
     
     let mut fetched_models = Vec::new();
     
-    // Budujemy klienta z nagłówkiem User-Agent, aby serwer go nie odrzucił
+    // Build client with User-Agent header so the server does not reject it
     let client = reqwest::Client::builder()
         .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
         .build()
@@ -58,7 +58,7 @@ pub async fn fetch_available_vosk_models(current_model_path: &str, lang: &str) -
     if let Ok(res) = client.get("https://alphacephei.com/vosk/models/model-list.json").send().await {
         if res.status().is_success() {
             if let Ok(models) = res.json::<Vec<serde_json::Value>>().await {
-                // Filtrujemy modele dla wybranego języka (np. "pl" lub "en" pasujący też do "en-us", "en-in") i te, które nie są obsolete
+                // Filter models for selected language (e.g. "pl" or "en" matching also "en-us", "en-in") and those that are not obsolete
                 for m in models {
                     let lang_val = m.get("lang").and_then(|v| v.as_str()).unwrap_or("");
                     if lang_val != lang && !lang_val.starts_with(&format!("{}-", lang)) {
@@ -107,7 +107,7 @@ pub async fn fetch_available_vosk_models(current_model_path: &str, lang: &str) -
         }
     }
     
-    // Jeśli lista jest pusta (np. brak internetu), zwracamy nasz bezpieczny fallback dla wybranego języka
+    // If list is empty (e.g. no internet), return our safe fallback for selected language
     if fetched_models.is_empty() {
         let fallback_name = match lang {
             "pl" => "vosk-model-small-pl-0.22",
@@ -129,7 +129,7 @@ pub async fn fetch_available_vosk_models(current_model_path: &str, lang: &str) -
         });
     }
     
-    // Sortuj rosnąco według rozmiaru modelu w bajtach
+    // Sort ascending by model size in bytes
     fetched_models.sort_by_key(|m| m.size_bytes);
     
     fetched_models
@@ -139,7 +139,7 @@ pub async fn fetch_available_sherpa_models(current_model_path: &str, lang: &str)
     let models_dir = get_models_dir().join("sherpa");
     let mut fetched_models = Vec::new();
     
-    // Oficjalnie dostępne i zweryfikowane modele Sherpa-ONNX z repozytorium k2-fsa/sherpa-onnx
+    // Officially available and verified Sherpa-ONNX models from k2-fsa/sherpa-onnx repository
     let model_candidates = if lang == "en" {
         vec![
             ("sherpa-onnx-streaming-zipformer-en-2023-06-26", "Zipformer EN (Streaming)", "78 MB", 81_788_928),
@@ -148,7 +148,7 @@ pub async fn fetch_available_sherpa_models(current_model_path: &str, lang: &str)
             ("sherpa-onnx-whisper-small.en", "Whisper ONNX Small (EN)", "480 MB", 503_316_480),
         ]
     } else {
-        // Wszystkie wersje wielojęzyczne (obsługujące m.in. PL, DE, FR, ES)
+        // All multilingual versions (supporting PL, DE, FR, ES, etc.)
         vec![
             ("sherpa-onnx-whisper-tiny", "Whisper ONNX Tiny (Multilingual)", "75 MB", 78_643_200),
             ("sherpa-onnx-whisper-base", "Whisper ONNX Base (Multilingual)", "145 MB", 152_043_520),
@@ -180,7 +180,7 @@ pub async fn get_model_info(engine: &str, model_id: &str) -> anyhow::Result<Mode
     let clean_engine = if engine == "faster_whisper" { "whisper" } else { engine };
     match clean_engine {
         "vosk" => {
-            // Pobieramy listę, żeby wyciągnąć URL i rozmiar dla modelu o id (czyli nazwie np. "vosk-model-small-pl-0.22")
+            // Download list to extract URL and size for the model with given id (i.e. name like "vosk-model-small-pl-0.22")
             let client = reqwest::Client::builder()
                 .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                 .build()
@@ -207,13 +207,13 @@ pub async fn get_model_info(engine: &str, model_id: &str) -> anyhow::Result<Mode
                     dest_filename: format!("vosk/{}", model_id),
                 })
             } else {
-                // Jeśli brak sieci/modelu w jsonie (np. offline fallback), generujemy URL domyślnie na podstawie nazwy modelu!
+                // If no network/model in json (e.g. offline fallback), generate URL by default based on model name!
                 Ok(ModelInfo {
                     engine: "vosk".into(),
                     model_id: model_id.into(),
                     url: format!("https://alphacephei.com/vosk/models/{}.zip", model_id),
                     sha256: None,
-                    size_bytes: 52_979_372, // Domyślny rozmiar (np. małego modelu)
+                    size_bytes: 52_979_372, // Default size (e.g. small model)
                     dest_filename: format!("vosk/{}", model_id),
                 })
             }
@@ -261,7 +261,7 @@ pub async fn get_model_info(engine: &str, model_id: &str) -> anyhow::Result<Mode
                 dest_filename: format!("whisper/ggml-{}.bin", model_id),
             })
         }
-        _ => Err(anyhow::anyhow!("Nieobsługiwany silnik: {}", engine)),
+        _ => Err(anyhow::anyhow!("Unsupported engine: {}", engine)),
     }
 }
 
@@ -373,7 +373,7 @@ pub fn delete_installed_model(engine_id: &str, model_id: Option<&str>) -> anyhow
         "vosk" => "vosk",
         "sherpa_onnx" => "sherpa",
         "whisper" | "faster_whisper" => "whisper",
-        _ => return Err(anyhow::anyhow!("Nieznany silnik")),
+        _ => return Err(anyhow::anyhow!("Unknown engine")),
     };
 
     let mut models_dir = Path::new("models").join(folder_name);

@@ -29,16 +29,16 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
         }).ok();
     };
 
-    emit_progress("Pobieranie środowiska Python (ok. 10 MB)...", Some("addons.py.step.download_init"), 10.0, false, None);
+    emit_progress("Downloading Python environment (approx. 10 MB)...", Some("addons.py.step.download_init"), 10.0, false, None);
 
-    // 1. Pobieranie portable Pythona 3.10.11 embeddable
+    // 1. Download portable Python 3.10.11 embeddable
     let client = reqwest::Client::new();
     let url = "https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip";
     
     let res = client.get(url).send().await.map_err(|e| e.to_string())?;
     if !res.status().is_success() {
-        let err = format!("Błąd pobierania Pythona, status: {}", res.status());
-        emit_progress("Błąd", None, 0.0, false, Some(err.clone()));
+        let err = format!("Python download error, status: {}", res.status());
+        emit_progress("Error", None, 0.0, false, Some(err.clone()));
         return Err(err);
     }
 
@@ -52,13 +52,13 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
         file.write_all(&chunk).map_err(|e| e.to_string())?;
         downloaded += chunk.len() as u64;
         let percent = (downloaded as f64 / total_size as f64) * 80.0 + 10.0; // 10% - 90%
-        emit_progress("Pobieranie środowiska Python...", Some("addons.py.step.downloading"), percent, false, None);
+        emit_progress("Downloading Python environment...", Some("addons.py.step.downloading"), percent, false, None);
     }
     drop(file);
 
-    emit_progress("Rozpakowywanie Pythona...", Some("addons.py.step.unpacking"), 90.0, false, None);
+    emit_progress("Unpacking Python...", Some("addons.py.step.unpacking"), 90.0, false, None);
 
-    // 2. Rozpakowywanie do folderu python_embed
+    // 2. Extract to python_embed folder
     if target_dir.exists() {
         std::fs::remove_dir_all(&target_dir).ok();
     }
@@ -87,19 +87,19 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
     }
     std::fs::remove_file(&zip_path).ok();
 
-    // 3. Odblokowanie import site w python310._pth
-    // To jest kluczowe! Domyslnie osadzony Python ignoruje pakiety zainstalowane przez pip.
+    // 3. Enable import site in python310._pth
+    // This is crucial! By default, embedded Python ignores packages installed by pip.
     let pth_file_path = target_dir.join("python310._pth");
     if pth_file_path.exists() {
         let content = std::fs::read_to_string(&pth_file_path).unwrap_or_default();
-        // Odkomentujmy import site
+        // Uncomment import site
         let new_content = content.replace("#import site", "import site");
         std::fs::write(&pth_file_path, new_content).ok();
     }
 
-    emit_progress("Instalowanie menedżera pakietów pip...", Some("addons.py.step.installing_pip"), 92.0, false, None);
+    emit_progress("Installing pip package manager...", Some("addons.py.step.installing_pip"), 92.0, false, None);
 
-    // 4. Pobieranie get-pip.py
+    // 4. Download get-pip.py
     let pip_res = client.get("https://bootstrap.pypa.io/get-pip.py").send().await.map_err(|e| e.to_string())?;
     if pip_res.status().is_success() {
         let mut pip_file = File::create(&pip_script_path).map_err(|e| e.to_string())?;
@@ -107,7 +107,7 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
         pip_file.write_all(&bytes).map_err(|e| e.to_string())?;
     }
 
-    // 5. Uruchomienie instalacji pip
+    // 5. Run pip installation
     let python_exe = target_dir.join("python.exe");
     let mut cmd = std::process::Command::new(&python_exe);
     cmd.arg(&pip_script_path);
@@ -117,14 +117,14 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
     std::fs::remove_file(&pip_script_path).ok();
 
     if let Err(e) = pip_install_output {
-        let err = format!("Nie udało się uruchomić instalacji pip: {}", e);
-        emit_progress("Błąd", None, 0.0, false, Some(err.clone()));
+        let err = format!("Failed to run pip installation: {}", e);
+        emit_progress("Error", None, 0.0, false, Some(err.clone()));
         return Err(err);
     }
 
-    emit_progress("Pobieranie i instalowanie biblioteki Faster-Whisper (to może zająć chwilę)...", Some("addons.py.step.installing_whisper"), 95.0, false, None);
+    emit_progress("Downloading and installing Faster-Whisper library (this may take a moment)...", Some("addons.py.step.installing_whisper"), 95.0, false, None);
 
-    // 6. Instalacja faster-whisper za pomocą pip
+    // 6. Install faster-whisper using pip
     let mut cmd = std::process::Command::new(&python_exe);
     cmd.args(["-m", "pip", "install", "faster-whisper"]);
     crate::platform::suppress_console_in_release(&mut cmd);
@@ -133,25 +133,25 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
     match whisper_install_output {
         Ok(out) => {
             if out.status.success() {
-                emit_progress("Instalacja ukończona pomyślnie!", Some("addons.py.step.completed"), 100.0, true, None);
+                emit_progress("Installation completed successfully!", Some("addons.py.step.completed"), 100.0, true, None);
                 Ok(())
             } else {
                 let stderr = String::from_utf8_lossy(&out.stderr).to_string();
-                let err = format!("Pip zakończył się błędem: {}", stderr);
-                emit_progress("Błąd", None, 0.0, false, Some(err.clone()));
+                let err = format!("Pip finished with error: {}", stderr);
+                emit_progress("Error", None, 0.0, false, Some(err.clone()));
                 Err(err)
             }
         }
         Err(e) => {
-            let err = format!("Nie udało się zainstalować faster-whisper: {}", e);
-            emit_progress("Błąd", None, 0.0, false, Some(err.clone()));
+            let err = format!("Failed to install faster-whisper: {}", e);
+            emit_progress("Error", None, 0.0, false, Some(err.clone()));
             Err(err)
         }
     }
 }
 
 pub fn is_python_available() -> bool {
-    // 1. Sprawdzamy czy mamy nasz wbudowany python_embed
+    // 1. Check if we have our local python_embed
     let local_python = Path::new("..").join("python_embed").join("python.exe");
     if local_python.exists() {
         return true;
@@ -161,7 +161,7 @@ pub fn is_python_available() -> bool {
         return true;
     }
     
-    // 2. Jeśli nie, sprawdzamy systemowy
+    // 2. If not, check system Python
     let mut cmd1 = std::process::Command::new("python3");
     cmd1.arg("--version");
     crate::platform::suppress_console_in_release(&mut cmd1);

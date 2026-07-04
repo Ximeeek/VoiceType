@@ -40,7 +40,7 @@ impl SpeechEngine for WhisperEngine {
         params.set_print_progress(false);
         params.set_print_realtime(false);
         
-        // Ogranicz do max 6 wątków CPU dla optymalnej wydajności (zmniejszenie narzutu synchronizacji i cache contention)
+        // Limit to max 6 CPU threads for optimal performance (reducing synchronization overhead and cache contention)
         let avail = std::thread::available_parallelism()
             .map(|n| n.get())
             .unwrap_or(4);

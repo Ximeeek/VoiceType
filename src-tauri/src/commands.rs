@@ -278,13 +278,13 @@ pub async fn test_engine(state: State<'_, Arc<AppState>>, engine_type: Option<St
 pub async fn download_model(app: tauri::AppHandle, state: State<'_, Arc<AppState>>, engine: String, model: String) -> Result<(), String> {
     let models_dir = crate::downloader::model_registry::get_models_dir();
     
-    // Pobierz informacje o modelu, zeby wiedziec jaki bedzie folder docelowy
+    // Get model info to know what the target folder will be
     let info = crate::downloader::model_registry::get_model_info(&engine, &model).await
-        .map_err(|e| format!("Nieznany model: {} {} ({})", engine, model, e))?;
+        .map_err(|e| format!("Unknown model: {} {} ({})", engine, model, e))?;
         
     crate::downloader::download_model(app, &engine, &model, &models_dir).await.map_err(|e| e.to_string())?;
     
-    // Zaktualizuj ścieżkę do modelu w konfiguracji
+    // Update the model path in the configuration
     let mut config = state.config.lock().await;
     if engine == "vosk" {
         let new_path = format!("models/{}", info.dest_filename);
@@ -386,7 +386,7 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
     }
     
     app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
-        step: "Instalowanie bibliotek CUDA w środowisku Python (nvidia-cublas-cu12, nvidia-cudnn-cu12)... To potrwa kilka minut.".to_string(),
+        step: "Installing CUDA libraries in Python environment (nvidia-cublas-cu12, nvidia-cudnn-cu12)... This will take a few minutes.".to_string(),
         step_key: Some("addons.cuda.step.installing".to_string()),
         percent: 50.0,
         done: false,
@@ -402,7 +402,7 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
         Ok(out) => {
             if out.status.success() {
                 app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
-                    step: "Biblioteki CUDA zainstalowane pomyślnie!".to_string(),
+                    step: "CUDA libraries installed successfully!".to_string(),
                     step_key: Some("addons.cuda.step.installed".to_string()),
                     percent: 100.0,
                     done: true,
@@ -411,9 +411,9 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
                 Ok(())
             } else {
                 let stderr = String::from_utf8_lossy(&out.stderr).to_string();
-                let err = format!("Błąd pip: {}", stderr);
+                let err = format!("Pip error: {}", stderr);
                 app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
-                    step: "Instalacja bibliotek CUDA nie powiodła się".to_string(),
+                    step: "CUDA libraries installation failed".to_string(),
                     step_key: Some("addons.cuda.step.install_failed".to_string()),
                     percent: 0.0,
                     done: false,
@@ -425,7 +425,7 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
         Err(e) => {
             let err = format!("Failed to run pip: {}", e);
             app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
-                step: "Błąd uruchomienia instalacji".to_string(),
+                step: "Installation execution error".to_string(),
                 step_key: Some("addons.cuda.step.run_failed".to_string()),
                 percent: 0.0,
                 done: false,
@@ -494,7 +494,7 @@ pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
     }
     
     app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
-        step: "Odinstalowywanie bibliotek CUDA ze środowiska Python...".to_string(),
+        step: "Uninstalling CUDA libraries from Python environment...".to_string(),
         step_key: Some("addons.cuda.step.uninstalling".to_string()),
         percent: 50.0,
         done: false,
@@ -516,7 +516,7 @@ pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
         Ok(out) => {
             if out.status.success() {
                 app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
-                    step: "Biblioteki CUDA zostały pomyślnie usunięte!".to_string(),
+                    step: "CUDA libraries uninstalled successfully!".to_string(),
                     step_key: Some("addons.cuda.step.uninstalled".to_string()),
                     percent: 100.0,
                     done: true,
@@ -525,9 +525,9 @@ pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
                 Ok(())
             } else {
                 let stderr = String::from_utf8_lossy(&out.stderr).to_string();
-                let err = format!("Błąd pip: {}", stderr);
+                let err = format!("Pip error: {}", stderr);
                 app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
-                    step: "Usuwanie bibliotek CUDA nie powiodło się".to_string(),
+                    step: "CUDA libraries uninstallation failed".to_string(),
                     step_key: Some("addons.cuda.step.uninstall_failed".to_string()),
                     percent: 0.0,
                     done: false,
@@ -539,7 +539,7 @@ pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
         Err(e) => {
             let err = format!("Failed to run pip: {}", e);
             app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
-                step: "Błąd uruchomienia deinstalacji".to_string(),
+                step: "Uninstallation execution error".to_string(),
                 step_key: Some("addons.cuda.step.uninstall_run_failed".to_string()),
                 percent: 0.0,
                 done: false,

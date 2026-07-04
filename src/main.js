@@ -1501,10 +1501,10 @@ function updateActiveEnginePanel(engineId) {
     if (engineId === 'sherpa_onnx') fields = sherpaFields;
     if (fields) fields.style.display = 'block';
     
-    // Załaduj i wyrenderuj listę dostępnych modeli
+    // Load and render the list of available models
     renderAvailableModels(engineId === 'faster_whisper' ? 'whisper' : engineId);
     
-    // Jeśli to Whisper lub Faster-Whisper, obsłuż checkboxy GPU
+    // If it's Whisper or Faster-Whisper, handle GPU checkboxes
     if (engineId === 'whisper' || engineId === 'faster_whisper') {
       const gpuContainer = document.getElementById('whisper-gpu-container');
       const gpuCheck = document.getElementById('whisper-use-gpu');
@@ -1920,7 +1920,7 @@ async function renderAvailableModels(engineId) {
 
   if (window.__TAURI__) {
     try {
-      // Pokaż animowany loader podczas pobierania listy z serwera
+      // Show animated loader while downloading the list from server
       radioGroup.innerHTML = `
         <div style="color: var(--text-secondary); font-size: 13px; display: flex; align-items: center; gap: 10px; padding: 5px 0;">
           <span class="spinner" style="width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--accent-green); border-radius: 50%; display: inline-block; animation: spin 0.8s linear infinite;"></span>
@@ -1952,8 +1952,8 @@ async function renderAvailableModels(engineId) {
         }
       });
 
-      // Jeśli żaden model nie jest aktywny w aktualnej konfiguracji (np. po zmianie języka),
-      // automatycznie zaznaczamy pierwszy z listy i aktualizujemy pendingConfig
+      // If no model is active in the current configuration (e.g. after language change),
+      // automatically select the first one from the list and update pendingConfig
       if (!hasActive && models.length > 0) {
         let shouldAutoSelect = false;
         if (pendingConfig && activeConfig) {
@@ -2026,7 +2026,7 @@ async function renderAvailableModels(engineId) {
         radioGroup.appendChild(tip);
       }
 
-      // Zarejestruj zmianę wyboru
+      // Register choice change
       const radios = radioGroup.querySelectorAll(`input[name="${engineId}-model-size"]`);
       radios.forEach(radio => {
         radio.onchange = async (e) => {
@@ -2050,13 +2050,13 @@ async function renderAvailableModels(engineId) {
         };
       });
 
-      // Ustaw status początkowy
+      // Set initial status
       const activeModel = models.find(m => m.is_active) || models[0];
       if (activeModel) {
         updateModelStatusText(engineId, activeModel.id);
       }
     } catch (err) {
-      console.error('Błąd pobierania listy modeli:', err);
+      console.error('Error fetching model list:', err);
     }
   }
 }
@@ -2379,7 +2379,7 @@ async function processDownloadQueue() {
 }
 
 async function startSingleDownload(item) {
-  console.log('[DOWNLOAD_START] Uruchomienie pobierania dla elementu:', item);
+  console.log('[DOWNLOAD_START] Starting download for item:', item);
   item.status = 'downloading';
   renderDownloadQueue();
   updateDashboardDownloadState(null);
@@ -2389,24 +2389,24 @@ async function startSingleDownload(item) {
     try {
       ToastManager.show({ type: 'info', title: t('toast.download_started'), message: t('toast.download_started_msg', { model: item.model }) });
       const checkEngine = item.engine === 'faster_whisper' ? 'whisper' : item.engine;
-      console.log('[DOWNLOAD_START] Wywołanie download_model w Tauri dla silnika:', checkEngine, 'modelu:', item.model);
+      console.log('[DOWNLOAD_START] Calling download_model in Tauri for engine:', checkEngine, 'model:', item.model);
       await window.__TAURI__.core.invoke('download_model', { engine: checkEngine, model: item.model });
       
-      console.log('[DOWNLOAD_FINISH] Zakończono invoke download_model, status elementu:', item.status);
+      console.log('[DOWNLOAD_FINISH] Finished invoking download_model, item status:', item.status);
       if (item.status !== 'cancelled') {
         item.status = 'completed';
-        console.log('[DOWNLOAD_FINISH] Oznaczono pobieranie jako ukończone:', item.model);
+        console.log('[DOWNLOAD_FINISH] Marked download as completed:', item.model);
         ToastManager.show({ type: 'success', title: t('toast.download_finished'), message: t('toast.download_finished_msg', { model: item.model }) });
       } else {
-        console.log('[DOWNLOAD_FINISH] Pobieranie było anulowane w trakcie, pomijam oznaczanie jako ukończone.');
+        console.log('[DOWNLOAD_FINISH] Download was cancelled in progress, skipping marking as completed.');
       }
     } catch (err) {
-      console.error('[DOWNLOAD_ERROR] Wystąpił błąd podczas pobierania:', err, 'aktualny status:', item.status);
+      console.error('[DOWNLOAD_ERROR] Error occurred during download:', err, 'current status:', item.status);
       if (item.status !== 'cancelled') {
         item.status = 'error';
         ToastManager.show({ type: 'error', title: t('toast.download_error'), message: err.toString() });
       } else {
-        console.log('[DOWNLOAD_ERROR] Błąd zignorowany, ponieważ status to cancelled.');
+        console.log('[DOWNLOAD_ERROR] Error ignored because status is cancelled.');
       }
     } finally {
       const isAnyActiveLeft = downloadQueue.some(q => q.status === 'downloading');
@@ -2417,7 +2417,7 @@ async function startSingleDownload(item) {
       updateDashboardDownloadState(null);
       renderInstalledModelsManager();
       updateQuickModelOptions();
-      console.log('[DOWNLOAD_CLEANUP] Pobieranie zakończone lub przerwane dla:', item.model, 'Przejście do kolejnego elementu.');
+      console.log('[DOWNLOAD_CLEANUP] Download completed or aborted for:', item.model, 'Moving to next item.');
       setTimeout(() => processDownloadQueue(), 300);
     }
   } else {
@@ -2767,30 +2767,30 @@ function renderDownloadQueue() {
     });
 
     activeContainer.onclick = async (e) => {
-      console.log('[DOWNLOAD_ACTIVE_CONTAINER] Kliknięcie wykryte w kontenerze aktywnych pobierań:', e.target);
+      console.log('[DOWNLOAD_ACTIVE_CONTAINER] Click detected in active downloads container:', e.target);
       const btn = e.target.closest('.btn-cancel-queue');
       if (!btn) {
-        console.log('[DOWNLOAD_ACTIVE_CONTAINER] Kliknięcie nie było w przycisk anulowania.');
+        console.log('[DOWNLOAD_ACTIVE_CONTAINER] Click was not on the cancel button.');
         return;
       }
       const id = btn.getAttribute('data-id');
-      console.log('[CANCEL_QUEUE] Kliknięto anuluj dla pobierania ID:', id);
+      console.log('[CANCEL_QUEUE] Clicked cancel for download ID:', id);
       const item = downloadQueue.find(q => q.id === id);
       if (item) {
-        console.log('[CANCEL_QUEUE] Znaleziono element w kolejce pobierania:', item);
+        console.log('[CANCEL_QUEUE] Found item in download queue:', item);
         item.status = 'cancelled';
         item.percent = 0;
         if (window.__TAURI__) {
           const checkEngine = item.engine === 'faster_whisper' ? 'whisper' : item.engine;
-          console.log('[CANCEL_QUEUE] Wywoływanie cleanup_model_tmp_files dla silnika:', checkEngine, 'modelu:', item.model);
+          console.log('[CANCEL_QUEUE] Calling cleanup_model_tmp_files for engine:', checkEngine, 'model:', item.model);
           try {
             await window.__TAURI__.core.invoke('cleanup_model_tmp_files', { engine: checkEngine, model: item.model });
-            console.log('[CANCEL_QUEUE] Czyszczenie zakończone sukcesem.');
+            console.log('[CANCEL_QUEUE] Cleanup completed successfully.');
           } catch (err) {
-            console.error('[CANCEL_QUEUE] Błąd podczas czyszczenia:', err);
+            console.error('[CANCEL_QUEUE] Error during cleanup:', err);
           }
         } else {
-          console.log('[CANCEL_QUEUE] Brak środowiska Tauri - symulowane czyszczenie.');
+          console.log('[CANCEL_QUEUE] No Tauri environment - simulated cleanup.');
         }
         ToastManager.show({ type: 'info', title: t('toast.download_cancelled'), message: t('toast.download_cancelled_msg', { model: item.model }) });
         updateDashboardDownloadState(null);
@@ -2951,7 +2951,7 @@ async function renderInstalledModelsManager() {
       });
 
     } catch (err) {
-      console.error('Błąd ładownia podsumowania modeli:', err);
+      console.error('Error loading model summary:', err);
     }
   }
 }
@@ -4835,7 +4835,7 @@ async function verifyStartupModel() {
       }
     }
   } catch (err) {
-    console.error('Błąd weryfikacji modelu przy starcie:', err);
+    console.error('Error validating model at startup:', err);
   }
 }
 

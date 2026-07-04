@@ -10,7 +10,7 @@ fn get_python_cmd() -> std::path::PathBuf {
         if local_root.is_file() {
             local_root
         } else {
-            // Sprawdź czy python3 lub python są dostępne w systemie
+            // Check if python3 or python are available in the system
             let mut cmd = std::process::Command::new("python3");
             cmd.arg("--version");
             crate::platform::suppress_console_in_release(&mut cmd);

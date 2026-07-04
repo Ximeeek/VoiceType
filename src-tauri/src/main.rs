@@ -154,7 +154,7 @@ fn main() {
             let (rx, stream) = audio::spawn_audio_pipeline(&audio_config_clone)
                 .expect("Failed to start audio pipeline");
 
-            // Zapobiega usunięciu Stream z pamięci (leak na stertę)
+            // Prevents Stream from being dropped from memory (leaked to the heap)
             Box::leak(Box::new(stream));
 
             let pipeline = audio::AudioPipeline {
