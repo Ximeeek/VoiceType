@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Config {
     pub general: GeneralConfig,
     pub audio: AudioConfig,
@@ -25,7 +25,7 @@ impl Default for Config {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(default)]
 pub struct GeneralConfig {
     pub autostart: bool,
@@ -47,7 +47,7 @@ impl Default for GeneralConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct AudioConfig {
     pub input_device: String,
     pub sample_rate: u32,
@@ -66,7 +66,7 @@ impl Default for AudioConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct TriggerConfig {
     pub words: Vec<String>,
     pub fuzzy_match: bool,
@@ -90,7 +90,7 @@ fn default_live_typing_interval_ms() -> u64 {
     2000
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct DictationConfig {
     pub stop_words: Vec<String>,
     pub silence_timeout_ms: u64,
@@ -114,7 +114,7 @@ impl Default for DictationConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct EngineConfig {
     #[serde(rename = "type")]
     pub engine_type: String,
@@ -146,7 +146,7 @@ impl Default for EngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct SherpaOnnxEngineConfig {
     pub model_path: String,
     pub tokens_path: String,
@@ -163,7 +163,7 @@ impl Default for SherpaOnnxEngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct VoskEngineConfig {
     pub model_path: String,
     pub enable_partial_results: bool,
@@ -178,7 +178,7 @@ impl Default for VoskEngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct WhisperEngineConfig {
     pub model: String,
     pub use_gpu: bool,
@@ -197,7 +197,7 @@ impl Default for WhisperEngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct FasterWhisperEngineConfig {
     pub model: String,
     pub device: String,
@@ -214,7 +214,7 @@ impl Default for FasterWhisperEngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct DeepgramEngineConfig {
     pub api_key: String,
     pub model: String,
@@ -233,7 +233,7 @@ impl Default for DeepgramEngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct AssemblyAiEngineConfig {
     pub api_key: String,
     pub word_boost: Vec<String>,
@@ -248,7 +248,7 @@ impl Default for AssemblyAiEngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct OpenAiEngineConfig {
     pub api_key: String,
     pub model: String,
@@ -265,7 +265,7 @@ impl Default for OpenAiEngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct GoogleEngineConfig {
     pub credentials_path: String,
     pub model: String,
@@ -282,7 +282,7 @@ impl Default for GoogleEngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct AzureEngineConfig {
     pub subscription_key: String,
     pub region: String,
@@ -297,7 +297,7 @@ impl Default for AzureEngineConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct InputConfig {
     pub prefer_uia: bool,
     pub clipboard_fallback: bool,
@@ -316,7 +316,7 @@ impl Default for InputConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(default)]
 pub struct UiConfig {
     pub theme: String,

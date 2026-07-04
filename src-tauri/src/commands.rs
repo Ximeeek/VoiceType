@@ -14,19 +14,42 @@ pub async fn get_config(state: State<'_, Arc<AppState>>) -> Result<Config, Strin
 
 #[tauri::command]
 pub async fn save_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle, config: Config) -> Result<(), String> {
+    let mut config_lock = state.config.lock().await;
+
+    let trigger_changed = config.trigger.words != config_lock.trigger.words;
+    let stop_words_changed = config.dictation.stop_words != config_lock.dictation.stop_words;
+    let silence_changed = config.dictation.silence_timeout_ms != config_lock.dictation.silence_timeout_ms;
+    let translate_changed = config.trigger.translate != config_lock.trigger.translate;
+    let lang_changed = config.general.language != config_lock.general.language;
+    let engine_changed = config.engine.engine_type != config_lock.engine.engine_type;
+    let engine_config_changed = config.engine != config_lock.engine;
+
     crate::config::save_config(&config).map_err(|e| e.to_string())?;
-    *state.config.lock().await = config.clone();
+    *config_lock = config.clone();
+    drop(config_lock);
     
     if let Ok(exe_path) = std::env::current_exe() {
         let _ = crate::platform::windows::set_autostart(config.general.autostart, &exe_path.to_string_lossy());
     }
 
-    state.control_tx.send(ControlCommand::SetTriggerWords(config.trigger.words)).await.ok();
-    state.control_tx.send(ControlCommand::SetStopWords(config.dictation.stop_words)).await.ok();
-    state.control_tx.send(ControlCommand::SetSilenceTimeout(config.dictation.silence_timeout_ms)).await.ok();
-    state.control_tx.send(ControlCommand::SetTriggerTranslate(config.trigger.translate)).await.ok();
-    state.control_tx.send(ControlCommand::SetLanguage(config.general.language.clone())).await.ok();
-    state.control_tx.send(ControlCommand::SetEngine(config.engine.engine_type.clone())).await.ok();
+    if trigger_changed {
+        state.control_tx.send(ControlCommand::SetTriggerWords(config.trigger.words)).await.ok();
+    }
+    if stop_words_changed {
+        state.control_tx.send(ControlCommand::SetStopWords(config.dictation.stop_words)).await.ok();
+    }
+    if silence_changed {
+        state.control_tx.send(ControlCommand::SetSilenceTimeout(config.dictation.silence_timeout_ms)).await.ok();
+    }
+    if translate_changed {
+        state.control_tx.send(ControlCommand::SetTriggerTranslate(config.trigger.translate)).await.ok();
+    }
+    if lang_changed {
+        state.control_tx.send(ControlCommand::SetLanguage(config.general.language.clone())).await.ok();
+    }
+    if engine_changed || engine_config_changed || lang_changed {
+        state.control_tx.send(ControlCommand::SetEngine(config.engine.engine_type.clone())).await.ok();
+    }
 
     let _ = crate::tray::rebuild_tray_menu(&app);
     

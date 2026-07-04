@@ -96,14 +96,7 @@ pub fn set_autostart(_enabled: bool, _exe_path: &str) -> anyhow::Result<()> {
 
 #[cfg(windows)]
 pub fn suppress_console_in_release(cmd: &mut std::process::Command) {
-    #[cfg(not(debug_assertions))]
-    {
-        use std::os::windows::process::CommandExt;
-        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
-    }
-    #[cfg(debug_assertions)]
-    {
-        let _ = cmd;
-    }
+    use std::os::windows::process::CommandExt;
+    cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
 }
 
