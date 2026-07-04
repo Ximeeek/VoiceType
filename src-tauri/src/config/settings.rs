@@ -354,6 +354,24 @@ impl Default for InputConfig {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(default)]
+pub struct ToastSettings {
+    pub close_mode: String,
+    pub duration_ms: u64,
+    pub hover_renew: bool,
+}
+
+impl Default for ToastSettings {
+    fn default() -> Self {
+        Self {
+            close_mode: "timer".to_string(),
+            duration_ms: 3000,
+            hover_renew: true,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(default)]
 pub struct UiConfig {
     pub theme: String,
     pub accent_preset: String,
@@ -367,6 +385,9 @@ pub struct UiConfig {
     pub window_opacity: f32,
     pub always_on_top: bool,
     pub start_minimized: bool,
+    pub toast_success: ToastSettings,
+    pub toast_info: ToastSettings,
+    pub toast_error: ToastSettings,
 }
 
 impl Default for UiConfig {
@@ -384,6 +405,21 @@ impl Default for UiConfig {
             window_opacity: 1.0,
             always_on_top: false,
             start_minimized: false,
+            toast_success: ToastSettings {
+                close_mode: "timer".to_string(),
+                duration_ms: 3000,
+                hover_renew: true,
+            },
+            toast_info: ToastSettings {
+                close_mode: "timer".to_string(),
+                duration_ms: 3000,
+                hover_renew: true,
+            },
+            toast_error: ToastSettings {
+                close_mode: "manual".to_string(),
+                duration_ms: 5000,
+                hover_renew: true,
+            },
         }
     }
 }

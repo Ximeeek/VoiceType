@@ -329,8 +329,37 @@ class ToastManager {
     toast.className = `toast ${type}`;
     toast.id = id;
 
+    // Extract configurations specific to the toast type (success, info, error)
+    let closeMode = 'timer';
+    let durationMs = 3000;
+    let hoverRenew = true;
+
+    if (activeConfig && activeConfig.ui) {
+      let toastConfigKey = 'toast_info';
+      if (type === 'success') {
+        toastConfigKey = 'toast_success';
+      } else if (type === 'error') {
+        toastConfigKey = 'toast_error';
+      }
+      
+      const tCfg = activeConfig.ui[toastConfigKey];
+      if (tCfg) {
+        closeMode = tCfg.close_mode || 'timer';
+        durationMs = tCfg.duration_ms !== undefined ? tCfg.duration_ms : 3000;
+        hoverRenew = tCfg.hover_renew !== undefined ? tCfg.hover_renew : true;
+      }
+    } else {
+      // Hardcoded fallback matching original behavior if config isn't loaded yet
+      if (type === 'error') {
+        closeMode = 'manual';
+        durationMs = 5000;
+      }
+    }
+
+    const isPersistent = closeMode === 'manual';
+
     let closeBtnHtml = '';
-    if (persistent || type === 'error') {
+    if (isPersistent) {
       closeBtnHtml = `<button class="toast-close">×</button>`;
     }
 
@@ -349,12 +378,12 @@ class ToastManager {
       closeBtn.addEventListener('click', () => ToastManager.hide(id));
     }
 
-    if (!persistent) {
+    if (!isPersistent) {
       const timerBar = document.createElement('div');
       timerBar.className = 'toast-timer';
       toast.appendChild(timerBar);
 
-      const totalDuration = 3000; // 3 seconds
+      const totalDuration = durationMs;
       let remainingTime = totalDuration;
       let lastTick = Date.now();
       let isHovered = false;
@@ -362,9 +391,11 @@ class ToastManager {
 
       toast.addEventListener('mouseenter', () => {
         isHovered = true;
-        remainingTime = totalDuration;
+        if (hoverRenew) {
+          remainingTime = totalDuration;
+          timerBar.style.transform = 'scaleX(1)';
+        }
         toast.style.opacity = '1';
-        timerBar.style.transform = 'scaleX(1)';
       });
 
       toast.addEventListener('mouseleave', () => {
@@ -1136,6 +1167,29 @@ function initCloudLiveTypingWarningModalListeners() {
   }
 }
 
+// Helper to update toast row state in settings UI
+function updateToastRowUI(type, closeMode) {
+  const durationInput = document.getElementById(`toast-duration-${type}`);
+  const durationVal = document.getElementById(`toast-duration-val-${type}`);
+  const hoverInput = document.getElementById(`toast-hover-${type}`);
+  
+  if (closeMode === 'manual') {
+    if (durationInput) durationInput.disabled = true;
+    if (hoverInput) hoverInput.disabled = true;
+    const durationCol = durationInput ? durationInput.parentElement : null;
+    const hoverCol = hoverInput ? hoverInput.parentElement.parentElement : null;
+    if (durationCol) durationCol.style.opacity = '0.35';
+    if (hoverCol) hoverCol.style.opacity = '0.35';
+  } else {
+    if (durationInput) durationInput.disabled = false;
+    if (hoverInput) hoverInput.disabled = false;
+    const durationCol = durationInput ? durationInput.parentElement : null;
+    const hoverCol = hoverInput ? hoverInput.parentElement.parentElement : null;
+    if (durationCol) durationCol.style.opacity = '1';
+    if (hoverCol) hoverCol.style.opacity = '1';
+  }
+}
+
 // Load Configuration into General settings UI elements
 function loadConfigGeneralUI(config) {
   // Trigger config
@@ -1157,6 +1211,54 @@ function loadConfigGeneralUI(config) {
   }
   document.getElementById('settings-start-delay').value = config.dictation.start_delay_ms;
   document.getElementById('start-delay-val').textContent = `${config.dictation.start_delay_ms} ms`;
+  
+  // Toast settings - Success
+  const successMode = (config.ui && config.ui.toast_success && config.ui.toast_success.close_mode) || 'timer';
+  const successDuration = (config.ui && config.ui.toast_success && config.ui.toast_success.duration_ms !== undefined) ? config.ui.toast_success.duration_ms : 3000;
+  const successHover = (config.ui && config.ui.toast_success && config.ui.toast_success.hover_renew !== undefined) ? config.ui.toast_success.hover_renew : true;
+
+  const modeSelSuccess = document.getElementById('toast-mode-success');
+  if (modeSelSuccess) modeSelSuccess.value = successMode;
+  const durInputSuccess = document.getElementById('toast-duration-success');
+  if (durInputSuccess) durInputSuccess.value = successDuration / 1000;
+  const durValSuccess = document.getElementById('toast-duration-val-success');
+  if (durValSuccess) durValSuccess.textContent = `${(successDuration / 1000).toFixed(1)}s`;
+  const hoverCheckSuccess = document.getElementById('toast-hover-success');
+  if (hoverCheckSuccess) hoverCheckSuccess.checked = successHover;
+
+  updateToastRowUI('success', successMode);
+
+  // Toast settings - Info
+  const infoMode = (config.ui && config.ui.toast_info && config.ui.toast_info.close_mode) || 'timer';
+  const infoDuration = (config.ui && config.ui.toast_info && config.ui.toast_info.duration_ms !== undefined) ? config.ui.toast_info.duration_ms : 3000;
+  const infoHover = (config.ui && config.ui.toast_info && config.ui.toast_info.hover_renew !== undefined) ? config.ui.toast_info.hover_renew : true;
+
+  const modeSelInfo = document.getElementById('toast-mode-info');
+  if (modeSelInfo) modeSelInfo.value = infoMode;
+  const durInputInfo = document.getElementById('toast-duration-info');
+  if (durInputInfo) durInputInfo.value = infoDuration / 1000;
+  const durValInfo = document.getElementById('toast-duration-val-info');
+  if (durValInfo) durValInfo.textContent = `${(infoDuration / 1000).toFixed(1)}s`;
+  const hoverCheckInfo = document.getElementById('toast-hover-info');
+  if (hoverCheckInfo) hoverCheckInfo.checked = infoHover;
+
+  updateToastRowUI('info', infoMode);
+
+  // Toast settings - Error
+  const errorMode = (config.ui && config.ui.toast_error && config.ui.toast_error.close_mode) || 'manual';
+  const errorDuration = (config.ui && config.ui.toast_error && config.ui.toast_error.duration_ms !== undefined) ? config.ui.toast_error.duration_ms : 5000;
+  const errorHover = (config.ui && config.ui.toast_error && config.ui.toast_error.hover_renew !== undefined) ? config.ui.toast_error.hover_renew : true;
+
+  const modeSelError = document.getElementById('toast-mode-error');
+  if (modeSelError) modeSelError.value = errorMode;
+  const durInputError = document.getElementById('toast-duration-error');
+  if (durInputError) durInputError.value = errorDuration / 1000;
+  const durValError = document.getElementById('toast-duration-val-error');
+  if (durValError) durValError.textContent = `${(errorDuration / 1000).toFixed(1)}s`;
+  const hoverCheckError = document.getElementById('toast-hover-error');
+  if (hoverCheckError) hoverCheckError.checked = errorHover;
+
+  updateToastRowUI('error', errorMode);
   
   const liveTypingCheck = document.getElementById('settings-live-typing');
   if (liveTypingCheck) {
@@ -1265,6 +1367,61 @@ function loadConfigGeneralUI(config) {
       saveConfigState();
     };
   }
+
+  const toastTypes = ['success', 'info', 'error'];
+  toastTypes.forEach(tType => {
+    const toastConfigKey = 'toast_' + tType;
+
+    // Mode Selector change
+    const modeSel = document.getElementById(`toast-mode-${tType}`);
+    if (modeSel) {
+      modeSel.onchange = (e) => {
+        const val = e.target.value;
+        if (activeConfig && activeConfig.ui && activeConfig.ui[toastConfigKey]) {
+          activeConfig.ui[toastConfigKey].close_mode = val;
+        }
+        if (pendingConfig && pendingConfig.ui && pendingConfig.ui[toastConfigKey]) {
+          pendingConfig.ui[toastConfigKey].close_mode = val;
+        }
+        updateToastRowUI(tType, val);
+        saveConfigState();
+      };
+    }
+
+    // Duration Slider input
+    const durInput = document.getElementById(`toast-duration-${tType}`);
+    const durVal = document.getElementById(`toast-duration-val-${tType}`);
+    if (durInput) {
+      durInput.oninput = (e) => {
+        const valSeconds = parseFloat(e.target.value);
+        if (durVal) durVal.textContent = `${valSeconds.toFixed(1)}s`;
+        
+        const valMs = Math.round(valSeconds * 1000);
+        if (activeConfig && activeConfig.ui && activeConfig.ui[toastConfigKey]) {
+          activeConfig.ui[toastConfigKey].duration_ms = valMs;
+        }
+        if (pendingConfig && pendingConfig.ui && pendingConfig.ui[toastConfigKey]) {
+          pendingConfig.ui[toastConfigKey].duration_ms = valMs;
+        }
+        debouncedSaveConfig();
+      };
+    }
+
+    // Hover Renew change
+    const hoverCheck = document.getElementById(`toast-hover-${tType}`);
+    if (hoverCheck) {
+      hoverCheck.onchange = (e) => {
+        const isChecked = e.target.checked;
+        if (activeConfig && activeConfig.ui && activeConfig.ui[toastConfigKey]) {
+          activeConfig.ui[toastConfigKey].hover_renew = isChecked;
+        }
+        if (pendingConfig && pendingConfig.ui && pendingConfig.ui[toastConfigKey]) {
+          pendingConfig.ui[toastConfigKey].hover_renew = isChecked;
+        }
+        saveConfigState();
+      };
+    }
+  });
 
   // Bind sliders
   document.getElementById('settings-silence-timeout').oninput = (e) => {

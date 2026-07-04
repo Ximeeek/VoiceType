@@ -156,6 +156,16 @@ export const translations = {
     "settings.clipboard_toast": "Show notification when copied to clipboard",
     "settings.auto_enter": "Automatically press Enter after dictation finishes",
     "settings.start_delay": "Start delay",
+    "settings.toast.title": "Toast Notification Settings",
+    "settings.toast.col.type": "Type",
+    "settings.toast.col.mode": "Mode",
+    "settings.toast.col.duration": "Duration (s)",
+    "settings.toast.col.hover": "Renew",
+    "settings.toast.type.success": "Success",
+    "settings.toast.type.info": "Info",
+    "settings.toast.type.error": "Error",
+    "settings.toast.close_mode.timer_short": "Timer",
+    "settings.toast.close_mode.manual_short": "Manual",
     "settings.no_stops": "No stop words",
 
     // Speech Engine Settings Tab
@@ -632,6 +642,16 @@ export const translations = {
     "settings.clipboard_toast": "Pokaż komunikat przy kopiowaniu",
     "settings.auto_enter": "Automatycznie naciśnij Enter po zakończeniu dyktowania",
     "settings.start_delay": "Opóźnienie startu",
+    "settings.toast.title": "Ustawienia komunikatów Toast",
+    "settings.toast.col.type": "Typ",
+    "settings.toast.col.mode": "Tryb",
+    "settings.toast.col.duration": "Czas (s)",
+    "settings.toast.col.hover": "Odnawiaj",
+    "settings.toast.type.success": "Sukces",
+    "settings.toast.type.info": "Info",
+    "settings.toast.type.error": "Błąd",
+    "settings.toast.close_mode.timer_short": "Timer",
+    "settings.toast.close_mode.manual_short": "Ręcznie",
     "settings.no_stops": "Brak stop words",
 
     // Speech Engine Settings Tab
