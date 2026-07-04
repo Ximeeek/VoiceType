@@ -58,7 +58,7 @@ pub async fn save_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle,
     if lang_changed {
         state.control_tx.send(ControlCommand::SetLanguage(config.general.language.clone())).await.ok();
     }
-    if engine_changed || active_engine_config_changed || lang_changed {
+    if active_engine_config_changed || (lang_changed && !engine_changed) {
         state.control_tx.send(ControlCommand::SetEngine(config.engine.engine_type.clone())).await.ok();
     }
 

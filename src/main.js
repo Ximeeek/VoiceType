@@ -3032,6 +3032,24 @@ function triggerShakeError(element) {
   }, 600);
 }
 
+function formatEngineErrorMessage(err, fallbackEngineId = '') {
+  let res = err;
+  if (typeof err === 'string') {
+    try {
+      res = JSON.parse(err);
+    } catch {}
+  }
+
+  if (res && typeof res === 'object' && res.key) {
+    const engineName = res.engine || fallbackEngineId;
+    const errorDetail = res.error_detail || res.error || '';
+    return t(res.key, { engine: engineName, error: errorDetail });
+  }
+
+  const errStr = (typeof err === 'object' && err !== null && err.message) ? err.message : String(err);
+  return t('toast.api_key_verification_msg', { error: errStr });
+}
+
 function getEngineChangesDescription() {
   if (!pendingConfig || !activeConfig) return '';
   const changes = [];
@@ -3454,13 +3472,7 @@ function showUnsavedChangesModal({ description, onProceed, onDiscard }) {
             console.error("Failed to restore active config:", e);
           }
         }
-        let msg = t('toast.api_key_verification_msg', { error: err.toString() });
-        try {
-          const res = JSON.parse(err);
-          if (res && res.key) {
-            msg = t(res.key, { engine: res.engine, error: res.error_detail });
-          }
-        } catch {}
+        let msg = formatEngineErrorMessage(err, engineId);
         ToastManager.show({ type: 'error', title: t('toast.api_key_verification_error'), message: msg, persistent: true });
 
         btnSave.disabled = false;
@@ -4333,13 +4345,7 @@ if (applyBtn) {
         if (window.__TAURI__) {
           await window.__TAURI__.core.invoke('save_config', { config: activeConfig });
         }
-        let msg = t('toast.api_key_verification_msg', { error: err.toString() });
-        try {
-          const res = JSON.parse(err);
-          if (res && res.key) {
-            msg = t(res.key, { engine: res.engine, error: res.error_detail });
-          }
-        } catch {}
+        let msg = formatEngineErrorMessage(err, engineId);
         ToastManager.show({ type: 'error', title: t('toast.api_key_verification_error'), message: msg, persistent: true });
         return;
       }
