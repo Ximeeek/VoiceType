@@ -64,4 +64,12 @@ mod tests {
         #[cfg(not(debug_assertions))]
         assert!(!dir_str.contains("voicetype-dev"), "Expected no 'voicetype-dev' in release path, got: {}", dir_str);
     }
+
+    #[test]
+    fn test_default_language_detection() {
+        let config = default_config();
+        let lang = &config.general.language;
+        assert!(lang == "en" || lang == "pl", "Default language should be 'en' or 'pl', got: {}", lang);
+        println!("Detected system default language: {}", lang);
+    }
 }

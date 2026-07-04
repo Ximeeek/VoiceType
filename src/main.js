@@ -1349,7 +1349,7 @@ function loadConfigGeneralUI(config) {
   // Bind App Language selector
   const appLangSelect = document.getElementById('settings-app-language');
   if (appLangSelect && config.general) {
-    appLangSelect.value = config.general.language || 'en';
+    appLangSelect.value = config.general.language || (navigator.language.startsWith('pl') ? 'pl' : 'en');
     appLangSelect.onchange = (e) => {
       const newLang = e.target.value;
       activeConfig.general.language = newLang;
@@ -3834,7 +3834,7 @@ async function init() {
       pendingConfig = JSON.parse(JSON.stringify(config));
       
       // Initialize i18n and Appearance
-      setLanguage(config.general ? config.general.language : 'en');
+      setLanguage(config.general && config.general.language ? config.general.language : (navigator.language.startsWith('pl') ? 'pl' : 'en'));
       setupAppearanceEventListeners();
       applyAppearanceSettings(config);
       await updateAppVersionBadge();

@@ -46,12 +46,31 @@ pub struct GeneralConfig {
     pub notification_duration_ms: u64,
 }
 
+#[cfg(target_os = "windows")]
+fn get_system_language() -> String {
+    extern "system" {
+        fn GetUserDefaultUILanguage() -> u16;
+    }
+    let lang_id = unsafe { GetUserDefaultUILanguage() };
+    let primary_lang = lang_id & 0x3ff;
+    if primary_lang == 0x15 {
+        "pl".to_string()
+    } else {
+        "en".to_string()
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn get_system_language() -> String {
+    "en".to_string()
+}
+
 impl Default for GeneralConfig {
     fn default() -> Self {
         Self {
             autostart: false,
             minimize_to_tray_on_close: true,
-            language: "en".to_string(),
+            language: get_system_language(),
             show_notifications: true,
             notification_duration_ms: 4000,
         }
