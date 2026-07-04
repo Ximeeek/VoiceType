@@ -22,7 +22,18 @@ pub async fn save_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle,
     let translate_changed = config.trigger.translate != config_lock.trigger.translate;
     let lang_changed = config.general.language != config_lock.general.language;
     let engine_changed = config.engine.engine_type != config_lock.engine.engine_type;
-    let engine_config_changed = config.engine != config_lock.engine;
+    let active_engine_config_changed = match config.engine.engine_type.as_str() {
+        "vosk" => config.engine.vosk != config_lock.engine.vosk,
+        "whisper" => config.engine.whisper != config_lock.engine.whisper,
+        "faster_whisper" => config.engine.whisper != config_lock.engine.whisper || config.engine.faster_whisper != config_lock.engine.faster_whisper,
+        "sherpa_onnx" => config.engine.sherpa_onnx != config_lock.engine.sherpa_onnx,
+        "deepgram" => config.engine.deepgram != config_lock.engine.deepgram,
+        "assemblyai" => config.engine.assemblyai != config_lock.engine.assemblyai,
+        "openai" => config.engine.openai != config_lock.engine.openai,
+        "google" => config.engine.google != config_lock.engine.google,
+        "azure" => config.engine.azure != config_lock.engine.azure,
+        _ => false,
+    };
 
     crate::config::save_config(&config).map_err(|e| e.to_string())?;
     *config_lock = config.clone();
@@ -47,7 +58,7 @@ pub async fn save_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle,
     if lang_changed {
         state.control_tx.send(ControlCommand::SetLanguage(config.general.language.clone())).await.ok();
     }
-    if engine_changed || engine_config_changed || lang_changed {
+    if engine_changed || active_engine_config_changed || lang_changed {
         state.control_tx.send(ControlCommand::SetEngine(config.engine.engine_type.clone())).await.ok();
     }
 

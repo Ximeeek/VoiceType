@@ -4140,8 +4140,8 @@ async function verifyStartupModel() {
 
       if (foundModel && foundEngine) {
         activeConfig.engine.type = foundEngine;
-        if (foundEngine === 'vosk') activeConfig.engine.vosk.model_path = `models/${foundModel}`;
-        else if (foundEngine === 'sherpa_onnx') activeConfig.engine.sherpa_onnx.model_path = `models/${foundModel}`;
+        if (foundEngine === 'vosk') activeConfig.engine.vosk.model_path = `models/vosk/${foundModel}`;
+        else if (foundEngine === 'sherpa_onnx') activeConfig.engine.sherpa_onnx.model_path = `models/sherpa/${foundModel}`;
         else activeConfig.engine.whisper.model = foundModel;
 
         pendingConfig = JSON.parse(JSON.stringify(activeConfig));
