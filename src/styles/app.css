@@ -724,7 +724,7 @@ body.dual-accent .btn-primary {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 10005;
+  z-index: 200000;
   pointer-events: none;
 }
 
