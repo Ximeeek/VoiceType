@@ -2121,7 +2121,7 @@ function updateDashboardDownloadState(progress) {
       if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
         dashText.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB`;
       } else {
-        dashText.textContent = 'Pobieranie modelu...';
+        dashText.textContent = t('dash.status.downloading_model');
       }
     } else {
       dashStatus.style.display = 'none';
@@ -2138,9 +2138,7 @@ function updateGlobalProcessingBanner(active, message = null, detail = null) {
 
   if (active) {
     banner.style.display = 'flex';
-    if (message && titleEl) {
-      titleEl.textContent = message;
-    }
+    if (titleEl) titleEl.textContent = message || '';
     if (detailEl) {
       detailEl.textContent = detail || '';
       detailEl.style.display = detail ? 'block' : 'none';
@@ -2164,7 +2162,19 @@ function updateDownloadProgress(progress) {
     }
   }
 
-  const activeStatusText = progress.status_text || (progress.percent >= 99.9 && progress.percent < 100 ? t('downloads.status.unpacking') : t('downloads.status.downloading'));
+  let activeStatusText = '';
+  if (progress.status_key) {
+    activeStatusText = t(`downloads.status.${progress.status_key}`);
+  } else if (progress.status_text) {
+    const rawText = progress.status_text;
+    if (rawText === 'Pobieranie pliku...') activeStatusText = t('downloads.status.downloading');
+    else if (rawText === 'Rozpakowywanie archiwum...') activeStatusText = t('downloads.status.unpacking');
+    else if (rawText === 'Finalizowanie zapisu...') activeStatusText = t('downloads.status.finalizing');
+    else if (rawText === 'Ukończono') activeStatusText = t('downloads.status.completed');
+    else activeStatusText = rawText;
+  } else {
+    activeStatusText = progress.percent >= 99.9 && progress.percent < 100 ? t('downloads.status.unpacking') : t('downloads.status.downloading');
+  }
 
   if (progress.percent < 100) {
     const detailMsg = progress.downloaded_mb !== undefined && progress.total_mb !== undefined
@@ -2185,16 +2195,28 @@ function updateDownloadProgress(progress) {
       if (fill) fill.style.width = `${progress.percent}%`;
       if (percentEl) percentEl.textContent = `${Math.round(progress.percent)}%`;
       if (stats) {
-        if (progress.status_text && progress.percent < 100) {
+        let statusLbl = '';
+        if (progress.status_key) {
+          statusLbl = t(`downloads.status.${progress.status_key}`);
+        } else if (progress.status_text) {
+          const rawText = progress.status_text;
+          if (rawText === 'Pobieranie pliku...') statusLbl = t('downloads.status.downloading');
+          else if (rawText === 'Rozpakowywanie archiwum...') statusLbl = t('downloads.status.unpacking');
+          else if (rawText === 'Finalizowanie zapisu...') statusLbl = t('downloads.status.finalizing');
+          else if (rawText === 'Ukończono') statusLbl = t('downloads.status.completed');
+          else statusLbl = rawText;
+        }
+
+        if (statusLbl && progress.percent < 100) {
           if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
-            stats.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB (${progress.status_text})`;
+            stats.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB (${statusLbl})`;
           } else {
-            stats.textContent = progress.status_text;
+            stats.textContent = statusLbl;
           }
         } else if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
           stats.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB`;
         } else {
-          stats.textContent = 'Kończenie pobierania...';
+          stats.textContent = t('downloads.status.finalizing') || 'Kończenie pobierania...';
         }
       }
       if (badge && queueItem.status === 'completed') {
@@ -2215,12 +2237,24 @@ function updateDownloadProgress(progress) {
     container.style.display = 'block';
     fill.style.width = `${progress.percent}%`;
     
-    if (progress.status_text) {
-      text.textContent = progress.status_text;
+    let statusLbl = '';
+    if (progress.status_key) {
+      statusLbl = t(`downloads.status.${progress.status_key}`);
+    } else if (progress.status_text) {
+      const rawText = progress.status_text;
+      if (rawText === 'Pobieranie pliku...') statusLbl = t('downloads.status.downloading');
+      else if (rawText === 'Rozpakowywanie archiwum...') statusLbl = t('downloads.status.unpacking');
+      else if (rawText === 'Finalizowanie zapisu...') statusLbl = t('downloads.status.finalizing');
+      else if (rawText === 'Ukończono') statusLbl = t('downloads.status.completed');
+      else statusLbl = rawText;
+    }
+
+    if (statusLbl) {
+      text.textContent = statusLbl;
     } else if (progress.downloaded_mb !== undefined && progress.total_mb !== undefined) {
       text.textContent = `${progress.downloaded_mb.toFixed(1)} MB / ${progress.total_mb.toFixed(1)} MB`;
     } else {
-      text.textContent = progress.done ? t('downloads.status.completed') : 'Kończenie pobierania...';
+      text.textContent = progress.done ? t('downloads.status.completed') : (t('downloads.status.finalizing') || 'Kończenie pobierania...');
     }
     
     percentEl.textContent = `${Math.round(progress.percent)}%`;
@@ -2943,9 +2977,17 @@ if (testApiBtn) {
           await window.__TAURI__.core.invoke('save_config', { config: pendingConfig });
         }
         const response = await window.__TAURI__.core.invoke('test_engine', { engineType: pendingConfig ? pendingConfig.engine.type : null });
-        ToastManager.show({ type: 'success', title: t('toast.connection_test_title'), message: response });
+        let msg = t(response.key, { engine: response.engine });
+        ToastManager.show({ type: 'success', title: t('toast.connection_test_title'), message: msg });
       } catch (err) {
-        ToastManager.show({ type: 'error', title: t('toast.conn_test_failed'), message: err.toString(), persistent: true });
+        let msg = err.toString();
+        try {
+          const res = JSON.parse(err);
+          if (res && res.key) {
+            msg = t(res.key, { engine: res.engine, error: res.error_detail });
+          }
+        } catch {}
+        ToastManager.show({ type: 'error', title: t('toast.conn_test_failed'), message: msg, persistent: true });
       }
     } else {
       setTimeout(() => {
@@ -3416,7 +3458,14 @@ function showPythonModal(targetEngineId) {
       const unlisten = await window.__TAURI__.event.listen('python_install_progress', (event) => {
         const payload = event.payload;
         progressBar.style.width = `${payload.percent}%`;
-        progressStep.textContent = payload.step;
+        let stepText = payload.step;
+        if (payload.step_key) {
+          const translated = t(payload.step_key);
+          if (translated && translated !== payload.step_key) {
+            stepText = translated;
+          }
+        }
+        progressStep.textContent = stepText;
         progressPercent.textContent = `${Math.round(payload.percent)}%`;
 
         if (payload.done) {
@@ -3488,7 +3537,14 @@ function showCudaInstallModal(gpuCheck = null) {
       const unlisten = await window.__TAURI__.event.listen('python_install_progress', (event) => {
         const payload = event.payload;
         progressBar.style.width = `${payload.percent}%`;
-        progressStep.textContent = payload.step;
+        let stepText = payload.step;
+        if (payload.step_key) {
+          const translated = t(payload.step_key);
+          if (translated && translated !== payload.step_key) {
+            stepText = translated;
+          }
+        }
+        progressStep.textContent = stepText;
         progressPercent.textContent = `${Math.round(payload.percent)}%`;
 
         if (payload.done) {
@@ -3555,7 +3611,14 @@ function showCudaUninstallProgress(gpuCheck = null) {
       const unlisten = await window.__TAURI__.event.listen('python_install_progress', (event) => {
         const payload = event.payload;
         progressBar.style.width = `${payload.percent}%`;
-        progressStep.textContent = payload.step;
+        let stepText = payload.step;
+        if (payload.step_key) {
+          const translated = t(payload.step_key);
+          if (translated && translated !== payload.step_key) {
+            stepText = translated;
+          }
+        }
+        progressStep.textContent = stepText;
         progressPercent.textContent = `${Math.round(payload.percent)}%`;
 
         if (payload.done) {
@@ -3686,14 +3749,22 @@ if (applyBtn) {
           loadConfigGeneralUI(activeConfig);
           updateActiveEnginePanel(activeConfig.engine.type);
 
-          ToastManager.show({ type: 'success', title: t('toast.engine_verified_activated'), message: testRes });
+          let msg = t(testRes.key, { engine: testRes.engine });
+          ToastManager.show({ type: 'success', title: t('toast.engine_verified_activated'), message: msg });
           return;
         }
       } catch (err) {
         if (window.__TAURI__) {
           await window.__TAURI__.core.invoke('save_config', { config: activeConfig });
         }
-        ToastManager.show({ type: 'error', title: t('toast.api_key_verification_error'), message: t('toast.api_key_verification_msg', { error: err.toString() }), persistent: true });
+        let msg = t('toast.api_key_verification_msg', { error: err.toString() });
+        try {
+          const res = JSON.parse(err);
+          if (res && res.key) {
+            msg = t(res.key, { engine: res.engine, error: res.error_detail });
+          }
+        } catch {}
+        ToastManager.show({ type: 'error', title: t('toast.api_key_verification_error'), message: msg, persistent: true });
         return;
       }
     }

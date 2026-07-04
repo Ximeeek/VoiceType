@@ -118,8 +118,15 @@ pub fn open_url(url: String) -> Result<(), String> {
     Ok(())
 }
 
+#[derive(serde::Serialize)]
+pub struct TestEngineResult {
+    pub key: String,
+    pub engine: String,
+    pub error_detail: Option<String>,
+}
+
 #[tauri::command]
-pub async fn test_engine(state: State<'_, Arc<AppState>>, engine_type: Option<String>) -> Result<String, String> {
+pub async fn test_engine(state: State<'_, Arc<AppState>>, engine_type: Option<String>) -> Result<TestEngineResult, TestEngineResult> {
     let config = state.config.lock().await;
     let target_id = engine_type.unwrap_or_else(|| config.engine.engine_type.clone());
     let engines = crate::recognition::engine_manager::EngineManager::list_engines(&config.engine);
@@ -128,31 +135,68 @@ pub async fn test_engine(state: State<'_, Arc<AppState>>, engine_type: Option<St
         Some(e) if e.is_available => {
             match e.id.as_str() {
                 "deepgram" => {
-                    let mut engine = crate::recognition::online::DeepgramEngine::new(&config.engine.deepgram, &config.general.language).map_err(|err| err.to_string())?;
-                    engine.start_stream().await.map_err(|err| format!("Deepgram błąd połączenia: {}", err))?;
-                    Ok(format!("{} dostępny i połączony pomyślnie!", e.name))
+                    let mut engine = crate::recognition::online::DeepgramEngine::new(&config.engine.deepgram, &config.general.language)
+                        .map_err(|err| TestEngineResult {
+                            key: "toast.engine.connection_failed".to_string(),
+                            engine: e.name.clone(),
+                            error_detail: Some(err.to_string()),
+                        })?;
+                    engine.start_stream().await.map_err(|err| TestEngineResult {
+                        key: "toast.engine.connection_failed".to_string(),
+                        engine: e.name.clone(),
+                        error_detail: Some(err.to_string()),
+                    })?;
+                    Ok(TestEngineResult {
+                        key: "toast.engine.connected".to_string(),
+                        engine: e.name.clone(),
+                        error_detail: None,
+                    })
                 }
                 "assemblyai" => {
                     let client = reqwest::Client::new();
                     let res = client.get("https://api.assemblyai.com/v2/transcript?limit=1")
                         .header("Authorization", &config.engine.assemblyai.api_key)
                         .send().await
-                        .map_err(|err| format!("Połączenie z AssemblyAI nieudane: {}", err))?;
+                        .map_err(|err| TestEngineResult {
+                            key: "toast.engine.connection_failed".to_string(),
+                            engine: e.name.clone(),
+                            error_detail: Some(err.to_string()),
+                        })?;
                     if !res.status().is_success() {
-                        return Err("Nieprawidłowy klucz API AssemblyAI (Brak autoryzacji 401/403)".into());
+                        return Err(TestEngineResult {
+                            key: "toast.engine.api_key_invalid".to_string(),
+                            engine: e.name.clone(),
+                            error_detail: None,
+                        });
                     }
-                    Ok(format!("{} klucz API poprawny!", e.name))
+                    Ok(TestEngineResult {
+                        key: "toast.engine.api_key_valid".to_string(),
+                        engine: e.name.clone(),
+                        error_detail: None,
+                    })
                 }
                 "openai" => {
                     let client = reqwest::Client::new();
                     let res = client.get("https://api.openai.com/v1/models")
                         .header("Authorization", format!("Bearer {}", config.engine.openai.api_key))
                         .send().await
-                        .map_err(|err| format!("Połączenie z OpenAI nieudane: {}", err))?;
+                        .map_err(|err| TestEngineResult {
+                            key: "toast.engine.connection_failed".to_string(),
+                            engine: e.name.clone(),
+                            error_detail: Some(err.to_string()),
+                        })?;
                     if !res.status().is_success() {
-                        return Err("Nieprawidłowy klucz API OpenAI (Brak autoryzacji 401/403)".into());
+                        return Err(TestEngineResult {
+                            key: "toast.engine.api_key_invalid".to_string(),
+                            engine: e.name.clone(),
+                            error_detail: None,
+                        });
                     }
-                    Ok(format!("{} klucz API poprawny!", e.name))
+                    Ok(TestEngineResult {
+                        key: "toast.engine.api_key_valid".to_string(),
+                        engine: e.name.clone(),
+                        error_detail: None,
+                    })
                 }
                 "google" => {
                     let key = if std::path::Path::new(&config.engine.google.credentials_path).exists() {
@@ -163,29 +207,70 @@ pub async fn test_engine(state: State<'_, Arc<AppState>>, engine_type: Option<St
                     let client = reqwest::Client::new();
                     let url = format!("https://speech.googleapis.com/v1/speech:recognize?key={}", key);
                     let res = client.post(&url).json(&serde_json::json!({})).send().await
-                        .map_err(|err| format!("Połączenie z Google nieudane: {}", err))?;
+                        .map_err(|err| TestEngineResult {
+                            key: "toast.engine.connection_failed".to_string(),
+                            engine: e.name.clone(),
+                            error_detail: Some(err.to_string()),
+                        })?;
                     let status = res.status().as_u16();
                     if status == 403 || status == 401 {
-                        Err("Nieprawidłowy klucz API Google STT (Brak autoryzacji)".into())
+                        Err(TestEngineResult {
+                            key: "toast.engine.google_key_unauthorized".to_string(),
+                            engine: e.name.clone(),
+                            error_detail: None,
+                        })
                     } else {
                         let text = res.text().await.unwrap_or_default();
                         if text.contains("API key not valid") || text.contains("API_KEY_INVALID") {
-                            Err("Nieprawidłowy klucz API Google STT".into())
+                            Err(TestEngineResult {
+                                key: "toast.engine.google_key_invalid".to_string(),
+                                engine: e.name.clone(),
+                                error_detail: None,
+                            })
                         } else {
-                            Ok(format!("{} klucz API poprawny!", e.name))
+                            Ok(TestEngineResult {
+                                key: "toast.engine.api_key_valid".to_string(),
+                                engine: e.name.clone(),
+                                error_detail: None,
+                            })
                         }
                     }
                 }
                 "azure" => {
-                    let mut engine = crate::recognition::online::AzureSpeechEngine::new(&config.engine.azure, &config.general.language).map_err(|err| err.to_string())?;
-                    engine.start_stream().await.map_err(|err| format!("Azure błąd połączenia: {}", err))?;
-                    Ok(format!("{} dostępny i połączony pomyślnie!", e.name))
+                    let mut engine = crate::recognition::online::AzureSpeechEngine::new(&config.engine.azure, &config.general.language)
+                        .map_err(|err| TestEngineResult {
+                            key: "toast.engine.connection_failed".to_string(),
+                            engine: e.name.clone(),
+                            error_detail: Some(err.to_string()),
+                        })?;
+                    engine.start_stream().await.map_err(|err| TestEngineResult {
+                        key: "toast.engine.connection_failed".to_string(),
+                        engine: e.name.clone(),
+                        error_detail: Some(err.to_string()),
+                    })?;
+                    Ok(TestEngineResult {
+                        key: "toast.engine.connected".to_string(),
+                        engine: e.name.clone(),
+                        error_detail: None,
+                    })
                 }
-                _ => Ok(format!("{} dostępny", e.name)),
+                _ => Ok(TestEngineResult {
+                    key: "toast.engine.available".to_string(),
+                    engine: e.name.clone(),
+                    error_detail: None,
+                }),
             }
         }
-        Some(e) => Err(format!("{} niedostępny — sprawdź model/klucz API", e.name)),
-        None => Err("Brak aktywnego silnika".into()),
+        Some(e) => Err(TestEngineResult {
+            key: "toast.engine.unavailable".to_string(),
+            engine: e.name.clone(),
+            error_detail: None,
+        }),
+        None => Err(TestEngineResult {
+            key: "toast.engine.no_active".to_string(),
+            engine: "".to_string(),
+            error_detail: None,
+        }),
     }
 }
 
@@ -302,6 +387,7 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
     
     app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
         step: "Instalowanie bibliotek CUDA w środowisku Python (nvidia-cublas-cu12, nvidia-cudnn-cu12)... To potrwa kilka minut.".to_string(),
+        step_key: Some("addons.cuda.step.installing".to_string()),
         percent: 50.0,
         done: false,
         error: None,
@@ -317,6 +403,7 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
             if out.status.success() {
                 app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
                     step: "Biblioteki CUDA zainstalowane pomyślnie!".to_string(),
+                    step_key: Some("addons.cuda.step.installed".to_string()),
                     percent: 100.0,
                     done: true,
                     error: None,
@@ -327,6 +414,7 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
                 let err = format!("Błąd pip: {}", stderr);
                 app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
                     step: "Instalacja bibliotek CUDA nie powiodła się".to_string(),
+                    step_key: Some("addons.cuda.step.install_failed".to_string()),
                     percent: 0.0,
                     done: false,
                     error: Some(err.clone()),
@@ -338,6 +426,7 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
             let err = format!("Failed to run pip: {}", e);
             app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
                 step: "Błąd uruchomienia instalacji".to_string(),
+                step_key: Some("addons.cuda.step.run_failed".to_string()),
                 percent: 0.0,
                 done: false,
                 error: Some(err.clone()),
@@ -406,6 +495,7 @@ pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
     
     app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
         step: "Odinstalowywanie bibliotek CUDA ze środowiska Python...".to_string(),
+        step_key: Some("addons.cuda.step.uninstalling".to_string()),
         percent: 50.0,
         done: false,
         error: None,
@@ -427,6 +517,7 @@ pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
             if out.status.success() {
                 app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
                     step: "Biblioteki CUDA zostały pomyślnie usunięte!".to_string(),
+                    step_key: Some("addons.cuda.step.uninstalled".to_string()),
                     percent: 100.0,
                     done: true,
                     error: None,
@@ -437,6 +528,7 @@ pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
                 let err = format!("Błąd pip: {}", stderr);
                 app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
                     step: "Usuwanie bibliotek CUDA nie powiodło się".to_string(),
+                    step_key: Some("addons.cuda.step.uninstall_failed".to_string()),
                     percent: 0.0,
                     done: false,
                     error: Some(err.clone()),
@@ -448,6 +540,7 @@ pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
             let err = format!("Failed to run pip: {}", e);
             app.emit("python_install_progress", crate::downloader::python_installer::InstallProgress {
                 step: "Błąd uruchomienia deinstalacji".to_string(),
+                step_key: Some("addons.cuda.step.uninstall_run_failed".to_string()),
                 percent: 0.0,
                 done: false,
                 error: Some(err.clone()),

@@ -8,6 +8,7 @@ use zip::ZipArchive;
 #[derive(Clone, serde::Serialize)]
 pub struct InstallProgress {
     pub step: String,
+    pub step_key: Option<String>,
     pub percent: f64,
     pub done: bool,
     pub error: Option<String>,
@@ -18,16 +19,17 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
     let zip_path = Path::new("..").join("python_embed.zip");
     let pip_script_path = Path::new("..").join("get-pip.py");
     
-    let emit_progress = |step: &str, percent: f64, done: bool, error: Option<String>| {
+    let emit_progress = |step: &str, step_key: Option<&str>, percent: f64, done: bool, error: Option<String>| {
         app.emit("python_install_progress", InstallProgress {
             step: step.to_string(),
+            step_key: step_key.map(|s| s.to_string()),
             percent,
             done,
             error,
         }).ok();
     };
 
-    emit_progress("Pobieranie środowiska Python (ok. 10 MB)...", 10.0, false, None);
+    emit_progress("Pobieranie środowiska Python (ok. 10 MB)...", Some("addons.py.step.download_init"), 10.0, false, None);
 
     // 1. Pobieranie portable Pythona 3.10.11 embeddable
     let client = reqwest::Client::new();
@@ -36,7 +38,7 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
     let res = client.get(url).send().await.map_err(|e| e.to_string())?;
     if !res.status().is_success() {
         let err = format!("Błąd pobierania Pythona, status: {}", res.status());
-        emit_progress("Błąd", 0.0, false, Some(err.clone()));
+        emit_progress("Błąd", None, 0.0, false, Some(err.clone()));
         return Err(err);
     }
 
@@ -50,11 +52,11 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
         file.write_all(&chunk).map_err(|e| e.to_string())?;
         downloaded += chunk.len() as u64;
         let percent = (downloaded as f64 / total_size as f64) * 80.0 + 10.0; // 10% - 90%
-        emit_progress("Pobieranie środowiska Python...", percent, false, None);
+        emit_progress("Pobieranie środowiska Python...", Some("addons.py.step.downloading"), percent, false, None);
     }
     drop(file);
 
-    emit_progress("Rozpakowywanie Pythona...", 90.0, false, None);
+    emit_progress("Rozpakowywanie Pythona...", Some("addons.py.step.unpacking"), 90.0, false, None);
 
     // 2. Rozpakowywanie do folderu python_embed
     if target_dir.exists() {
@@ -95,7 +97,7 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
         std::fs::write(&pth_file_path, new_content).ok();
     }
 
-    emit_progress("Instalowanie menedżera pakietów pip...", 92.0, false, None);
+    emit_progress("Instalowanie menedżera pakietów pip...", Some("addons.py.step.installing_pip"), 92.0, false, None);
 
     // 4. Pobieranie get-pip.py
     let pip_res = client.get("https://bootstrap.pypa.io/get-pip.py").send().await.map_err(|e| e.to_string())?;
@@ -116,11 +118,11 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
 
     if let Err(e) = pip_install_output {
         let err = format!("Nie udało się uruchomić instalacji pip: {}", e);
-        emit_progress("Błąd", 0.0, false, Some(err.clone()));
+        emit_progress("Błąd", None, 0.0, false, Some(err.clone()));
         return Err(err);
     }
 
-    emit_progress("Pobieranie i instalowanie biblioteki Faster-Whisper (to może zająć chwilę)...", 95.0, false, None);
+    emit_progress("Pobieranie i instalowanie biblioteki Faster-Whisper (to może zająć chwilę)...", Some("addons.py.step.installing_whisper"), 95.0, false, None);
 
     // 6. Instalacja faster-whisper za pomocą pip
     let mut cmd = std::process::Command::new(&python_exe);
@@ -131,18 +133,18 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
     match whisper_install_output {
         Ok(out) => {
             if out.status.success() {
-                emit_progress("Instalacja ukończona pomyślnie!", 100.0, true, None);
+                emit_progress("Instalacja ukończona pomyślnie!", Some("addons.py.step.completed"), 100.0, true, None);
                 Ok(())
             } else {
                 let stderr = String::from_utf8_lossy(&out.stderr).to_string();
                 let err = format!("Pip zakończył się błędem: {}", stderr);
-                emit_progress("Błąd", 0.0, false, Some(err.clone()));
+                emit_progress("Błąd", None, 0.0, false, Some(err.clone()));
                 Err(err)
             }
         }
         Err(e) => {
             let err = format!("Nie udało się zainstalować faster-whisper: {}", e);
-            emit_progress("Błąd", 0.0, false, Some(err.clone()));
+            emit_progress("Błąd", None, 0.0, false, Some(err.clone()));
             Err(err)
         }
     }

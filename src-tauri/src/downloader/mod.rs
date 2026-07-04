@@ -134,7 +134,8 @@ pub async fn download_model(
                 "downloaded_mb": downloaded as f64 / 1_048_576.0,
                 "total_mb": total as f64 / 1_048_576.0,
                 "percent": percent,
-                "status_text": "Pobieranie pliku..."
+                "status_text": "Pobieranie pliku...",
+                "status_key": "downloading"
             })).ok();
         }
     }
@@ -151,7 +152,8 @@ pub async fn download_model(
         "downloaded_mb": total as f64 / 1_048_576.0,
         "total_mb": total as f64 / 1_048_576.0,
         "percent": 99.9,
-        "status_text": if is_archive { "Rozpakowywanie archiwum..." } else { "Finalizowanie zapisu..." }
+        "status_text": if is_archive { "Rozpakowywanie archiwum..." } else { "Finalizowanie zapisu..." },
+        "status_key": if is_archive { "unpacking" } else { "finalizing" }
     })).ok();
 
     // Przenosimy ciężkie weryfikacje SHA256 oraz rozpakowywanie pliku (tar) do blokującego wątku, aby nie blokować Tokio runtime
@@ -197,7 +199,8 @@ pub async fn download_model(
         "model": model_id,
         "percent": 100.0,
         "done": true,
-        "status_text": "Ukończono"
+        "status_text": "Ukończono",
+        "status_key": "completed"
     })).ok();
     Ok(())
 }
