@@ -170,12 +170,13 @@ pub async fn download_model(
         
         if is_archive {
             let parent_dir = dest_clone.parent().ok_or_else(|| anyhow::anyhow!("Brak folderu nadrzędnego"))?;
-            let status = std::process::Command::new("tar")
-                .arg("-xf")
+            let mut cmd = std::process::Command::new("tar");
+            cmd.arg("-xf")
                 .arg(&tmp_clone)
                 .arg("-C")
-                .arg(parent_dir)
-                .status();
+                .arg(parent_dir);
+            crate::platform::suppress_console_in_release(&mut cmd);
+            let status = cmd.status();
                 
             match status {
                 Ok(s) if s.success() => {

@@ -71,9 +71,10 @@ pub async fn set_engine(state: State<'_, Arc<AppState>>, engine_type: String) ->
 pub fn open_url(url: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
-        std::process::Command::new("cmd")
-            .args(["/C", "start", "", &url])
-            .spawn()
+        let mut cmd = std::process::Command::new("cmd");
+        cmd.args(["/C", "start", "", &url]);
+        crate::platform::suppress_console_in_release(&mut cmd);
+        cmd.spawn()
             .map_err(|e| e.to_string())?;
     }
     #[cfg(not(target_os = "windows"))]
@@ -272,9 +273,10 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
         error: None,
     }).ok();
 
-    let output = std::process::Command::new(&python_exe)
-        .args(["-m", "pip", "install", "nvidia-cublas-cu12", "nvidia-cudnn-cu12"])
-        .output();
+    let mut cmd = std::process::Command::new(&python_exe);
+    cmd.args(["-m", "pip", "install", "nvidia-cublas-cu12", "nvidia-cudnn-cu12"]);
+    crate::platform::suppress_console_in_release(&mut cmd);
+    let output = cmd.output();
 
     match output {
         Ok(out) => {
@@ -380,11 +382,7 @@ pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
     #[cfg(not(windows))]
     let mut cmd = std::process::Command::new("python3");
 
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
-    }
+    crate::platform::suppress_console_in_release(&mut cmd);
 
     let output = cmd
         .args(["-m", "pip", "uninstall", "-y", "nvidia-cublas-cu12", "nvidia-cudnn-cu12"])
@@ -429,15 +427,14 @@ pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
 pub fn check_gpu_support() -> bool {
     #[cfg(windows)]
     {
-        use std::os::windows::process::CommandExt;
-        let output = std::process::Command::new("powershell")
-            .args([
-                "-NoProfile",
-                "-Command",
-                "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name"
-            ])
-            .creation_flags(0x08000000) // CREATE_NO_WINDOW
-            .output();
+        let mut cmd = std::process::Command::new("powershell");
+        cmd.args([
+            "-NoProfile",
+            "-Command",
+            "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name"
+        ]);
+        crate::platform::suppress_console_in_release(&mut cmd);
+        let output = cmd.output();
 
         if let Ok(out) = output {
             let stdout = String::from_utf8_lossy(&out.stdout).to_string();

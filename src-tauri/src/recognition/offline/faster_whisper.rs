@@ -11,7 +11,10 @@ fn get_python_cmd() -> std::path::PathBuf {
             local_root
         } else {
             // Sprawdź czy python3 lub python są dostępne w systemie
-            let has_python3 = std::process::Command::new("python3").arg("--version").output().is_ok();
+            let mut cmd = std::process::Command::new("python3");
+            cmd.arg("--version");
+            crate::platform::suppress_console_in_release(&mut cmd);
+            let has_python3 = cmd.output().is_ok();
             if has_python3 {
                 std::path::PathBuf::from("python3")
             } else {
@@ -35,7 +38,10 @@ pub struct FasterWhisperEngine {
 impl FasterWhisperEngine {
     pub fn new(model: &str, device: &str, language: &str) -> anyhow::Result<Self> {
         let python_bin = get_python_cmd();
-        let output = std::process::Command::new(&python_bin).arg("--version").output()
+        let mut cmd = std::process::Command::new(&python_bin);
+        cmd.arg("--version");
+        crate::platform::suppress_console_in_release(&mut cmd);
+        let output = cmd.output()
             .map_err(|_| anyhow::anyhow!("Python nie jest zainstalowany"))?;
         if !output.status.success() { return Err(anyhow::anyhow!("Python niedostepny")); }
 
@@ -60,9 +66,10 @@ try:
 except Exception as e:
     print(e, file=sys.stderr)
 sys.exit(0 if ok else 1)"#;
-            let check_output = std::process::Command::new(&python_bin)
-                .args(["-c", script])
-                .output();
+            let mut cmd = std::process::Command::new(&python_bin);
+            cmd.args(["-c", script]);
+            crate::platform::suppress_console_in_release(&mut cmd);
+            let check_output = cmd.output();
             let is_cuda_ok = match check_output {
                 Ok(out) => {
                     if !out.status.success() {
@@ -114,12 +121,13 @@ for line in sys.stdin:
 "#;
 
         println!("[Faster-Whisper] Spawning persistent python process with model: {}, device: {}", model, final_device);
-        let mut child = std::process::Command::new(&python_bin)
-            .args(["-c", script, model, &final_device, language])
+        let mut cmd = std::process::Command::new(&python_bin);
+        cmd.args(["-c", script, model, &final_device, language])
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::inherit())
-            .spawn()
+            .stderr(std::process::Stdio::inherit());
+        crate::platform::suppress_console_in_release(&mut cmd);
+        let mut child = cmd.spawn()
             .map_err(|e| anyhow::anyhow!("Failed to spawn python process: {}", e))?;
 
         let child_stdin = child.stdin.take().ok_or_else(|| anyhow::anyhow!("Failed to open stdin"))?;

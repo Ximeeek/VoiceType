@@ -61,12 +61,13 @@ for line in sys.stdin:
         print(json.dumps({"error": str(e)}), flush=True)
 "#;
 
-        let mut child = std::process::Command::new(&python_bin)
-            .args(["-c", script, model_path, language])
+        let mut cmd = std::process::Command::new(&python_bin);
+        cmd.args(["-c", script, model_path, language])
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::inherit())
-            .spawn()
+            .stderr(std::process::Stdio::inherit());
+        crate::platform::suppress_console_in_release(&mut cmd);
+        let mut child = cmd.spawn()
             .map_err(|e| anyhow::anyhow!("Failed to spawn python worker: {}", e))?;
 
         let child_stdin = child.stdin.take().ok_or_else(|| anyhow::anyhow!("Failed to open stdin"))?;

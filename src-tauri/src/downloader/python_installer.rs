@@ -107,9 +107,10 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
 
     // 5. Uruchomienie instalacji pip
     let python_exe = target_dir.join("python.exe");
-    let pip_install_output = std::process::Command::new(&python_exe)
-        .arg(&pip_script_path)
-        .output();
+    let mut cmd = std::process::Command::new(&python_exe);
+    cmd.arg(&pip_script_path);
+    crate::platform::suppress_console_in_release(&mut cmd);
+    let pip_install_output = cmd.output();
         
     std::fs::remove_file(&pip_script_path).ok();
 
@@ -122,9 +123,10 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
     emit_progress("Pobieranie i instalowanie biblioteki Faster-Whisper (to może zająć chwilę)...", 95.0, false, None);
 
     // 6. Instalacja faster-whisper za pomocą pip
-    let whisper_install_output = std::process::Command::new(&python_exe)
-        .args(["-m", "pip", "install", "faster-whisper"])
-        .output();
+    let mut cmd = std::process::Command::new(&python_exe);
+    cmd.args(["-m", "pip", "install", "faster-whisper"]);
+    crate::platform::suppress_console_in_release(&mut cmd);
+    let whisper_install_output = cmd.output();
 
     match whisper_install_output {
         Ok(out) => {
@@ -158,8 +160,17 @@ pub fn is_python_available() -> bool {
     }
     
     // 2. Jeśli nie, sprawdzamy systemowy
-    let output = std::process::Command::new("python3").arg("--version").output()
-        .or_else(|_| std::process::Command::new("python").arg("--version").output());
+    let mut cmd1 = std::process::Command::new("python3");
+    cmd1.arg("--version");
+    crate::platform::suppress_console_in_release(&mut cmd1);
+
+    let output = cmd1.output()
+        .or_else(|_| {
+            let mut cmd2 = std::process::Command::new("python");
+            cmd2.arg("--version");
+            crate::platform::suppress_console_in_release(&mut cmd2);
+            cmd2.output()
+        });
         
     if let Ok(out) = output {
         out.status.success()
