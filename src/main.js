@@ -1021,6 +1021,128 @@ async function handleAddStop() {
 if (stopAddBtn) stopAddBtn.addEventListener('click', handleAddStop);
 if (stopInput) stopInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddStop(); });
 
+let pendingCloudWarningEngineId = null;
+
+function getLiveTypingForEngine(engineId) {
+  const dict = (pendingConfig && pendingConfig.dictation) ? pendingConfig.dictation : (activeConfig && activeConfig.dictation ? activeConfig.dictation : null);
+  if (!dict) return false;
+  if (!dict.engine_live_typing) {
+    dict.engine_live_typing = {};
+  }
+  if (typeof dict.engine_live_typing[engineId] === 'boolean') {
+    return dict.engine_live_typing[engineId];
+  }
+  const currentEngine = (pendingConfig && pendingConfig.engine && pendingConfig.engine.type) || (activeConfig && activeConfig.engine && activeConfig.engine.type) || 'vosk';
+  if (engineId === currentEngine && typeof dict.live_typing === 'boolean') {
+    dict.engine_live_typing[engineId] = dict.live_typing;
+    return dict.live_typing;
+  }
+  return false;
+}
+
+function setLiveTypingForEngine(engineId, enabled) {
+  const currentEngine = (pendingConfig && pendingConfig.engine && pendingConfig.engine.type) || (activeConfig && activeConfig.engine && activeConfig.engine.type) || 'vosk';
+
+  if (pendingConfig && pendingConfig.dictation) {
+    if (!pendingConfig.dictation.engine_live_typing) {
+      pendingConfig.dictation.engine_live_typing = {};
+    }
+    pendingConfig.dictation.engine_live_typing[engineId] = enabled;
+    if (engineId === currentEngine) {
+      pendingConfig.dictation.live_typing = enabled;
+    }
+  }
+
+  if (activeConfig && activeConfig.dictation) {
+    if (!activeConfig.dictation.engine_live_typing) {
+      activeConfig.dictation.engine_live_typing = {};
+    }
+    activeConfig.dictation.engine_live_typing[engineId] = enabled;
+    if (engineId === currentEngine) {
+      activeConfig.dictation.live_typing = enabled;
+    }
+  }
+}
+
+function showCloudLiveTypingWarningModal(engineId) {
+  pendingCloudWarningEngineId = engineId;
+  const modal = document.getElementById('cloud-live-typing-warning-modal');
+  const nameElem = document.getElementById('cloud-warning-engine-name');
+
+  const nameMap = {
+    vosk: 'Vosk Offline',
+    sherpa_onnx: 'Sherpa-ONNX',
+    whisper: 'Whisper.cpp',
+    faster_whisper: 'Faster-Whisper',
+    deepgram: 'Deepgram Online',
+    assemblyai: 'AssemblyAI Online',
+    openai: 'OpenAI Whisper',
+    google: 'Google Cloud STT',
+    azure: 'Azure Speech'
+  };
+
+  if (nameElem) {
+    nameElem.textContent = nameMap[engineId] || engineId;
+  }
+
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+function hideCloudLiveTypingWarningModal() {
+  pendingCloudWarningEngineId = null;
+  const modal = document.getElementById('cloud-live-typing-warning-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function initCloudLiveTypingWarningModalListeners() {
+  const btnCancel = document.getElementById('btn-cloud-warning-cancel');
+  const btnCloseX = document.getElementById('btn-cloud-warning-close-x');
+  const btnEnable = document.getElementById('btn-cloud-warning-enable');
+  const modal = document.getElementById('cloud-live-typing-warning-modal');
+
+  if (btnCancel) {
+    btnCancel.onclick = () => {
+      const liveTypingCheck = document.getElementById('settings-live-typing');
+      if (liveTypingCheck) liveTypingCheck.checked = false;
+      hideCloudLiveTypingWarningModal();
+    };
+  }
+
+  if (btnCloseX) {
+    btnCloseX.onclick = () => {
+      const liveTypingCheck = document.getElementById('settings-live-typing');
+      if (liveTypingCheck) liveTypingCheck.checked = false;
+      hideCloudLiveTypingWarningModal();
+    };
+  }
+
+  if (modal) {
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        const liveTypingCheck = document.getElementById('settings-live-typing');
+        if (liveTypingCheck) liveTypingCheck.checked = false;
+        hideCloudLiveTypingWarningModal();
+      }
+    };
+  }
+
+  if (btnEnable) {
+    btnEnable.onclick = () => {
+      if (pendingCloudWarningEngineId) {
+        setLiveTypingForEngine(pendingCloudWarningEngineId, true);
+        const liveTypingCheck = document.getElementById('settings-live-typing');
+        if (liveTypingCheck) liveTypingCheck.checked = true;
+        saveConfigState();
+      }
+      hideCloudLiveTypingWarningModal();
+    };
+  }
+}
+
 // Load Configuration into General settings UI elements
 function loadConfigGeneralUI(config) {
   // Trigger config
@@ -1045,14 +1167,23 @@ function loadConfigGeneralUI(config) {
   
   const liveTypingCheck = document.getElementById('settings-live-typing');
   if (liveTypingCheck) {
-    liveTypingCheck.checked = config.dictation ? !!config.dictation.live_typing : false;
+    const currentEngine = (pendingConfig && pendingConfig.engine && pendingConfig.engine.type) || (config && config.engine && config.engine.type) || 'vosk';
+    liveTypingCheck.checked = getLiveTypingForEngine(currentEngine);
     liveTypingCheck.onchange = (e) => {
-      if (activeConfig && activeConfig.dictation) {
-        activeConfig.dictation.live_typing = e.target.checked;
+      const activeEngineId = (pendingConfig && pendingConfig.engine && pendingConfig.engine.type) || (activeConfig && activeConfig.engine && activeConfig.engine.type) || 'vosk';
+      const isChecked = e.target.checked;
+
+      const cloudEngines = ['deepgram', 'assemblyai', 'openai', 'google', 'azure'];
+      const streamingSupportedEngines = ['vosk', 'deepgram', 'assemblyai', 'azure'];
+      const isCloudNonStreaming = cloudEngines.includes(activeEngineId) && !streamingSupportedEngines.includes(activeEngineId);
+
+      if (isChecked && isCloudNonStreaming) {
+        e.target.checked = false;
+        showCloudLiveTypingWarningModal(activeEngineId);
+        return;
       }
-      if (pendingConfig && pendingConfig.dictation) {
-        pendingConfig.dictation.live_typing = e.target.checked;
-      }
+
+      setLiveTypingForEngine(activeEngineId, isChecked);
       saveConfigState();
     };
   }
@@ -1304,7 +1435,20 @@ function updateActiveEnginePanel(engineId) {
   // Toggle Live Typing container and warning badge visibility
   const liveTypingWarning = document.getElementById('engine-live-typing-warning');
   const liveTypingIntervalContainer = document.getElementById('engine-live-typing-interval-container');
+  const liveTypingCheck = document.getElementById('settings-live-typing');
   const streamingSupportedEngines = ['vosk', 'deepgram', 'assemblyai', 'azure'];
+
+  if (liveTypingCheck) {
+    const engineLiveTyping = getLiveTypingForEngine(engineId);
+    liveTypingCheck.checked = engineLiveTyping;
+    if (pendingConfig && pendingConfig.dictation) {
+      pendingConfig.dictation.live_typing = engineLiveTyping;
+    }
+    if (activeConfig && activeConfig.dictation) {
+      activeConfig.dictation.live_typing = engineLiveTyping;
+    }
+  }
+
   if (liveTypingContainer) {
     liveTypingContainer.style.display = 'block';
   }
@@ -3473,6 +3617,7 @@ async function init() {
       renderTriggerWords(config.trigger.words);
       renderStopWords(config.dictation.stop_words);
       loadConfigGeneralUI(config);
+      initCloudLiveTypingWarningModalListeners();
 
       // 3. Query engines list
       const engines = await window.__TAURI__.core.invoke('list_engines');

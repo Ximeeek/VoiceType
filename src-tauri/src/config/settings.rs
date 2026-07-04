@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Config {
@@ -9,6 +10,16 @@ pub struct Config {
     pub engine: EngineConfig,
     pub input: InputConfig,
     pub ui: UiConfig,
+}
+
+impl Config {
+    pub fn is_live_typing_enabled(&self) -> bool {
+        if let Some(enabled) = self.dictation.engine_live_typing.get(&self.engine.engine_type) {
+            *enabled
+        } else {
+            self.dictation.live_typing
+        }
+    }
 }
 
 impl Default for Config {
@@ -99,6 +110,8 @@ pub struct DictationConfig {
     pub live_typing: bool,
     #[serde(default = "default_live_typing_interval_ms")]
     pub live_typing_interval_ms: u64,
+    #[serde(default)]
+    pub engine_live_typing: HashMap<String, bool>,
 }
 
 impl Default for DictationConfig {
@@ -110,6 +123,7 @@ impl Default for DictationConfig {
             start_delay_ms: 0,
             live_typing: false,
             live_typing_interval_ms: 2000,
+            engine_live_typing: HashMap::new(),
         }
     }
 }

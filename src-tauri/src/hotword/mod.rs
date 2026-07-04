@@ -302,7 +302,7 @@ pub async fn run_control_loop(
                                 app_handle.emit("focus_detected", !matches!(focus, FocusResult::NoTextField)).ok();
                                 live_typing = LiveTypingState::new();
 
-                                if !remaining.is_empty() && config.dictation.live_typing {
+                                if !remaining.is_empty() && config.is_live_typing_enabled() {
                                     _current_partial = remaining.clone();
                                     if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
                                         let _ = live_typing.update_partial(&remaining, &focus, config.input.key_delay_ms).await;
@@ -342,7 +342,7 @@ pub async fn run_control_loop(
 
                                 if !remaining.is_empty() {
                                     batch_remaining_text = Some(remaining.clone());
-                                    if config.dictation.live_typing {
+                                    if config.is_live_typing_enabled() {
                                         _current_partial = remaining.clone();
                                         if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
                                             let _ = live_typing.update_partial(&remaining, &focus, config.input.key_delay_ms).await;
@@ -386,7 +386,7 @@ pub async fn run_control_loop(
 
                                         if !remaining.is_empty() {
                                             batch_remaining_text = Some(remaining.clone());
-                                            if config.dictation.live_typing {
+                                            if config.is_live_typing_enabled() {
                                                 _current_partial = remaining.clone();
                                                 if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
                                                     let _ = live_typing.update_partial(&remaining, &focus, config.input.key_delay_ms).await;
@@ -474,7 +474,7 @@ pub async fn run_control_loop(
                                 _current_partial = transcript.text.clone();
                                 app_handle.emit("transcript_partial", transcript.text.clone()).ok();
                                 
-                                if config.dictation.live_typing {
+                                if config.is_live_typing_enabled() {
                                     focus = detect_focused_text_field();
                                     if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
                                         let _ = live_typing.update_partial(&transcript.text, &focus, config.input.key_delay_ms).await;
@@ -530,7 +530,7 @@ pub async fn run_control_loop(
                     }
 
                     // Simulated streaming for non-native streaming engines (periodic interim transcription pass)
-                    if !engine.supports_streaming() && dictating_last_interim_time.elapsed() >= Duration::from_millis(config.dictation.live_typing_interval_ms) {
+                    if !engine.supports_streaming() && config.is_live_typing_enabled() && dictating_last_interim_time.elapsed() >= Duration::from_millis(config.dictation.live_typing_interval_ms) {
                         dictating_last_interim_time = Instant::now();
                         if let Ok(Some(interim_text)) = engine.get_interim_transcript().await {
                             // Immediately drain queued chunks after inference to refresh VAD timestamp!
@@ -552,7 +552,7 @@ pub async fn run_control_loop(
                                 _current_partial = display_text.clone();
                                 app_handle.emit("transcript_partial", display_text.clone()).ok();
 
-                                if config.dictation.live_typing {
+                                if config.is_live_typing_enabled() {
                                     focus = detect_focused_text_field();
                                     if config.input.prefer_uia || !matches!(focus, FocusResult::NoTextField) {
                                         let _ = live_typing.update_partial(&display_text, &focus, config.input.key_delay_ms).await;
