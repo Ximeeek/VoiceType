@@ -9,6 +9,8 @@
   --accent-magenta: #e0147a;
   --accent-green-dim: rgba(57,255,80,0.12);
   --accent-green-pulse: rgba(57,255,80,0.4);
+  --accent-contrast-text: #080c08;
+  --bg-overlay:     rgba(14, 19, 14, 0.9);
   --text-primary:   #ffffff;
   --text-secondary: rgba(255,255,255,0.55);
   --text-muted:     rgba(255,255,255,0.25);
@@ -27,9 +29,16 @@
   --bg-elevated:    #eef2f7;
   --card-bg:        rgba(255, 255, 255, 0.85);
   --border-subtle:  rgba(0, 0, 0, 0.08);
+  --border-accent:  rgba(16, 185, 129, 0.3);
   --text-primary:   #0f172a;
   --text-secondary: #475569;
   --text-muted:     #94a3b8;
+  --accent-green:   #10b981;
+  --accent-magenta: #db2777;
+  --accent-green-dim: rgba(16, 185, 129, 0.12);
+  --accent-green-pulse: rgba(16, 185, 129, 0.4);
+  --accent-contrast-text: #ffffff;
+  --bg-overlay:     rgba(244, 246, 249, 0.92);
 }
 
 /* Density Modifiers */
