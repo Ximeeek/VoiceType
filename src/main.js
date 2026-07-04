@@ -1362,6 +1362,30 @@ function loadConfigGeneralUI(config) {
   loadConfigAppearanceUI(config);
 }
 
+function updateEngineCardsUI(engineId) {
+  const targetId = engineId || (pendingConfig && pendingConfig.engine && pendingConfig.engine.type) || (activeConfig && activeConfig.engine && activeConfig.engine.type);
+  if (!targetId) return;
+
+  document.querySelectorAll('.engine-card').forEach(c => {
+    c.classList.remove('active');
+    const badge = c.querySelector('.engine-card-badge');
+    if (badge) {
+      badge.classList.remove('active');
+      badge.textContent = typeof t === 'function' ? t('engines.badge.select') : 'Select';
+    }
+  });
+
+  const activeCard = document.querySelector(`.engine-card[data-engine-id="${targetId}"]`);
+  if (activeCard) {
+    activeCard.classList.add('active');
+    const badge = activeCard.querySelector('.engine-card-badge');
+    if (badge) {
+      badge.classList.add('active');
+      badge.textContent = typeof t === 'function' ? t('engines.badge.active') : 'Active';
+    }
+  }
+}
+
 // Engine Selection & dynamic panels
 const engineCards = document.querySelectorAll('.engine-card');
 
@@ -1383,23 +1407,6 @@ engineCards.forEach(card => {
         duration: 10000
       });
     }
-    
-    // Update active visual states
-    engineCards.forEach(c => {
-      c.classList.remove('active');
-      const badge = c.querySelector('.engine-card-badge');
-      if (badge) {
-        badge.classList.remove('active');
-        badge.textContent = t('engines.badge.select');
-      }
-    });
-
-    card.classList.add('active');
-    const badge = card.querySelector('.engine-card-badge');
-    if (badge) {
-      badge.classList.add('active');
-      badge.textContent = t('engines.badge.active');
-    }
 
     if (pendingConfig && pendingConfig.engine) {
       pendingConfig.engine.type = engineId;
@@ -1412,6 +1419,8 @@ engineCards.forEach(card => {
 });
 
 function updateActiveEnginePanel(engineId) {
+  updateEngineCardsUI(engineId);
+
   const panel = document.getElementById('engine-config-card');
   const title = document.getElementById('config-panel-title');
   const voskFields = document.getElementById('config-fields-vosk');
@@ -4100,24 +4109,6 @@ if (applyBtn) {
           activeConfig = JSON.parse(JSON.stringify(pendingConfig));
           checkEngineDirty();
 
-          document.querySelectorAll('.engine-card').forEach(c => {
-            c.classList.remove('active');
-            const badge = c.querySelector('.engine-card-badge');
-            if (badge) {
-              badge.classList.remove('active');
-              badge.textContent = t('engines.badge.select');
-            }
-          });
-          const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
-          if (activeCard) {
-            activeCard.classList.add('active');
-            const badge = activeCard.querySelector('.engine-card-badge');
-            if (badge) {
-              badge.classList.add('active');
-              badge.textContent = t('engines.badge.active');
-            }
-          }
-
           renderTriggerWords(activeConfig.trigger.words);
           renderStopWords(activeConfig.dictation.stop_words);
           loadConfigGeneralUI(activeConfig);
@@ -4168,24 +4159,6 @@ if (applyBtn) {
       }
       checkEngineDirty();
       
-      document.querySelectorAll('.engine-card').forEach(c => {
-        c.classList.remove('active');
-        const badge = c.querySelector('.engine-card-badge');
-        if (badge) {
-          badge.classList.remove('active');
-          badge.textContent = t('engines.badge.select');
-        }
-      });
-      const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
-      if (activeCard) {
-        activeCard.classList.add('active');
-        const badge = activeCard.querySelector('.engine-card-badge');
-        if (badge) {
-          badge.classList.add('active');
-          badge.textContent = t('engines.badge.active');
-        }
-      }
-      
       renderTriggerWords(activeConfig.trigger.words);
       renderStopWords(activeConfig.dictation.stop_words);
       loadConfigGeneralUI(activeConfig);
@@ -4198,24 +4171,6 @@ if (applyBtn) {
         activeConfig = JSON.parse(JSON.stringify(pendingConfig));
         await saveConfigState();
         checkEngineDirty();
-        
-        document.querySelectorAll('.engine-card').forEach(c => {
-          c.classList.remove('active');
-          const badge = c.querySelector('.engine-card-badge');
-          if (badge) {
-            badge.classList.remove('active');
-            badge.textContent = t('engines.badge.select');
-          }
-        });
-        const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
-        if (activeCard) {
-          activeCard.classList.add('active');
-          const badge = activeCard.querySelector('.engine-card-badge');
-          if (badge) {
-            badge.classList.add('active');
-            badge.textContent = t('engines.badge.active');
-          }
-        }
         
         renderTriggerWords(activeConfig.trigger.words);
         renderStopWords(activeConfig.dictation.stop_words);
@@ -4250,24 +4205,6 @@ if (applyBtn) {
             await saveConfigState();
             checkEngineDirty();
             
-            document.querySelectorAll('.engine-card').forEach(c => {
-              c.classList.remove('active');
-              const badge = c.querySelector('.engine-card-badge');
-              if (badge) {
-                badge.classList.remove('active');
-                badge.textContent = t('engines.badge.select');
-              }
-            });
-            const activeCard = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
-            if (activeCard) {
-              activeCard.classList.add('active');
-              const badge = activeCard.querySelector('.engine-card-badge');
-              if (badge) {
-                badge.classList.add('active');
-                badge.textContent = t('engines.badge.active');
-              }
-            }
-            
             renderTriggerWords(activeConfig.trigger.words);
             renderStopWords(activeConfig.dictation.stop_words);
             loadConfigGeneralUI(activeConfig);
@@ -4284,24 +4221,6 @@ if (applyBtn) {
         onCancel: () => {
           pendingConfig = JSON.parse(JSON.stringify(activeConfig));
           loadConfigGeneralUI(activeConfig);
-          
-          document.querySelectorAll('.engine-card').forEach(c => {
-            c.classList.remove('active');
-            const badge = c.querySelector('.engine-card-badge');
-            if (badge) {
-              badge.classList.remove('active');
-              badge.textContent = t('engines.badge.select');
-            }
-          });
-          const cardEl = document.querySelector(`.engine-card[data-engine-id="${activeConfig.engine.type}"]`);
-          if (cardEl) {
-            cardEl.classList.add('active');
-            const badge = cardEl.querySelector('.engine-card-badge');
-            if (badge) {
-              badge.classList.add('active');
-              badge.textContent = t('engines.badge.active');
-            }
-          }
           updateActiveEnginePanel(activeConfig.engine.type);
           checkEngineDirty();
         }
