@@ -287,7 +287,24 @@ pub fn show_custom_notification(app: &tauri::AppHandle, notif_type: &str) {
     }
 
     let app_clone = app.clone();
-    let url_str = format!("notification.html?type={}", notif_type);
+    let mut url_str = format!("notification.html?type={}", notif_type);
+
+    if let Some(state) = app.try_state::<std::sync::Arc<crate::AppState>>() {
+        if let Ok(config) = state.config.try_lock() {
+            let ui = &config.ui;
+            let main_color = ui.accent_custom_main.replace('#', "%23");
+            let sec_color = ui.accent_custom_sec.replace('#', "%23");
+            url_str = format!(
+                "notification.html?type={}&theme={}&accent_preset={}&dual_accent={}&accent_custom_main={}&accent_custom_sec={}",
+                notif_type,
+                ui.theme,
+                ui.accent_preset,
+                ui.dual_accent,
+                main_color,
+                sec_color
+            );
+        }
+    }
 
     match tauri::WebviewWindowBuilder::new(
         app,

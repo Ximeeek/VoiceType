@@ -9,10 +9,23 @@
   <style>
     :root {
       --bg-elevated: #141a14;
+      --card-bg: rgba(20, 26, 20, 0.95);
       --border-accent: rgba(57, 255, 80, 0.25);
       --accent-green: #39ff50;
+      --accent-green-dim: rgba(57, 255, 80, 0.12);
       --text-primary: #ffffff;
       --text-secondary: rgba(255, 255, 255, 0.65);
+      --shadow-color: rgba(0, 0, 0, 0.5);
+      --inset-shadow-color: rgba(255, 255, 255, 0.05);
+    }
+
+    [data-theme="light"] {
+      --bg-elevated: #eef2f7;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --shadow-color: rgba(15, 23, 42, 0.15);
+      --inset-shadow-color: rgba(255, 255, 255, 0.5);
     }
 
     html, body {
@@ -37,7 +50,7 @@
     }
 
     .notification-card {
-      background: rgba(20, 26, 20, 0.95);
+      background: var(--card-bg);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid var(--border-accent);
@@ -46,13 +59,14 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 30px var(--shadow-color), inset 0 1px 1px var(--inset-shadow-color);
       width: 100%;
       height: 100%;
       box-sizing: border-box;
       animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       position: relative;
       overflow: hidden;
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     /* Left glowing status line */
@@ -65,6 +79,7 @@
       width: 3px;
       background: var(--accent-green);
       box-shadow: 0 0 10px var(--accent-green);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     @keyframes slideInUp {
@@ -99,12 +114,13 @@
       justify-content: center;
       width: 36px;
       height: 36px;
-      background: rgba(57, 255, 80, 0.1);
-      border: 1px solid rgba(57, 255, 80, 0.2);
+      background: var(--accent-green-dim);
+      border: 1px solid var(--border-accent);
       border-radius: 50%;
       color: var(--accent-green);
       flex-shrink: 0;
-      box-shadow: 0 0 12px rgba(57, 255, 80, 0.15);
+      box-shadow: 0 0 12px var(--accent-green-dim);
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
     }
 
     .icon-container svg {
@@ -124,14 +140,87 @@
       font-weight: 600;
       color: var(--text-primary);
       letter-spacing: 0.2px;
+      transition: color 0.3s ease;
     }
 
     .message {
       font-size: 11px;
       color: var(--text-secondary);
       line-height: 1.4;
+      transition: color 0.3s ease;
     }
   </style>
+  <script>
+    // Extract theme/color parameters from URL synchronously to avoid FOUC (Flash of Unstyled Content)
+    (function() {
+      const ACCENT_PRESETS = {
+        neon: { main: '#39ff50', sec: '#e0147a', dim: 'rgba(57,255,80,0.12)', border: 'rgba(57,255,80,0.25)' },
+        electric: { main: '#00d4ff', sec: '#7b2fff', dim: 'rgba(0,212,255,0.12)', border: 'rgba(0,212,255,0.25)' },
+        plasma: { main: '#9b59ff', sec: '#e0147a', dim: 'rgba(155,89,255,0.12)', border: 'rgba(155,89,255,0.25)' },
+        amber: { main: '#ff8c00', sec: '#ff2d6f', dim: 'rgba(255,140,0,0.12)', border: 'rgba(255,140,0,0.25)' },
+        rose: { main: '#ff2d6f', sec: '#ff8c00', dim: 'rgba(255,45,111,0.12)', border: 'rgba(255,45,111,0.25)' },
+        arctic: { main: '#e8f4f8', sec: '#4a9eff', dim: 'rgba(232,244,248,0.12)', border: 'rgba(232,244,248,0.25)' }
+      };
+
+      function hexToRgba(hex, alpha) {
+        if (!hex || typeof hex !== 'string') return `rgba(57,255,80,${alpha})`;
+        let c = hex.replace('#', '');
+        if (c.length === 3) c = c.split('').map(x => x + x).join('');
+        const num = parseInt(c, 16);
+        if (isNaN(num)) return `rgba(57,255,80,${alpha})`;
+        return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+      }
+
+      function applyAppearanceSettings(config) {
+        if (!config || !config.ui) return;
+        const ui = config.ui;
+
+        document.documentElement.setAttribute('data-theme', ui.theme || 'dark');
+
+        const isDual = ui.dual_accent || false;
+        const presetKey = ui.accent_preset || 'neon';
+        let mainColor, secColor, dimColor, borderColor;
+
+        if (presetKey === 'custom') {
+          mainColor = ui.accent_custom_main || '#39ff50';
+          secColor = isDual ? (ui.accent_custom_sec || '#e0147a') : mainColor;
+          dimColor = hexToRgba(mainColor, 0.12);
+          borderColor = hexToRgba(mainColor, 0.25);
+        } else {
+          const preset = ACCENT_PRESETS[presetKey] || ACCENT_PRESETS.neon;
+          mainColor = preset.main;
+          secColor = isDual ? preset.sec : mainColor;
+          dimColor = preset.dim;
+          borderColor = preset.border;
+        }
+
+        document.documentElement.style.setProperty('--accent-green', mainColor);
+        document.documentElement.style.setProperty('--accent-green-dim', dimColor);
+        document.documentElement.style.setProperty('--border-accent', borderColor);
+      }
+
+      window.applyAppearanceSettings = applyAppearanceSettings;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const themeParam = urlParams.get('theme');
+      const presetParam = urlParams.get('accent_preset');
+      const dualParam = urlParams.get('dual_accent') === 'true';
+      const mainParam = urlParams.get('accent_custom_main');
+      const secParam = urlParams.get('accent_custom_sec');
+
+      if (themeParam || presetParam) {
+        applyAppearanceSettings({
+          ui: {
+            theme: themeParam,
+            accent_preset: presetParam,
+            dual_accent: dualParam,
+            accent_custom_main: mainParam,
+            accent_custom_sec: secParam
+          }
+        });
+      }
+    })();
+  </script>
 </head>
 <body>
   <div class="notification-container">
@@ -212,11 +301,24 @@
       try {
         if (window.__TAURI__) {
           const config = await window.__TAURI__.core.invoke('get_config');
-          if (config && config.general && config.general.language) {
-            currentLang = config.general.language;
+          if (config) {
+            if (config.general && config.general.language) {
+              currentLang = config.general.language;
+            }
+            if (window.applyAppearanceSettings) {
+              window.applyAppearanceSettings(config);
+            }
           }
           
-          window.__TAURI__.event.listen('show_notification', (event) => {
+          window.__TAURI__.event.listen('show_notification', async (event) => {
+            try {
+              const updatedConfig = await window.__TAURI__.core.invoke('get_config');
+              if (updatedConfig && window.applyAppearanceSettings) {
+                window.applyAppearanceSettings(updatedConfig);
+              }
+            } catch (e) {
+              console.error("Failed to fetch updated config on show_notification", e);
+            }
             applyNotificationUI(event.payload || 'tray');
           });
         }
