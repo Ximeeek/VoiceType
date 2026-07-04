@@ -1735,3 +1735,24 @@ select.input-field option {
   align-items: center;
   gap: 4px;
 }
+
+/* Button Error Shake & Highlight Animation */
+@keyframes btn-shake-error {
+  0% { transform: translateX(0); background-color: #ef4444 !important; border-color: #ef4444 !important; box-shadow: 0 0 14px rgba(239, 68, 68, 0.7) !important; }
+  15% { transform: translateX(-8px); background-color: #ef4444 !important; }
+  30% { transform: translateX(8px); background-color: #ef4444 !important; }
+  45% { transform: translateX(-6px); background-color: #ef4444 !important; }
+  60% { transform: translateX(6px); background-color: #ef4444 !important; }
+  75% { transform: translateX(-3px); background-color: #ef4444 !important; }
+  90% { transform: translateX(3px); background-color: #ef4444 !important; }
+  100% { transform: translateX(0); }
+}
+
+.btn-shake-error {
+  animation: btn-shake-error 0.5s ease-in-out !important;
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.7) !important;
+  color: #ffffff !important;
+}
+

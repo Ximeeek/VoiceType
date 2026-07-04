@@ -3002,11 +3002,51 @@ function showCustomConfirmModal({ title, message, confirmText, cancelText, isDan
   };
 }
 
+function getEngineApiKey(engineType, configEngine) {
+  if (!configEngine) return '';
+  if (engineType === 'deepgram') return configEngine.deepgram?.api_key || '';
+  if (engineType === 'assemblyai') return configEngine.assemblyai?.api_key || '';
+  if (engineType === 'openai') return configEngine.openai?.api_key || '';
+  if (engineType === 'google') return configEngine.google?.credentials_path || '';
+  if (engineType === 'azure') return configEngine.azure?.subscription_key || '';
+  return '';
+}
+
+function setEngineApiKey(engineType, configEngine, val) {
+  if (!configEngine) return;
+  if (!configEngine[engineType]) configEngine[engineType] = {};
+  if (engineType === 'deepgram') configEngine.deepgram.api_key = val;
+  if (engineType === 'assemblyai') configEngine.assemblyai.api_key = val;
+  if (engineType === 'openai') configEngine.openai.api_key = val;
+  if (engineType === 'google') configEngine.google.credentials_path = val;
+  if (engineType === 'azure') configEngine.azure.subscription_key = val;
+}
+
+function triggerShakeError(element) {
+  if (!element) return;
+  element.classList.remove('btn-shake-error');
+  void element.offsetWidth;
+  element.classList.add('btn-shake-error');
+  setTimeout(() => {
+    element.classList.remove('btn-shake-error');
+  }, 600);
+}
+
 function getEngineChangesDescription() {
   if (!pendingConfig || !activeConfig) return '';
   const changes = [];
   if (pendingConfig.engine.type !== activeConfig.engine.type) {
-    const names = { vosk: 'Vosk', sherpa_onnx: 'Sherpa-ONNX', whisper: 'Whisper.cpp', faster_whisper: 'Faster-Whisper' };
+    const names = {
+      vosk: 'Vosk',
+      sherpa_onnx: 'Sherpa-ONNX',
+      whisper: 'Whisper.cpp',
+      faster_whisper: 'Faster-Whisper',
+      deepgram: 'Deepgram',
+      assemblyai: 'AssemblyAI',
+      openai: 'OpenAI Whisper',
+      google: 'Google STT',
+      azure: 'Azure Speech'
+    };
     changes.push(`• ${t('desc.change_engine')}: <b>${names[activeConfig.engine.type] || activeConfig.engine.type}</b> ➔ <b>${names[pendingConfig.engine.type] || pendingConfig.engine.type}</b>`);
   }
   if (pendingConfig.general.language !== activeConfig.general.language) {
@@ -3126,11 +3166,7 @@ async function confirmUnsavedChanges(onProceed) {
     const desc = getEngineChangesDescription();
     showUnsavedChangesModal({
       description: desc,
-      onSave: async () => {
-        console.log("[confirmUnsavedChanges] User elected to SAVE changes.");
-        applyBtn.click();
-        onProceed();
-      },
+      onProceed: onProceed,
       onDiscard: () => {
         console.log("[confirmUnsavedChanges] User elected to DISCARD changes.");
         pendingConfig = JSON.parse(JSON.stringify(activeConfig));
@@ -3243,7 +3279,8 @@ function showMissingModelNavigationGuardModal({ engine, modelId, onProceed }) {
   };
 }
 
-function showUnsavedChangesModal({ description, onSave, onDiscard }) {
+function showUnsavedChangesModal({ description, onProceed, onDiscard }) {
+  console.log("[showUnsavedChangesModal] Opening unsaved changes modal...");
   const backdrop = document.createElement('div');
   backdrop.className = 'modal-backdrop';
   backdrop.style.zIndex = '100000';
@@ -3251,6 +3288,37 @@ function showUnsavedChangesModal({ description, onSave, onDiscard }) {
   const card = document.createElement('div');
   card.className = 'modal-card';
   card.style.maxWidth = '460px';
+
+  const ONLINE_ENGINES = ['deepgram', 'assemblyai', 'openai', 'google', 'azure'];
+  const pendingEngineId = pendingConfig?.engine?.type;
+  const isOnlineEngine = ONLINE_ENGINES.includes(pendingEngineId);
+  const currentApiKey = isOnlineEngine ? getEngineApiKey(pendingEngineId, pendingConfig.engine) : '';
+  const isKeyMissing = isOnlineEngine && (!currentApiKey || !currentApiKey.trim());
+
+  const engineDisplayNames = {
+    vosk: 'Vosk Offline',
+    sherpa_onnx: 'Sherpa-ONNX',
+    whisper: 'Whisper.cpp',
+    faster_whisper: 'Faster-Whisper',
+    deepgram: 'Deepgram Online',
+    assemblyai: 'AssemblyAI Online',
+    openai: 'OpenAI Whisper',
+    google: 'Google Cloud STT',
+    azure: 'Azure Speech Services'
+  };
+
+  let apiKeySectionHtml = '';
+  if (isOnlineEngine) {
+    const engineLabel = engineDisplayNames[pendingEngineId] || pendingEngineId;
+    apiKeySectionHtml = `
+      <div id="modal-api-key-container" style="margin-top: 14px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-subtle); padding: 12px; border-radius: 8px;">
+        <label id="modal-api-key-label" style="display: block; font-size: 13px; font-weight: 600; color: ${isKeyMissing ? '#ef4444' : 'var(--text-primary)'}; margin-bottom: 6px;">
+          ${t('nav.unsaved_changes_api_key_required', { engine: engineLabel })}
+        </label>
+        <input type="password" id="modal-api-key-input" class="settings-input" placeholder="${t('nav.unsaved_changes_api_key_placeholder')}" value="${currentApiKey.replace(/"/g, '&quot;')}" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid ${isKeyMissing ? '#ef4444' : 'var(--border-subtle)'}; color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" />
+      </div>
+    `;
+  }
 
   card.innerHTML = `
     <div class="modal-title" style="color: var(--accent-gold, #f59e0b); display: flex; align-items: center; gap: 8px;">
@@ -3262,11 +3330,12 @@ function showUnsavedChangesModal({ description, onSave, onDiscard }) {
       <div style="background: rgba(255,255,255,0.04); border-left: 3px solid var(--accent-gold, #f59e0b); padding: 10px 14px; border-radius: 6px; font-size: 13px; color: var(--text-primary); line-height: 1.6;">
         ${description || t('nav.unsaved_changes_default_desc')}
       </div>
+      ${apiKeySectionHtml}
     </div>
     <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
       <button class="btn-cancel" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">${t('nav.unsaved_changes_btn_cancel')}</button>
       <button class="btn-discard" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">${t('nav.unsaved_changes_btn_discard')}</button>
-      <button class="btn-save" style="background: var(--accent-green, #10b981); border: none; color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">${t('nav.unsaved_changes_btn_save')}</button>
+      <button class="btn-save" style="background: var(--accent-green, #10b981); border: none; color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(16,185,129,0.3); transition: all 0.2s;">${t('nav.unsaved_changes_btn_save')}</button>
     </div>
   `;
 
@@ -3274,9 +3343,151 @@ function showUnsavedChangesModal({ description, onSave, onDiscard }) {
   document.body.appendChild(backdrop);
 
   const close = () => backdrop.remove();
-  card.querySelector('.btn-cancel').onclick = close;
-  card.querySelector('.btn-discard').onclick = () => { close(); onDiscard(); };
-  card.querySelector('.btn-save').onclick = () => { close(); onSave(); };
+  const btnCancel = card.querySelector('.btn-cancel');
+  const btnDiscard = card.querySelector('.btn-discard');
+  const btnSave = card.querySelector('.btn-save');
+  const apiKeyInput = card.querySelector('#modal-api-key-input');
+  const apiKeyLabel = card.querySelector('#modal-api-key-label');
+
+  if (isKeyMissing) {
+    btnSave.disabled = true;
+    btnSave.style.opacity = '0.5';
+    btnSave.style.cursor = 'not-allowed';
+  }
+
+  if (apiKeyInput) {
+    apiKeyInput.addEventListener('input', (e) => {
+      const val = e.target.value;
+      setEngineApiKey(pendingEngineId, pendingConfig.engine, val);
+
+      const mainKeyInput = document.getElementById('engine-api-key');
+      if (mainKeyInput) mainKeyInput.value = val;
+
+      checkEngineDirty();
+
+      if (val.trim().length > 0) {
+        btnSave.disabled = false;
+        btnSave.style.opacity = '1';
+        btnSave.style.cursor = 'pointer';
+        apiKeyInput.style.borderColor = 'var(--border-subtle)';
+        if (apiKeyLabel) apiKeyLabel.style.color = 'var(--text-primary)';
+      } else {
+        btnSave.disabled = true;
+        btnSave.style.opacity = '0.5';
+        btnSave.style.cursor = 'not-allowed';
+        apiKeyInput.style.borderColor = '#ef4444';
+        if (apiKeyLabel) apiKeyLabel.style.color = '#ef4444';
+      }
+    });
+  }
+
+  btnCancel.onclick = () => {
+    console.log("[showUnsavedChangesModal] Cancel clicked.");
+    close();
+  };
+
+  btnDiscard.onclick = () => {
+    console.log("[showUnsavedChangesModal] Discard clicked.");
+    close();
+    if (onDiscard) onDiscard();
+  };
+
+  btnSave.onclick = async () => {
+    console.log("[showUnsavedChangesModal] Save and Apply clicked.");
+    if (btnSave.disabled) {
+      console.log("[showUnsavedChangesModal] Save button disabled. Triggering shake.");
+      triggerShakeError(btnSave);
+      return;
+    }
+
+    const engineId = pendingConfig.engine.type;
+
+    if (ONLINE_ENGINES.includes(engineId)) {
+      const key = getEngineApiKey(engineId, pendingConfig.engine);
+      if (!key || !key.trim()) {
+        console.warn("[showUnsavedChangesModal] Missing API key when saving.");
+        ToastManager.show({ type: 'error', title: t('toast.missing_api_key_title'), message: t('toast.missing_api_key_msg', { engine: engineId }), persistent: true });
+        triggerShakeError(btnSave);
+        return;
+      }
+
+      btnSave.disabled = true;
+      const origText = btnSave.textContent;
+      btnSave.textContent = t('nav.unsaved_changes_verifying');
+      btnSave.style.opacity = '0.7';
+
+      ToastManager.show({ type: 'info', title: t('toast.verifying_api_conn') });
+
+      try {
+        if (window.__TAURI__) {
+          await window.__TAURI__.core.invoke('save_config', { config: pendingConfig });
+          const testRes = await window.__TAURI__.core.invoke('test_engine', { engineType: engineId });
+          await window.__TAURI__.core.invoke('set_engine', { engineType: engineId });
+
+          activeConfig = JSON.parse(JSON.stringify(pendingConfig));
+          checkEngineDirty();
+
+          renderTriggerWords(activeConfig.trigger.words);
+          renderStopWords(activeConfig.dictation.stop_words);
+          loadConfigGeneralUI(activeConfig);
+          updateActiveEnginePanel(activeConfig.engine.type);
+
+          let msg = t(testRes.key, { engine: testRes.engine });
+          ToastManager.show({ type: 'success', title: t('toast.engine_verified_activated'), message: msg });
+
+          close();
+          if (onProceed) onProceed();
+          return;
+        } else {
+          activeConfig = JSON.parse(JSON.stringify(pendingConfig));
+          checkEngineDirty();
+          close();
+          if (onProceed) onProceed();
+          return;
+        }
+      } catch (err) {
+        console.error("[showUnsavedChangesModal] API Key verification error:", err);
+        if (window.__TAURI__) {
+          try {
+            await window.__TAURI__.core.invoke('save_config', { config: activeConfig });
+          } catch (e) {
+            console.error("Failed to restore active config:", e);
+          }
+        }
+        let msg = t('toast.api_key_verification_msg', { error: err.toString() });
+        try {
+          const res = JSON.parse(err);
+          if (res && res.key) {
+            msg = t(res.key, { engine: res.engine, error: res.error_detail });
+          }
+        } catch {}
+        ToastManager.show({ type: 'error', title: t('toast.api_key_verification_error'), message: msg, persistent: true });
+
+        btnSave.disabled = false;
+        btnSave.textContent = origText;
+        btnSave.style.opacity = '1';
+        btnSave.style.cursor = 'pointer';
+        triggerShakeError(btnSave);
+        return;
+      }
+    } else {
+      activeConfig = JSON.parse(JSON.stringify(pendingConfig));
+      await saveConfigState();
+      if (window.__TAURI__) {
+        await window.__TAURI__.core.invoke('set_engine', { engineType: engineId });
+      }
+      checkEngineDirty();
+
+      renderTriggerWords(activeConfig.trigger.words);
+      renderStopWords(activeConfig.dictation.stop_words);
+      loadConfigGeneralUI(activeConfig);
+      updateActiveEnginePanel(activeConfig.engine.type);
+
+      ToastManager.show({ type: 'success', title: t('toast.changes_applied'), message: t('toast.engine_updated_msg') });
+      close();
+      if (onProceed) onProceed();
+    }
+  };
 }
 
 function showTranslationModelDownloadModal(onSuccess) {
