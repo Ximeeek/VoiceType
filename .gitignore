@@ -10,3 +10,8 @@ node_modules
 /~
 .agents/
 Self
+
+# Local config directories/files (in case AppData falls back to the current directory)
+/config.toml
+/voicetype/
+/voicetype-dev/
