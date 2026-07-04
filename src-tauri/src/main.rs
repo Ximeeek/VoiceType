@@ -74,7 +74,10 @@ pub struct AppState {
 
 fn main() {
     #[cfg(windows)]
-    crate::platform::windows::optimize_process_priority();
+    {
+        std::env::set_var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--auto-accept-camera-and-microphone-capture");
+        crate::platform::windows::optimize_process_priority();
+    }
 
     let (control_tx, control_rx) = mpsc::channel(32);
     let initial_config = load_config();

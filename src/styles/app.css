@@ -1630,6 +1630,65 @@ select.input-field option {
   color: var(--text-secondary);
 }
 
+/* Microphone Test Feature Styles */
+.btn-secondary-custom {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
 
+.btn-secondary-custom:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
 
+.btn-secondary-custom.active {
+  background: rgba(255, 77, 77, 0.1);
+  border-color: #ff4d4d;
+  color: #ff4d4d;
+}
 
+.mic-test-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.mic-level-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-elevated);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+.mic-level-bar-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-green) 0%, #a3ff00 70%, #ff4d4d 100%);
+  transition: width 0.05s ease;
+}
+
+.mic-test-warning {
+  font-size: 11px;
+  color: #ff9f43;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
