@@ -1032,23 +1032,16 @@ function getLiveTypingForEngine(engineId) {
   if (typeof dict.engine_live_typing[engineId] === 'boolean') {
     return dict.engine_live_typing[engineId];
   }
-  const currentEngine = (pendingConfig && pendingConfig.engine && pendingConfig.engine.type) || (activeConfig && activeConfig.engine && activeConfig.engine.type) || 'vosk';
-  if (engineId === currentEngine && typeof dict.live_typing === 'boolean') {
-    dict.engine_live_typing[engineId] = dict.live_typing;
-    return dict.live_typing;
-  }
   return false;
 }
 
 function setLiveTypingForEngine(engineId, enabled) {
-  const currentEngine = (pendingConfig && pendingConfig.engine && pendingConfig.engine.type) || (activeConfig && activeConfig.engine && activeConfig.engine.type) || 'vosk';
-
   if (pendingConfig && pendingConfig.dictation) {
     if (!pendingConfig.dictation.engine_live_typing) {
       pendingConfig.dictation.engine_live_typing = {};
     }
     pendingConfig.dictation.engine_live_typing[engineId] = enabled;
-    if (engineId === currentEngine) {
+    if (pendingConfig.engine && pendingConfig.engine.type === engineId) {
       pendingConfig.dictation.live_typing = enabled;
     }
   }
@@ -1058,7 +1051,7 @@ function setLiveTypingForEngine(engineId, enabled) {
       activeConfig.dictation.engine_live_typing = {};
     }
     activeConfig.dictation.engine_live_typing[engineId] = enabled;
-    if (engineId === currentEngine) {
+    if (activeConfig.engine && activeConfig.engine.type === engineId) {
       activeConfig.dictation.live_typing = enabled;
     }
   }

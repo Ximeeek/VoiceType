@@ -17,7 +17,7 @@ impl Config {
         if let Some(enabled) = self.dictation.engine_live_typing.get(&self.engine.engine_type) {
             *enabled
         } else {
-            self.dictation.live_typing
+            false
         }
     }
 }
