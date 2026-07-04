@@ -1,5 +1,5 @@
 import { setLanguage, t, updateDOMTranslations, getLanguage, onLanguageChange } from './i18n.js';
-import { setupUpdateNotificationUI } from './updater.js';
+import { setupUpdateNotificationUI, initUpdater } from './updater.js';
 
 const ACCENT_PRESETS = {
   neon: { main: '#39ff50', sec: '#e0147a', dim: 'rgba(57,255,80,0.12)', border: 'rgba(57,255,80,0.25)' },
@@ -3837,6 +3837,7 @@ async function init() {
       setLanguage(config.general ? config.general.language : 'en');
       setupAppearanceEventListeners();
       applyAppearanceSettings(config);
+      await updateAppVersionBadge();
 
       // 2. Render UI lists
       renderTriggerWords(config.trigger.words);
@@ -4677,6 +4678,60 @@ if (dashboardViewHistoryBtn) {
   });
 }
 
+let cachedVersionInfo = null;
+
+async function updateAppVersionBadge() {
+  const badgeEl = document.getElementById('about-app-version-badge');
+  if (!badgeEl) return;
+
+  try {
+    if (window.__TAURI__) {
+      cachedVersionInfo = await window.__TAURI__.core.invoke('get_app_version_info');
+    } else {
+      cachedVersionInfo = {
+        version: 'DEV',
+        is_dev: true,
+        is_prerelease: false,
+        channel: 'dev',
+        display_tag: 'DEV'
+      };
+    }
+  } catch (err) {
+    console.warn('[ABOUT] Error fetching version info:', err);
+    cachedVersionInfo = {
+      version: 'DEV',
+      is_dev: true,
+      is_prerelease: false,
+      channel: 'dev',
+      display_tag: 'DEV'
+    };
+  }
+
+  renderAppVersionBadge(cachedVersionInfo);
+}
+
+function renderAppVersionBadge(info) {
+  const badgeEl = document.getElementById('about-app-version-badge');
+  if (!badgeEl || !info) return;
+
+  if (info.is_dev) {
+    badgeEl.textContent = 'DEV';
+    badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
+    badgeEl.style.color = '#f59e0b';
+    badgeEl.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+  } else if (info.is_prerelease) {
+    badgeEl.textContent = `v${info.version} (Nightly)`;
+    badgeEl.style.background = 'rgba(139, 92, 246, 0.18)';
+    badgeEl.style.color = '#a78bfa';
+    badgeEl.style.border = '1px solid rgba(139, 92, 246, 0.4)';
+  } else {
+    badgeEl.textContent = `v${info.version} (Stable)`;
+    badgeEl.style.background = 'rgba(16, 185, 129, 0.18)';
+    badgeEl.style.color = 'var(--accent-green)';
+    badgeEl.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+  }
+}
+
 // Bind About Repository Button
 const aboutGithubRepoBtn = document.getElementById('about-github-repo-btn');
 if (aboutGithubRepoBtn) {
@@ -4686,6 +4741,37 @@ if (aboutGithubRepoBtn) {
       window.__TAURI__.core.invoke('open_url', { url: repoUrl });
     } else {
       window.open(repoUrl, '_blank');
+    }
+  });
+}
+
+// Bind About Check Updates Button
+const aboutCheckUpdatesBtn = document.getElementById('about-check-updates-btn');
+if (aboutCheckUpdatesBtn) {
+  aboutCheckUpdatesBtn.addEventListener('click', async () => {
+    try {
+      if (typeof ToastManager !== 'undefined') {
+        ToastManager.show({ type: 'info', title: t('about.check_updates'), message: t('updater.checking') || 'Checking for updates...' });
+      }
+      await initUpdater((status) => {
+        if (status.type === 'up_to_date') {
+          if (typeof ToastManager !== 'undefined') {
+            ToastManager.show({ type: 'success', title: t('about.check_updates'), message: t('updater.up_to_date') || 'VoiceType is up to date!' });
+          }
+        } else if (status.type === 'downloading') {
+          if (typeof ToastManager !== 'undefined') {
+            ToastManager.show({ type: 'info', title: t('about.check_updates'), message: `Downloading update v${status.version} (${status.progress}%)...` });
+          }
+        } else if (status.type === 'ready_to_install') {
+          if (typeof ToastManager !== 'undefined') {
+            ToastManager.show({ type: 'success', title: t('about.check_updates'), message: `Update v${status.version} ready to install.` });
+          }
+        }
+      });
+    } catch (e) {
+      if (typeof ToastManager !== 'undefined') {
+        ToastManager.show({ type: 'error', title: t('about.check_updates'), message: e.message || e.toString() });
+      }
     }
   });
 }
@@ -4894,6 +4980,7 @@ onLanguageChange(() => {
     renderAddonsManagerUI();
     updateEngineCardsLockUI();
     updateDOMTranslations();
+    if (cachedVersionInfo) renderAppVersionBadge(cachedVersionInfo);
   } catch (err) {
     console.error('[i18n] Error updating UI on language change:', err);
   }

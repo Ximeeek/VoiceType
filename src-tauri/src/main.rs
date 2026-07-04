@@ -209,7 +209,8 @@ fn main() {
             commands::delete_installed_model,
             commands::cleanup_model_tmp_files,
             commands::open_url,
-            commands::get_session_stats
+            commands::get_session_stats,
+            commands::get_app_version_info
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

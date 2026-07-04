@@ -667,3 +667,44 @@ pub async fn get_session_stats(state: State<'_, Arc<AppState>>) -> Result<crate:
     Ok(state.session_stats.lock().await.clone())
 }
 
+#[derive(serde::Serialize)]
+pub struct AppVersionInfo {
+    pub version: String,
+    pub is_dev: bool,
+    pub is_prerelease: bool,
+    pub channel: String,
+    pub display_tag: String,
+}
+
+#[tauri::command]
+pub async fn get_app_version_info(app: tauri::AppHandle) -> Result<AppVersionInfo, String> {
+    let version = app.package_info().version.to_string();
+    let is_dev = cfg!(debug_assertions);
+    let is_prerelease = !app.package_info().version.pre.is_empty() || version.contains('-') || version.contains("beta") || version.contains("alpha") || version.contains("rc") || version.contains("nightly");
+
+    let channel = if is_dev {
+        "dev".to_string()
+    } else if is_prerelease {
+        "nightly".to_string()
+    } else {
+        "stable".to_string()
+    };
+
+    let display_tag = if is_dev {
+        "DEV".to_string()
+    } else if is_prerelease {
+        format!("v{} (Nightly)", version)
+    } else {
+        format!("v{} (Stable)", version)
+    };
+
+    Ok(AppVersionInfo {
+        version,
+        is_dev,
+        is_prerelease,
+        channel,
+        display_tag,
+    })
+}
+
+
