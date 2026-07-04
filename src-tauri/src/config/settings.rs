@@ -298,10 +298,12 @@ impl Default for AzureEngineConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(default)]
 pub struct InputConfig {
     pub prefer_uia: bool,
     pub clipboard_fallback: bool,
     pub clipboard_toast: bool,
+    pub auto_enter: bool,
     pub key_delay_ms: u64,
 }
 
@@ -311,6 +313,7 @@ impl Default for InputConfig {
             prefer_uia: true,
             clipboard_fallback: true,
             clipboard_toast: true,
+            auto_enter: false,
             key_delay_ms: 0,
         }
     }

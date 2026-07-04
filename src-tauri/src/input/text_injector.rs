@@ -104,3 +104,27 @@ async fn send_backspaces(count: usize, _focus: &FocusResult) -> anyhow::Result<(
     }
     Ok(())
 }
+
+pub async fn send_enter(_focus: &FocusResult) -> anyhow::Result<()> {
+    #[cfg(windows)]
+    {
+        use windows::Win32::UI::Input::KeyboardAndMouse::*;
+        
+        let mut input_down = INPUT::default();
+        input_down.r#type = INPUT_KEYBOARD;
+        input_down.Anonymous.ki.wVk = VK_RETURN;
+        input_down.Anonymous.ki.dwFlags = KEYBD_EVENT_FLAGS(0);
+        unsafe { SendInput(&[input_down], std::mem::size_of::<INPUT>() as i32) };
+        
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        
+        let mut input_up = INPUT::default();
+        input_up.r#type = INPUT_KEYBOARD;
+        input_up.Anonymous.ki.wVk = VK_RETURN;
+        input_up.Anonymous.ki.dwFlags = KEYEVENTF_KEYUP;
+        unsafe { SendInput(&[input_up], std::mem::size_of::<INPUT>() as i32) };
+        
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    }
+    Ok(())
+}

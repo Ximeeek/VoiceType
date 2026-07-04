@@ -1034,8 +1034,12 @@ function loadConfigGeneralUI(config) {
   
   // Behavior config
   document.getElementById('settings-autostart').checked = config.general.autostart;
-  document.getElementById('settings-clipboard-fallback').checked = config.input.clipboard_fallback;
-  document.getElementById('settings-clipboard-toast').checked = config.input.clipboard_toast;
+  document.getElementById('settings-clipboard-fallback').checked = config.input ? config.input.clipboard_fallback : true;
+  document.getElementById('settings-clipboard-toast').checked = config.input ? config.input.clipboard_toast : true;
+  const autoEnterCheck = document.getElementById('settings-auto-enter');
+  if (autoEnterCheck) {
+    autoEnterCheck.checked = config.input ? !!config.input.auto_enter : false;
+  }
   document.getElementById('settings-start-delay').value = config.dictation.start_delay_ms;
   document.getElementById('start-delay-val').textContent = `${config.dictation.start_delay_ms} ms`;
   
@@ -1124,6 +1128,19 @@ function loadConfigGeneralUI(config) {
     if (pendingConfig) pendingConfig.input.clipboard_toast = e.target.checked;
     saveConfigState();
   };
+
+  const autoEnterCheckEl = document.getElementById('settings-auto-enter');
+  if (autoEnterCheckEl) {
+    autoEnterCheckEl.onchange = (e) => {
+      if (activeConfig && activeConfig.input) {
+        activeConfig.input.auto_enter = e.target.checked;
+      }
+      if (pendingConfig && pendingConfig.input) {
+        pendingConfig.input.auto_enter = e.target.checked;
+      }
+      saveConfigState();
+    };
+  }
 
   // Bind sliders
   document.getElementById('settings-silence-timeout').oninput = (e) => {
@@ -3573,7 +3590,7 @@ async function init() {
       trigger: { words: ['zaczynamy', 'start'], fuzzy_match: true },
       dictation: { stop_words: ['stop', 'done'], silence_timeout_ms: 1500, stop_word_remove_from_text: true, start_delay_ms: 0, live_typing_interval_ms: 2000 },
       general: { autostart: false },
-      input: { clipboard_fallback: true, clipboard_toast: true },
+      input: { clipboard_fallback: true, clipboard_toast: true, auto_enter: false },
       audio: { input_device: 'default' },
       engine: { type: 'vosk', vosk: { model_path: 'models/vosk/vosk-model-small-pl-0.22' } }
     };

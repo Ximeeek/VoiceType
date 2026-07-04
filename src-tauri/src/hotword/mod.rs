@@ -4,7 +4,7 @@ use crate::{AppState, AppStatus, ControlCommand};
 use crate::audio::AudioPipeline;
 use crate::config::Config;
 use crate::recognition::engine_manager::EngineManager;
-use crate::input::{detect_focused_text_field, LiveTypingState, copy_to_clipboard, FocusResult};
+use crate::input::{detect_focused_text_field, LiveTypingState, copy_to_clipboard, FocusResult, send_enter};
 use detector::VoiceDetector;
 use std::sync::Arc;
 use tokio::time::{sleep, timeout, Duration, Instant};
@@ -145,7 +145,7 @@ pub async fn run_control_loop(
 
     let mut _current_partial = String::new();
     let mut live_typing = LiveTypingState::new();
-    let mut focus;
+    let mut focus = FocusResult::NoTextField;
 
     let mut idle_speech_detected = false;
     let mut idle_speech_start_time: Option<Instant> = None;
@@ -441,6 +441,11 @@ pub async fn run_control_loop(
                         focus = detect_focused_text_field();
                         if !matches!(focus, FocusResult::NoTextField) {
                             let _ = live_typing.finalize(&final_text, &focus, config.input.key_delay_ms).await;
+                            let latest_cfg = state.config.lock().await;
+                            if latest_cfg.input.auto_enter {
+                                println!("[AUTO_ENTER] Sending Enter key after silence timeout flush.");
+                                let _ = send_enter(&focus).await;
+                            }
                         } else {
                             println!("[CLIPBOARD] No text field focused - Copied text to clipboard: {}", final_text);
                             let _ = copy_to_clipboard(&final_text);
@@ -515,6 +520,11 @@ pub async fn run_control_loop(
                                 app_handle.emit("status_changed", "idle").ok();
                                 idle_speech_detected = false;
                                 idle_speech_start_time = None;
+                                let latest_cfg = state.config.lock().await;
+                                if latest_cfg.input.auto_enter && !matches!(focus, FocusResult::NoTextField) {
+                                    println!("[AUTO_ENTER] Sending Enter key after stop word.");
+                                    let _ = send_enter(&focus).await;
+                                }
                             }
                         }
                     }

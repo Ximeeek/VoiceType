@@ -154,6 +154,7 @@ export const translations = {
     "settings.autostart": "Autostart with Windows",
     "settings.clipboard_fallback": "Copy to clipboard when no text field is focused",
     "settings.clipboard_toast": "Show notification when copied to clipboard",
+    "settings.auto_enter": "Automatically press Enter after dictation finishes",
     "settings.start_delay": "Start delay",
     "settings.no_stops": "No stop words",
 
@@ -612,6 +613,7 @@ export const translations = {
     "settings.autostart": "Autostart z Windows",
     "settings.clipboard_fallback": "Kopiuj do schowka gdy brak pola tekstowego",
     "settings.clipboard_toast": "Pokaż komunikat przy kopiowaniu",
+    "settings.auto_enter": "Automatycznie naciśnij Enter po zakończeniu dyktowania",
     "settings.start_delay": "Opóźnienie startu",
     "settings.no_stops": "Brak stop words",
 
