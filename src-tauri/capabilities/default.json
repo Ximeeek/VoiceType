@@ -18,6 +18,7 @@
       "allow": [
         { "url": "https://raw.githubusercontent.com/**" },
         { "url": "https://github.com/**" },
+        { "url": "https://api.github.com/**" },
         { "url": "https://objects.githubusercontent.com/**" },
         { "url": "https://*.githubusercontent.com/**" }
       ]

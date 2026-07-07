@@ -1130,6 +1130,47 @@
                             <span data-i18n="about.hard_reset.btn">Wykonaj twardy reset</span>
                         </button>
                     </div>
+
+                    <!-- Changelog Card -->
+                    <div style="background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px; margin-top: 8px; display: flex; flex-direction: column; gap: 14px;">
+                        <!-- Title & Filters Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="background: var(--accent-green-dim); color: var(--accent-green); padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.changelog.title">Historia Zmian (Changelog)</div>
+                                    <div style="font-size: 11px; color: var(--text-muted);" data-i18n="about.changelog.subtitle">Dziennik aktualizacji z repozytorium GitHub</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Filters -->
+                            <div style="display: flex; gap: 12px; align-items: center; font-size: 11px; font-weight: 600;">
+                                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-secondary); user-select: none;">
+                                    <input type="checkbox" id="changelog-filter-stable" checked style="accent-color: var(--accent-green); cursor: pointer;">
+                                    <span data-i18n="about.changelog.filter_stable">Wersje stabilne</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-secondary); user-select: none;">
+                                    <input type="checkbox" id="changelog-filter-pre" checked style="accent-color: var(--accent-green); cursor: pointer;">
+                                    <span data-i18n="about.changelog.filter_pre">Wersje rozwojowe (Pre-release)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Changelog Columns -->
+                        <div id="changelog-columns-container" style="display: flex; gap: 12px; min-height: 200px; max-height: 350px;">
+                            <!-- Left: List of versions -->
+                            <div id="changelog-versions-list" style="width: 220px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 6px; border-right: 1px solid var(--border-subtle);">
+                                <div style="font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 30px;" data-i18n="about.changelog.loading">Ładowanie historii zmian...</div>
+                            </div>
+
+                            <!-- Right: Selected version details -->
+                            <div id="changelog-details-view" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-left: 6px;">
+                                <div style="font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 50px;" data-i18n="about.changelog.select_prompt">Wybierz wersję z listy po lewej stronie, aby zobaczyć szczegóły zmian.</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

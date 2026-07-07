@@ -1788,3 +1788,35 @@ select.input-field option {
   color: #ffffff !important;
 }
 
+/* Changelog Styles */
+.changelog-version-btn {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.01);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.changelog-version-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-subtle);
+}
+
+.changelog-version-btn.active {
+  background: var(--accent-green-dim);
+  border-color: var(--border-accent);
+}
+
+.changelog-version-btn.current {
+  border-left: 3px solid var(--accent-green);
+}
+
+.changelog-version-btn.current.active {
+  border-left: 3px solid var(--accent-green);
+}
+

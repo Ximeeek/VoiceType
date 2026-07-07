@@ -498,6 +498,10 @@ navButtons.forEach(btn => {
         checkActiveEngineAvailability();
         updateDashboardActiveEngineCard();
       }
+      if (targetPageId === 'about') {
+        console.log('[Navigation] Navigating to about section. Fetching changelog...');
+        loadChangelog();
+      }
       if (targetPageId === 'downloads') {
         console.log('[Navigation] Navigating to downloads section.');
         if (window.pendingModelHighlight) {
@@ -5200,8 +5204,213 @@ onLanguageChange(() => {
     updateEngineCardsLockUI();
     updateDOMTranslations();
     if (cachedVersionInfo) renderAppVersionBadge(cachedVersionInfo);
+    if (cachedReleases) renderChangelog();
   } catch (err) {
     console.error('[i18n] Error updating UI on language change:', err);
   }
+});
+
+// Changelog Functionality
+let cachedReleases = null;
+let activeSelectedReleaseId = null;
+
+window.openChangelogUrl = (url) => {
+  console.log('[UI] Opening changelog link in external browser:', url);
+  if (window.__TAURI__) {
+    window.__TAURI__.core.invoke('open_url', { url: url });
+  } else {
+    window.open(url, '_blank');
+  }
+};
+
+function parseMarkdown(text) {
+  if (!text) return '';
+  
+  // Escape HTML tags to prevent XSS
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Headings
+  html = html.replace(/^### (.*?)$/gm, '<h4 style="margin: 12px 0 6px 0; font-weight: 700; color: var(--text-primary); font-size: 13px;">$1</h4>');
+  html = html.replace(/^## (.*?)$/gm, '<h3 style="margin: 16px 0 8px 0; font-weight: 800; color: var(--text-primary); font-size: 14px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 4px;">$1</h3>');
+  html = html.replace(/^# (.*?)$/gm, '<h2 style="margin: 18px 0 10px 0; font-weight: 800; color: var(--text-primary); font-size: 16px;">$1</h2>');
+
+  // Bullet points
+  html = html.replace(/^[-\*\u2022]\s+(.*?)$/gm, '<li style="margin-left: 12px; margin-bottom: 4px; list-style-type: disc; font-size: 12px; line-height: 1.4; color: var(--text-secondary);">$1</li>');
+
+  // Bold text
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="color: var(--text-primary); font-weight: 600;">$1</strong>');
+
+  // Inline code
+  html = html.replace(/`(.*?)`/g, '<code style="background: rgba(255, 255, 255, 0.08); color: var(--accent-green); padding: 2px 5px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid var(--border-subtle);">$1</code>');
+
+  // Links
+  html = html.replace(/\[(.*?)\]\((.*?)\)/g, (match, linkText, url) => {
+    return `<a href="#" onclick="window.openChangelogUrl('${url}'); return false;" style="color: var(--accent-green); text-decoration: none; border-bottom: 1px dashed var(--accent-green);" onmouseover="this.style.borderBottomStyle='solid'" onmouseout="this.style.borderBottomStyle='dashed'">${linkText}</a>`;
+  });
+
+  // Paragraph blocks (two newlines)
+  html = html.replace(/\n\n/g, '<div style="height: 8px;"></div>');
+  
+  // Newlines
+  html = html.replace(/\n/g, '<br>');
+
+  return html;
+}
+
+async function loadChangelog() {
+  const versionsListEl = document.getElementById('changelog-versions-list');
+  const detailsViewEl = document.getElementById('changelog-details-view');
+  if (!versionsListEl || !detailsViewEl) return;
+
+  // Render loading state if not loaded
+  if (!cachedReleases) {
+    versionsListEl.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 30px;" data-i18n="about.changelog.loading">${t('about.changelog.loading')}</div>`;
+    detailsViewEl.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 50px;" data-i18n="about.changelog.select_prompt">${t('about.changelog.select_prompt')}</div>`;
+
+    try {
+      console.log('[Changelog] Fetching releases from GitHub API...');
+      const response = await fetch('https://api.github.com/repos/Ximeeek/VoiceType/releases');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch releases: HTTP ${response.status}`);
+      }
+      cachedReleases = await response.json();
+      console.log(`[Changelog] Loaded ${cachedReleases.length} releases successfully.`);
+    } catch (err) {
+      console.error('[Changelog] Error loading releases:', err);
+      versionsListEl.innerHTML = `<div style="font-size: 12px; color: #ef4444; text-align: center; margin-top: 30px;" data-i18n="about.changelog.error">${t('about.changelog.error')}</div>`;
+      return;
+    }
+  }
+
+  renderChangelog();
+}
+
+function renderChangelog() {
+  const versionsListEl = document.getElementById('changelog-versions-list');
+  const detailsViewEl = document.getElementById('changelog-details-view');
+  if (!versionsListEl || !detailsViewEl) return;
+
+  const filterStable = document.getElementById('changelog-filter-stable')?.checked ?? true;
+  const filterPre = document.getElementById('changelog-filter-pre')?.checked ?? true;
+
+  const filtered = (cachedReleases || []).filter(rel => {
+    if (rel.prerelease) return filterPre;
+    return filterStable;
+  });
+
+  if (filtered.length === 0) {
+    versionsListEl.innerHTML = `<div style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 30px;" data-i18n="about.changelog.no_releases">${t('about.changelog.no_releases')}</div>`;
+    detailsViewEl.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 50px;" data-i18n="about.changelog.select_prompt">${t('about.changelog.select_prompt')}</div>`;
+    activeSelectedReleaseId = null;
+    return;
+  }
+
+  // Determine which release to auto-select
+  let selectTarget = null;
+  if (activeSelectedReleaseId) {
+    selectTarget = filtered.find(r => r.id === activeSelectedReleaseId);
+  }
+  if (!selectTarget) {
+    // Find current version
+    const currentVer = (cachedVersionInfo?.version || '').replace(/^v/, '');
+    selectTarget = filtered.find(r => r.tag_name.replace(/^v/, '') === currentVer) || filtered[0];
+  }
+
+  if (selectTarget) {
+    activeSelectedReleaseId = selectTarget.id;
+    renderReleaseDetails(selectTarget);
+  }
+
+  versionsListEl.innerHTML = '';
+  filtered.forEach(rel => {
+    const isCurrent = rel.tag_name.replace(/^v/, '') === (cachedVersionInfo?.version || '').replace(/^v/, '');
+    const isActive = rel.id === activeSelectedReleaseId;
+    const isPrerelease = rel.prerelease;
+    const publishDate = new Date(rel.published_at);
+    
+    const dateStr = publishDate.toLocaleDateString(getLanguage() === 'pl' ? 'pl-PL' : 'en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    const itemEl = document.createElement('div');
+    itemEl.className = `changelog-version-btn ${isActive ? 'active' : ''} ${isCurrent ? 'current' : ''}`;
+    
+    const typeLabel = isPrerelease ? t('about.changelog.prerelease') : t('about.changelog.stable');
+    const badgeHtml = isCurrent ? `<span style="background: rgba(57, 255, 80, 0.18); border: 1px solid rgba(57, 255, 80, 0.4); color: var(--accent-green); font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">${t('about.changelog.current_version')}</span>` : '';
+
+    itemEl.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+        <span style="font-weight: 700; font-size: 12px; color: ${isActive ? 'var(--accent-green)' : 'var(--text-primary)'};">${rel.tag_name}</span>
+        ${badgeHtml}
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: var(--text-secondary);">
+        <span>${dateStr}</span>
+        <span style="color: ${isPrerelease ? '#a78bfa' : 'var(--accent-green)'}; font-weight: 600;">${typeLabel}</span>
+      </div>
+    `;
+
+    itemEl.addEventListener('click', () => {
+      console.log(`[Changelog] Version clicked: ${rel.tag_name}`);
+      activeSelectedReleaseId = rel.id;
+      renderReleaseDetails(rel);
+      
+      // Update active styling
+      document.querySelectorAll('.changelog-version-btn').forEach(btn => btn.classList.remove('active'));
+      itemEl.classList.add('active');
+    });
+
+    versionsListEl.appendChild(itemEl);
+  });
+}
+
+function renderReleaseDetails(release) {
+  const detailsViewEl = document.getElementById('changelog-details-view');
+  if (!detailsViewEl) return;
+
+  const isPrerelease = release.prerelease;
+  const publishDate = new Date(release.published_at);
+  const dateStr = publishDate.toLocaleDateString(getLanguage() === 'pl' ? 'pl-PL' : 'en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const typeLabel = isPrerelease ? t('about.changelog.prerelease') : t('about.changelog.stable');
+  const typeColor = isPrerelease ? '#a78bfa' : 'var(--accent-green)';
+  const typeBg = isPrerelease ? 'rgba(139, 92, 246, 0.15)' : 'var(--accent-green-dim)';
+  const typeBorder = isPrerelease ? 'rgba(139, 92, 246, 0.4)' : 'rgba(57, 255, 80, 0.4)';
+
+  detailsViewEl.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <h3 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 15px; color: var(--text-primary);">${release.name || release.tag_name}</h3>
+        <span style="background: ${typeBg}; border: 1px solid ${typeBorder}; color: ${typeColor}; font-size: 9px; padding: 2px 8px; border-radius: 6px; font-weight: 700; text-transform: uppercase;">${typeLabel}</span>
+      </div>
+      <div style="font-size: 10px; color: var(--text-muted);">${dateStr}</div>
+    </div>
+    <hr style="border: 0; border-top: 1px solid var(--border-subtle); margin: 6px 0;">
+    <div style="flex: 1; font-size: 12px; color: var(--text-secondary); line-height: 1.6; padding-right: 4px;">
+      ${parseMarkdown(release.body)}
+    </div>
+  `;
+}
+
+// Bind Changelog Filters
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('changelog-filter-stable')?.addEventListener('change', () => {
+    console.log('[Changelog] Filter stable changed');
+    renderChangelog();
+  });
+  document.getElementById('changelog-filter-pre')?.addEventListener('change', () => {
+    console.log('[Changelog] Filter pre changed');
+    renderChangelog();
+  });
 });
 
