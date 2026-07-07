@@ -1091,29 +1091,29 @@
 
                     <!-- Installed Addons & System Components Card -->
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px; margin-top: 8px;">
-                        <div>
+                        <div style="flex: 1; padding-right: 16px;">
                             <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.addons.title">Zarządzanie Pobranymi Dodatkami</div>
                             <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="about.addons.desc">Zarządzaj i usuwaj pobrane środowiska (Python, CUDA), modele mowy oraz tłumacz.</div>
                         </div>
-                        <button class="btn-primary" id="btn-view-all-addons" style="padding: 10px 20px; background: var(--accent-green); color: #000000; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);" data-i18n="about.addons.btn">Zobacz wszystkie pobrane dodatki</button>
+                        <button class="btn-primary" id="btn-view-all-addons" style="flex-shrink: 0; white-space: nowrap; padding: 10px 20px; background: var(--accent-green); color: #000000; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);" data-i18n="about.addons.btn">Zobacz wszystkie pobrane dodatki</button>
                     </div>
 
                     <!-- Reset Config & Actions -->
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px; margin-top: 8px;">
-                        <div>
+                        <div style="flex: 1; padding-right: 16px;">
                             <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.reset.title">Reset Ustawień Aplikacji</div>
                             <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="about.reset.desc">Przywraca domyślną konfigurację silników i fraz aktywujących.</div>
                         </div>
-                        <button class="btn-primary" id="btn-reset-all-config" style="padding: 10px 20px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; font-weight: 700;" data-i18n="about.reset.btn">Resetuj konfigurację</button>
+                        <button class="btn-primary" id="btn-reset-all-config" style="flex-shrink: 0; white-space: nowrap; padding: 10px 20px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; font-weight: 700; border-radius: 8px; cursor: pointer;" data-i18n="about.reset.btn">Resetuj konfigurację</button>
                     </div>
 
                     <!-- Open Config Directory -->
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px; margin-top: 8px;">
-                        <div>
+                        <div style="flex: 1; padding-right: 16px;">
                             <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.config_dir.title">Pliki konfiguracyjne</div>
                             <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="about.config_dir.desc">Otwórz lokalny folder, w którym przechowywana jest konfiguracja i ustawienia aplikacji.</div>
                         </div>
-                        <button class="btn-primary" id="btn-open-config-dir" style="padding: 10px 20px; background: var(--bg-secondary); border: 1px solid var(--border-subtle); color: var(--text-primary); font-weight: 600; border-radius: 8px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <button class="btn-primary" id="btn-open-config-dir" style="flex-shrink: 0; white-space: nowrap; padding: 10px 20px; background: var(--bg-secondary); border: 1px solid var(--border-subtle); color: var(--text-primary); font-weight: 600; border-radius: 8px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
                             <span data-i18n="about.config_dir.btn">Otwórz folder konfiguracji</span>
                         </button>
@@ -1121,12 +1121,12 @@
 
                     <!-- Hard Reset Config -->
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px; margin-top: 8px;">
-                        <div>
+                        <div style="flex: 1; padding-right: 16px;">
                             <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);" data-i18n="about.hard_reset.title">Twardy reset aplikacji</div>
                             <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="about.hard_reset.desc">Całkowicie usuwa wszystkie pliki aplikacji, pobrane modele, ustawienia lokalne oraz wpisy w rejestrze systemowym. Aplikacja zostanie natychmiast zamknięta.</div>
                         </div>
-                        <button class="btn-primary" id="btn-hard-reset" style="padding: 10px 20px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; font-weight: 700; border-radius: 8px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        <button class="btn-hazard" id="btn-hard-reset" style="flex-shrink: 0; white-space: nowrap;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                             <span data-i18n="about.hard_reset.btn">Wykonaj twardy reset</span>
                         </button>
                     </div>

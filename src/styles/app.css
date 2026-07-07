@@ -597,6 +597,38 @@ body.dual-accent .btn-primary {
   transform: translateY(-1px);
 }
 
+.btn-hazard {
+  background: rgba(255, 68, 0, 0.12);
+  border: 1px solid rgba(255, 68, 0, 0.45);
+  border-radius: 8px;
+  color: #ff4400;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(255, 68, 0, 0.1);
+}
+
+.btn-hazard:hover {
+  background: rgba(255, 68, 0, 0.25);
+  border-color: #ff4400;
+  box-shadow: 0 6px 15px rgba(255, 68, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-hazard:active {
+  transform: translateY(0);
+}
+
 /* Engine Card */
 .engine-info-row {
   display: flex;

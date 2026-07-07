@@ -3113,15 +3113,26 @@ async function renderInstalledModelsManager() {
   }
 }
 
-function showCustomConfirmModal({ title, message, confirmText, cancelText, isDanger = true, onConfirm, onCancel }) {
+function showCustomConfirmModal({ title, message, confirmText, cancelText, isDanger = true, isHazard = false, onConfirm, onCancel }) {
   const cancelBtnText = cancelText || t('btn.cancel');
   const confirmBtnText = confirmText || (isDanger ? t('models.btn.delete') : t('btn.apply'));
-  const headerColor = isDanger ? '#ff4d4d' : 'var(--accent-green)';
-  const btnBackground = isDanger ? '#ff4d4d' : 'var(--accent-green)';
-  const btnTextColor = isDanger ? '#ffffff' : 'var(--accent-contrast-text, #080c08)';
-  const iconSvg = isDanger 
-    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>'
-    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>';
+  
+  let headerColor = 'var(--accent-green)';
+  let btnBackground = 'var(--accent-green)';
+  let btnTextColor = 'var(--accent-contrast-text, #080c08)';
+  let iconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>';
+
+  if (isHazard) {
+    headerColor = '#ff4400';
+    btnBackground = '#ff4400';
+    btnTextColor = '#ffffff';
+    iconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+  } else if (isDanger) {
+    headerColor = '#ff4d4d';
+    btnBackground = '#ff4d4d';
+    btnTextColor = '#ffffff';
+    iconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>';
+  }
 
   const backdrop = document.createElement('div');
   backdrop.className = 'modal-backdrop';
@@ -3815,22 +3826,32 @@ if (openConfigDirBtn) {
 const hardResetBtn = document.getElementById('btn-hard-reset');
 if (hardResetBtn) {
   hardResetBtn.addEventListener('click', () => {
+    console.log('[UI] Hard Reset button clicked, opening confirmation modal');
     showCustomConfirmModal({
       title: t('about.hard_reset.title'),
       message: t('about.hard_reset.confirm'),
       confirmText: t('about.hard_reset.btn'),
-      isDanger: true,
+      isDanger: false,
+      isHazard: true,
       onConfirm: async () => {
+        console.log('[UI] Hard Reset confirmed. Initiating hard reset process...');
         if (window.__TAURI__) {
           try {
             await window.__TAURI__.core.invoke('hard_reset_config');
+            console.log('[UI] Hard Reset successful, exiting process.');
             window.__TAURI__.process.exit(0);
           } catch (err) {
+            console.error('[UI] Hard Reset failed:', err);
             ToastManager.show({ type: 'error', title: t('toast.reset_failed'), message: err.toString() });
+            throw err;
           }
         } else {
+          console.warn('[UI] Hard Reset simulated (non-Tauri environment)');
           ToastManager.show({ type: 'success', title: 'Hard Reset Simulated (non-Tauri)' });
         }
+      },
+      onCancel: () => {
+        console.log('[UI] Hard Reset confirmation cancelled');
       }
     });
   });
