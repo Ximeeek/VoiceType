@@ -3795,6 +3795,47 @@ if (resetConfigBtn) {
   });
 }
 
+// Open Config Directory Button
+const openConfigDirBtn = document.getElementById('btn-open-config-dir');
+if (openConfigDirBtn) {
+  openConfigDirBtn.addEventListener('click', async () => {
+    if (window.__TAURI__) {
+      try {
+        await window.__TAURI__.core.invoke('open_config_directory');
+      } catch (err) {
+        ToastManager.show({ type: 'error', title: 'Failed to open directory', message: err.toString() });
+      }
+    } else {
+      ToastManager.show({ type: 'success', title: 'Open Config Directory Simulated (non-Tauri)' });
+    }
+  });
+}
+
+// Hard Reset Button
+const hardResetBtn = document.getElementById('btn-hard-reset');
+if (hardResetBtn) {
+  hardResetBtn.addEventListener('click', () => {
+    showCustomConfirmModal({
+      title: t('about.hard_reset.title'),
+      message: t('about.hard_reset.confirm'),
+      confirmText: t('about.hard_reset.btn'),
+      isDanger: true,
+      onConfirm: async () => {
+        if (window.__TAURI__) {
+          try {
+            await window.__TAURI__.core.invoke('hard_reset_config');
+            window.__TAURI__.process.exit(0);
+          } catch (err) {
+            ToastManager.show({ type: 'error', title: t('toast.reset_failed'), message: err.toString() });
+          }
+        } else {
+          ToastManager.show({ type: 'success', title: 'Hard Reset Simulated (non-Tauri)' });
+        }
+      }
+    });
+  });
+}
+
 // Update Orb Visuals
 function updateOrbState(status) {
   currentStatus = status.toLowerCase();

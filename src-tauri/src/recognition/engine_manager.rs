@@ -34,13 +34,7 @@ impl EngineManager {
             config.engine.engine_type, config.general.language, config.engine.vosk.model_path, config.engine.whisper.model, config.engine.whisper.use_gpu
         );
 
-        let mut model_path = Path::new(&config.engine.vosk.model_path).to_path_buf();
-        if !model_path.exists() {
-            let alt_path = Path::new("..").join(&config.engine.vosk.model_path);
-            if alt_path.exists() {
-                model_path = alt_path;
-            }
-        }
+        let model_path = crate::downloader::model_registry::resolve_model_path(&config.engine.vosk.model_path);
 
         let engine_opt = match config.engine.engine_type.as_str() {
             "vosk" => match VoskEngine::new(&model_path.to_string_lossy()) {
@@ -52,10 +46,7 @@ impl EngineManager {
             },
             "whisper" => {
                 let model_name = format!("ggml-{}.bin", config.engine.whisper.model);
-                let mut path = Path::new("models").join("whisper").join(&model_name);
-                if !path.exists() {
-                    path = Path::new("..").join("models").join("whisper").join(&model_name);
-                }
+                let path = crate::downloader::model_registry::resolve_model_path(&format!("models/whisper/{}", model_name));
                 match WhisperEngine::new(&path.to_string_lossy(), config.engine.whisper.use_gpu, &config.general.language) {
                     Ok(e) => Some(Box::new(e) as Box<dyn SpeechEngine>),
                     Err(err) => {
@@ -76,13 +67,7 @@ impl EngineManager {
                 }
             }
             "sherpa_onnx" => {
-                let mut path = Path::new(&config.engine.sherpa_onnx.model_path).to_path_buf();
-                if !path.exists() {
-                    let alt_path = Path::new("..").join(&config.engine.sherpa_onnx.model_path);
-                    if alt_path.exists() {
-                        path = alt_path;
-                    }
-                }
+                let path = crate::downloader::model_registry::resolve_model_path(&config.engine.sherpa_onnx.model_path);
                 match SherpaOnnxEngine::new(&path.to_string_lossy(), &config.general.language) {
                     Ok(e) => Some(Box::new(e) as Box<dyn SpeechEngine>),
                     Err(err) => {
@@ -249,13 +234,7 @@ impl EngineManager {
     }
 
     pub async fn switch_engine(&mut self, engine_type: &str, config: &Config) -> anyhow::Result<()> {
-        let mut model_path = Path::new(&config.engine.vosk.model_path).to_path_buf();
-        if !model_path.exists() {
-            let alt_path = Path::new("..").join(&config.engine.vosk.model_path);
-            if alt_path.exists() {
-                model_path = alt_path;
-            }
-        }
+        let model_path = crate::downloader::model_registry::resolve_model_path(&config.engine.vosk.model_path);
 
         println!(
             "[ENGINE_MANAGER] Switching engine to: {}, Language: {}, Vosk model path: {}, Whisper model: {}, use_gpu: {}",
@@ -266,10 +245,7 @@ impl EngineManager {
             "vosk" => Box::new(VoskEngine::new(&model_path.to_string_lossy())?),
             "whisper" => {
                 let model_name = format!("ggml-{}.bin", config.engine.whisper.model);
-                let mut path = Path::new("models").join("whisper").join(&model_name);
-                if !path.exists() {
-                    path = Path::new("..").join("models").join("whisper").join(&model_name);
-                }
+                let path = crate::downloader::model_registry::resolve_model_path(&format!("models/whisper/{}", model_name));
                 Box::new(WhisperEngine::new(&path.to_string_lossy(), config.engine.whisper.use_gpu, &config.general.language)?)
             }
             "faster_whisper" => {
@@ -278,13 +254,7 @@ impl EngineManager {
                 Box::new(FasterWhisperEngine::new(&whisper_model, device, &config.general.language)?)
             }
             "sherpa_onnx" => {
-                let mut path = Path::new(&config.engine.sherpa_onnx.model_path).to_path_buf();
-                if !path.exists() {
-                    let alt_path = Path::new("..").join(&config.engine.sherpa_onnx.model_path);
-                    if alt_path.exists() {
-                        path = alt_path;
-                    }
-                }
+                let path = crate::downloader::model_registry::resolve_model_path(&config.engine.sherpa_onnx.model_path);
                 Box::new(SherpaOnnxEngine::new(&path.to_string_lossy(), &config.general.language)?)
             }
             "deepgram" => Box::new(DeepgramEngine::new(&config.engine.deepgram, &config.general.language)?),

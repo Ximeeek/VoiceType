@@ -4,7 +4,7 @@ pub use settings::Config;
 use std::path::PathBuf;
 use std::fs;
 
-fn get_config_dir() -> PathBuf {
+pub fn get_config_dir() -> PathBuf {
     let mut path = dirs::config_dir().unwrap_or_else(|| PathBuf::from("."));
     #[cfg(debug_assertions)]
     path.push("voicetype-dev");

@@ -250,6 +250,13 @@ export const translations = {
     "about.reset.title": "Reset Application Settings",
     "about.reset.desc": "Restores default configuration for speech engines and trigger words.",
     "about.reset.btn": "Reset Configuration",
+    "about.config_dir.title": "Configuration Files",
+    "about.config_dir.desc": "Open the local folder where the application configuration and settings are stored.",
+    "about.config_dir.btn": "Open Config Directory",
+    "about.hard_reset.title": "Hard Reset Application",
+    "about.hard_reset.desc": "Completely erases all application files, downloaded models, local settings, and registry entries. The application will close immediately after.",
+    "about.hard_reset.btn": "Perform Hard Reset",
+    "about.hard_reset.confirm": "WARNING: This will permanently delete ALL settings, configurations, registry keys, and downloaded speech models (such as Whisper or Vosk models). The application will close immediately.\n\nAre you sure you want to proceed with a complete hard reset?",
 
     // Modals & General Elements
     "engines.python.modal_title": "Python Environment Required",
@@ -736,6 +743,13 @@ export const translations = {
     "about.reset.title": "Reset Ustawień Aplikacji",
     "about.reset.desc": "Przywraca domyślną konfigurację silników i fraz aktywujących.",
     "about.reset.btn": "Resetuj konfigurację",
+    "about.config_dir.title": "Pliki konfiguracyjne",
+    "about.config_dir.desc": "Otwórz lokalny folder, w którym przechowywana jest konfiguracja i ustawienia aplikacji.",
+    "about.config_dir.btn": "Otwórz folder konfiguracji",
+    "about.hard_reset.title": "Twardy reset aplikacji",
+    "about.hard_reset.desc": "Całkowicie usuwa wszystkie pliki aplikacji, pobrane modele, ustawienia lokalne oraz wpisy w rejestrze systemowym. Aplikacja zostanie natychmiast zamknięta.",
+    "about.hard_reset.btn": "Wykonaj twardy reset",
+    "about.hard_reset.confirm": "OSTRZEŻENIE: Spowoduje to trwałe usunięcie WSZYSTKICH ustawień, konfiguracji, kluczy rejestru oraz pobranych modeli mowy (takich jak modele Whisper lub Vosk). Aplikacja zostanie natychmiast zamknięta.\n\nCzy na pewno chcesz kontynuować pełny twardy reset?",
 
     // Modals & General Elements
     "engines.python.modal_title": "Wymagana instalacja środowiska Python",

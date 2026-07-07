@@ -36,11 +36,55 @@ pub struct AvailableModel {
 }
 
 pub fn get_models_dir() -> PathBuf {
-    let mut p = PathBuf::from("models");
-    if !p.exists() {
-        p = Path::new("..").join("models");
+    let local_path = PathBuf::from("models");
+    
+    let is_local_writable = if local_path.exists() {
+        let test_file = local_path.join(".write_test");
+        if std::fs::write(&test_file, "").is_ok() {
+            let _ = std::fs::remove_file(test_file);
+            true
+        } else {
+            false
+        }
+    } else {
+        let parent = Path::new(".");
+        let test_file = parent.join(".write_test");
+        if std::fs::write(&test_file, "").is_ok() {
+            let _ = std::fs::remove_file(test_file);
+            true
+        } else {
+            false
+        }
+    };
+
+    if is_local_writable {
+        local_path
+    } else {
+        let mut p = crate::config::get_config_dir();
+        p.push("models");
+        p
     }
-    p
+}
+
+pub fn resolve_model_path(relative_path: &str) -> PathBuf {
+    let path = Path::new(relative_path);
+    if path.exists() {
+        return path.to_path_buf();
+    }
+    let alt_path = Path::new("..").join(relative_path);
+    if alt_path.exists() {
+        return alt_path;
+    }
+    
+    if relative_path.starts_with("models/") || relative_path.starts_with("models\\") {
+        let suffix = &relative_path[7..];
+        let target = get_models_dir().join(suffix);
+        if target.exists() {
+            return target;
+        }
+    }
+    
+    path.to_path_buf()
 }
 
 // Fetches Vosk model list for selected language from internet, or returns fallback if offline

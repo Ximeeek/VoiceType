@@ -210,7 +210,9 @@ fn main() {
             commands::cleanup_model_tmp_files,
             commands::open_url,
             commands::get_session_stats,
-            commands::get_app_version_info
+            commands::get_app_version_info,
+            commands::open_config_directory,
+            commands::hard_reset_config
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

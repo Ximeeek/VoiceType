@@ -707,4 +707,43 @@ pub async fn get_app_version_info(app: tauri::AppHandle) -> Result<AppVersionInf
     })
 }
 
+#[tauri::command]
+pub fn open_config_directory() -> Result<(), String> {
+    let path = crate::config::get_config_dir();
+    if path.exists() {
+        #[cfg(target_os = "windows")]
+        {
+            let mut cmd = std::process::Command::new("explorer");
+            cmd.arg(&path);
+            crate::platform::suppress_console_in_release(&mut cmd);
+            cmd.spawn().map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn hard_reset_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        let _ = std::process::Command::new("powershell")
+            .args(["-NoProfile", "-Command", "Remove-Item -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VoiceType' -Recurse -Force -ErrorAction SilentlyContinue"])
+            .creation_flags(0x08000000)
+            .status();
+
+        let _ = std::process::Command::new("powershell")
+            .args(["-NoProfile", "-Command", "Remove-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'VoiceType' -ErrorAction SilentlyContinue"])
+            .creation_flags(0x08000000)
+            .status();
+    }
+
+    let config_dir = crate::config::get_config_dir();
+    if config_dir.exists() {
+        let _ = std::fs::remove_dir_all(&config_dir);
+    }
+
+    std::process::exit(0);
+}
+
 
