@@ -1,0 +1,4 @@
+1
+# Set the first line to 1 to force the onboarding setup wizard during development.
+# Set it to 0 to disable forcing.
+# NOTE: This file is only read in debug builds. Release builds ignore it entirely.

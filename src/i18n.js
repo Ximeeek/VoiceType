@@ -501,7 +501,83 @@ export const translations = {
     "updater.ready_title": "Update {version} ready!",
     "updater.ready_msg": "New application version downloaded and ready to install.",
     "updater.btn_later": "Later",
-    "updater.btn_install": "Install & Relaunch"
+    "updater.btn_install": "Install & Relaunch",
+
+    // Onboarding Wizard
+    "onboard.welcome.title": "Welcome to VoiceType",
+    "onboard.welcome.subtitle": "Let's configure your smart dictation assistant in a few steps.",
+    "onboard.language.title": "Select Application UI Language",
+    "onboard.speech_lang.title": "Select Speech Recognition Language",
+    "onboard.speech_lang.subtitle": "Choose the language in which you will dictate text to the application.",
+    "onboard.btn.next": "Next",
+    "onboard.btn.prev": "Back",
+    "onboard.btn.finish": "Get Started",
+    "onboard.btn.skip": "I'll configure it myself",
+    
+    // Step 2: Category
+    "onboard.category.title": "Select Dictation Mode",
+    "onboard.category.subtitle": "Choose between running speech recognition offline or via high-speed cloud APIs.",
+    "onboard.category.offline": "Offline Engine",
+    "onboard.category.offline_desc": "Runs 100% locally on your computer. Private, secure, and no internet required.",
+    "onboard.category.cloud": "Cloud Engine",
+    "onboard.category.cloud_desc": "Uses external cloud APIs. Extremely fast, highly accurate, and lightweight.",
+
+    // Step 2B: Cloud Setup
+    "onboard.cloud.title": "Cloud API Configuration",
+    "onboard.cloud.subtitle": "Select your cloud provider, enter your API key, and test the connection.",
+    "onboard.cloud.select_provider": "Select Cloud Provider",
+    "onboard.cloud.api_key": "API Key",
+    "onboard.cloud.region": "Azure Region / Google Credentials",
+    "onboard.cloud.btn_test": "Test Connection",
+    "onboard.cloud.testing": "Testing connection...",
+    "onboard.cloud.test_success": "Connection successful!",
+    "onboard.cloud.test_failed": "Validation failed: Check your key and connection.",
+    "onboard.cloud.validation_required": "Please test and validate your API key successfully before proceeding.",
+
+    // Step 2B: Offline Setup
+    "onboard.offline.title": "Offline Engine & Profile Selection",
+    "onboard.offline.subtitle": "We've detected your system specifications to recommend the best local setup.",
+    "onboard.offline.gpu_detected": "NVIDIA GPU Detected! GPU acceleration will be active.",
+    "onboard.offline.gpu_not_detected": "No NVIDIA GPU detected. Running on CPU (Vosk or Sherpa recommended).",
+    "onboard.offline.profile_label": "Select PC Performance Profile",
+    "onboard.offline.profile_high": "High-end PC",
+    "onboard.offline.profile_high_desc": "Uses Faster-Whisper (Requires CUDA/GPU). Best local accuracy.",
+    "onboard.offline.profile_mid": "Mid-range PC",
+    "onboard.offline.profile_mid_desc": "Uses Whisper.cpp / Sherpa-ONNX. Balanced speed and memory.",
+    "onboard.offline.profile_low": "Low-end PC",
+    "onboard.offline.profile_low_desc": "Uses Vosk. Lightweight streaming, runs smoothly on any hardware.",
+    "onboard.offline.gb_limit_label": "Max disk/RAM size for speech model:",
+    "onboard.offline.gb_limit_desc": "Enter the maximum size you allow the model files to occupy.",
+    "onboard.offline.auto_space_checkbox": "Automatically select model based on free disk space (Recommended)",
+    "onboard.offline.free_space_label": "Available Disk Space:",
+    "onboard.offline.free_space_value": "{size} free",
+    "onboard.offline.matched_model": "Matched Speech Model:",
+    "onboard.offline.upgrade_title": "Model Upgrade Recommendation",
+    "onboard.offline.upgrade_msg": "We found a higher quality model ({name}) that takes {size} ({percent}% over your limit). Would you like to use this model instead for better accuracy?",
+    "onboard.offline.btn_upgrade": "Yes, use better model",
+    "onboard.offline.btn_stay": "No, stay with limit",
+
+    // Download/Install Step
+    "onboard.model.title": "Installing Speech Model",
+    "onboard.model.desc": "Downloading the selected offline model. This can take a few minutes depending on size.",
+    "onboard.model.btn_download": "Start Download",
+    "onboard.model.downloading": "Downloading model...",
+    "onboard.model.download_complete": "Installation complete!",
+    
+    // Preferences/Finish
+    "onboard.prefs.title": "General Preferences",
+    "onboard.prefs.subtitle": "Configure how the application runs.",
+    "onboard.prefs.autostart": "Launch automatically on Windows startup",
+    "onboard.prefs.minimized": "Start minimized in system tray",
+    "onboard.finish.title": "Configuration Complete!",
+    "onboard.finish.subtitle": "VoiceType is configured and ready to capture your voice.",
+    "onboard.finish.summary.lang": "Interface Language:",
+    "onboard.finish.summary.speech_lang": "Speech Language:",
+    "onboard.finish.summary.engine": "Speech Engine:",
+    "onboard.finish.summary.model": "Speech Model:",
+    "onboard.finish.summary.autostart": "Autostart:",
+    "onboard.finish.summary.enabled": "Enabled",
+    "onboard.finish.summary.disabled": "Disabled"
   },
   pl: {
     // Navigation & Header
@@ -1005,7 +1081,83 @@ export const translations = {
     "updater.ready_title": "Aktualizacja {version} gotowa!",
     "updater.ready_msg": "Nowa wersja aplikacji została pobrana i przygotowana do instalacji.",
     "updater.btn_later": "Później",
-    "updater.btn_install": "Zainstaluj i uruchom ponownie"
+    "updater.btn_install": "Zainstaluj i uruchom ponownie",
+
+    // Onboarding Wizard
+    "onboard.welcome.title": "Witaj w VoiceType",
+    "onboard.welcome.subtitle": "Skonfigurujmy Twój inteligentny asystent dyktowania w kilku krokach.",
+    "onboard.language.title": "Wybierz język aplikacji (UI)",
+    "onboard.speech_lang.title": "Wybierz język rozpoznawania mowy",
+    "onboard.speech_lang.subtitle": "Wybierz język, w którym będziesz dyktować tekst do aplikacji.",
+    "onboard.btn.next": "Dalej",
+    "onboard.btn.prev": "Wstecz",
+    "onboard.btn.finish": "Rozpocznij korzystanie",
+    "onboard.btn.skip": "Poradzę sobie sam",
+    
+    // Step 2: Category
+    "onboard.category.title": "Wybierz tryb dyktowania",
+    "onboard.category.subtitle": "Wybierz, czy rozpoznawanie mowy ma działać w pełni lokalnie na Twoim komputerze, czy przez szybkie chmurowe API.",
+    "onboard.category.offline": "Silnik lokalny (Offline)",
+    "onboard.category.offline_desc": "Działa w 100% lokalnie na Twoim komputerze. Pełna prywatność i bezpieczeństwo. Nie wymaga internetu.",
+    "onboard.category.cloud": "Silnik chmurowy (Cloud)",
+    "onboard.category.cloud_desc": "Korzysta z zewnętrznych API chmurowych. Niezwykle szybki, lekki i bardzo dokładny.",
+
+    // Step 2B: Cloud Setup
+    "onboard.cloud.title": "Konfiguracja API w chmurze",
+    "onboard.cloud.subtitle": "Wybierz dostawcę, wprowadź klucz API i przetestuj połączenie.",
+    "onboard.cloud.select_provider": "Wybierz dostawcę chmurowego",
+    "onboard.cloud.api_key": "Klucz API",
+    "onboard.cloud.region": "Region Azure / Dane uwierzytelniające Google",
+    "onboard.cloud.btn_test": "Testuj połączenie",
+    "onboard.cloud.testing": "Testowanie połączenia...",
+    "onboard.cloud.test_success": "Połączenie udane!",
+    "onboard.cloud.test_failed": "Walidacja nieudana. Sprawdź klucz API i połączenie internetowe.",
+    "onboard.cloud.validation_required": "Przed przejściem dalej należy pomyślnie przetestować i zweryfikować klucz API.",
+
+    // Step 2B: Offline Setup
+    "onboard.offline.title": "Silnik lokalny i wybór profilu",
+    "onboard.offline.subtitle": "Wykryliśmy specyfikację Twojego systemu, aby polecić najlepszą lokalną konfigurację.",
+    "onboard.offline.gpu_detected": "Wykryto kartę graficzną NVIDIA! Akceleracja GPU (CUDA) będzie aktywna.",
+    "onboard.offline.gpu_not_detected": "Nie wykryto karty graficznej NVIDIA. Działanie na procesorze CPU (zalecany Vosk lub Sherpa).",
+    "onboard.offline.profile_label": "Wybierz profil wydajności komputera",
+    "onboard.offline.profile_high": "Mocny komputer",
+    "onboard.offline.profile_high_desc": "Używa Faster-Whisper (wymaga CUDA/GPU). Najlepsza lokalna dokładność.",
+    "onboard.offline.profile_mid": "Średni komputer",
+    "onboard.offline.profile_mid_desc": "Używa Whisper.cpp / Sherpa-ONNX. Zrównoważona prędkość i zużycie pamięci.",
+    "onboard.offline.profile_low": "Słaby komputer",
+    "onboard.offline.profile_low_desc": "Używa Vosk. Bardzo lekki streaming mowy, działa płynnie na każdym sprzęcie.",
+    "onboard.offline.gb_limit_label": "Maksymalny rozmiar modelu mowy:",
+    "onboard.offline.gb_limit_desc": "Podaj limit miejsca na dysku/pamięci RAM dla plików modelu.",
+    "onboard.offline.auto_space_checkbox": "Dobierz model automatycznie na podstawie wolnego miejsca (Zalecane)",
+    "onboard.offline.free_space_label": "Dostępne miejsce na dysku:",
+    "onboard.offline.free_space_value": "{size} wolne",
+    "onboard.offline.matched_model": "Dopasowany model mowy:",
+    "onboard.offline.upgrade_title": "Rekomendacja ulepszenia modelu",
+    "onboard.offline.upgrade_msg": "Znaleźliśmy model o wyższej jakości ({name}), który zajmuje {size} (o {percent}% ponad Twój limit). Czy chcesz użyć tego lepszego modelu?",
+    "onboard.offline.btn_upgrade": "Tak, wybierz lepszy model",
+    "onboard.offline.btn_stay": "Nie, zostań przy limicie",
+
+    // Download/Install Step
+    "onboard.model.title": "Instalowanie modelu mowy",
+    "onboard.model.desc": "Pobieranie wybranego modelu lokalnego. Może to zająć kilka minut w zależności od rozmiaru.",
+    "onboard.model.btn_download": "Rozpocznij pobieranie",
+    "onboard.model.downloading": "Pobieranie modelu...",
+    "onboard.model.download_complete": "Instalacja zakończona!",
+    
+    // Preferences/Finish
+    "onboard.prefs.title": "Preferencje startowe",
+    "onboard.prefs.subtitle": "Skonfiguruj sposób działania aplikacji.",
+    "onboard.prefs.autostart": "Uruchamiaj automatycznie przy starcie Windows",
+    "onboard.prefs.minimized": "Uruchom zminiaturyzowany w zasobniku",
+    "onboard.finish.title": "Konfiguracja zakończona!",
+    "onboard.finish.subtitle": "VoiceType jest skonfigurowany i gotowy do zapisu Twojego głosu.",
+    "onboard.finish.summary.lang": "Język interfejsu:",
+    "onboard.finish.summary.speech_lang": "Język dyktowania:",
+    "onboard.finish.summary.engine": "Silnik mowy:",
+    "onboard.finish.summary.model": "Model mowy:",
+    "onboard.finish.summary.autostart": "Autostart:",
+    "onboard.finish.summary.enabled": "Włączony",
+    "onboard.finish.summary.disabled": "Wyłączony"
   }
 };
 

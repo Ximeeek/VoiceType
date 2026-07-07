@@ -194,6 +194,7 @@ fn main() {
             commands::check_cuda_installed,
             commands::uninstall_cuda_libs,
             commands::check_gpu_support,
+            commands::get_free_disk_space,
             commands::list_audio_devices,
             commands::set_audio_device,
             commands::test_microphone,
@@ -212,7 +213,8 @@ fn main() {
             commands::get_session_stats,
             commands::get_app_version_info,
             commands::open_config_directory,
-            commands::hard_reset_config
+            commands::hard_reset_config,
+            commands::check_show_first_start
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

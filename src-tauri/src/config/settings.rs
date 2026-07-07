@@ -36,6 +36,10 @@ impl Default for Config {
     }
 }
 
+fn default_first_start_completed() -> bool {
+    false
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(default)]
 pub struct GeneralConfig {
@@ -44,6 +48,8 @@ pub struct GeneralConfig {
     pub language: String,
     pub show_notifications: bool,
     pub notification_duration_ms: u64,
+    #[serde(default = "default_first_start_completed")]
+    pub first_start_completed: bool,
 }
 
 #[cfg(target_os = "windows")]
@@ -73,6 +79,7 @@ impl Default for GeneralConfig {
             language: get_system_language(),
             show_notifications: true,
             notification_duration_ms: 4000,
+            first_start_completed: false,
         }
     }
 }

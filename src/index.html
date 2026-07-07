@@ -1265,6 +1265,302 @@
         </div>
     </div>
 
+    <!-- Onboarding Setup Wizard Modal -->
+    <div class="onboarding-backdrop" id="onboarding-modal" style="display: none;">
+        <div class="onboarding-card">
+            <!-- Header (shared across steps) -->
+            <div class="onboarding-header">
+                <div class="onboard-logo-container">
+                    <div class="onboard-orb"></div>
+                </div>
+                <a href="#" id="onboard-skip-btn" class="onboard-skip-link" data-i18n="onboard.btn.skip">Poradzę sobie sam</a>
+            </div>
+
+            <!-- Body (switched by step) -->
+            <div class="onboarding-body">
+                <!-- STEP 1: UI Language Selection -->
+                <div class="onboarding-step active" data-step="1">
+                    <h2 class="modal-title" style="text-align: center; font-size: 20px; font-family: 'Space Grotesk', sans-serif;" data-i18n="onboard.welcome.title">Witaj w VoiceType</h2>
+                    <p style="text-align: center; font-size: 13px; color: var(--text-secondary); margin: 8px 0 16px 0;" data-i18n="onboard.welcome.subtitle">Skonfigurujmy Twój inteligentny asystent dyktowania w kilku krokach.</p>
+                    
+                    <h3 style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; text-align: center; margin-top: 10px;" data-i18n="onboard.language.title">Wybierz język aplikacji (UI)</h3>
+                    <div class="onboard-lang-select-container">
+                        <button class="onboard-lang-btn" id="onboard-lang-en" data-lang="en">
+                            <svg viewBox="0 0 60 30" width="18" height="11" style="border-radius: 1px; display: inline-block; vertical-align: middle;"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#c8102e" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#c8102e" stroke-width="6"/></svg>
+                            English
+                        </button>
+                        <button class="onboard-lang-btn" id="onboard-lang-pl" data-lang="pl">
+                            <svg viewBox="0 0 16 10" width="18" height="11" style="border-radius: 1px; border: 1px solid rgba(255,255,255,0.15); display: inline-block; vertical-align: middle;"><rect width="16" height="5" fill="#ffffff"/><rect y="5" width="16" height="5" fill="#dc143c"/></svg>
+                            Polski
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Engine Dictation Language Selection -->
+                <div class="onboarding-step" data-step="2">
+                    <h2 class="modal-title" style="text-align: center; font-size: 18px; font-family: 'Space Grotesk', sans-serif;" data-i18n="onboard.speech_lang.title">Wybierz język rozpoznawania mowy</h2>
+                    <p style="text-align: center; font-size: 12px; color: var(--text-secondary); margin: 6px 0 16px 0;" data-i18n="onboard.speech_lang.subtitle">Wybierz język, w którym będziesz dyktować tekst do aplikacji.</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px;">
+                        <button class="onboard-lang-btn" id="onboard-speech-lang-pl" data-lang="pl">
+                            <svg viewBox="0 0 16 10" width="18" height="11" style="border-radius: 1px; border: 1px solid rgba(255,255,255,0.15); display: inline-block; vertical-align: middle;"><rect width="16" height="5" fill="#ffffff"/><rect y="5" width="16" height="5" fill="#dc143c"/></svg>
+                            Polski
+                        </button>
+                        <button class="onboard-lang-btn" id="onboard-speech-lang-en" data-lang="en">
+                            <svg viewBox="0 0 60 30" width="18" height="11" style="border-radius: 1px; display: inline-block; vertical-align: middle;"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#c8102e" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#c8102e" stroke-width="6"/></svg>
+                            English
+                        </button>
+                        <button class="onboard-lang-btn" id="onboard-speech-lang-de" data-lang="de">
+                            <svg viewBox="0 0 5 3" width="18" height="11" style="border-radius: 1px; border: 1px solid rgba(255,255,255,0.15); display: inline-block; vertical-align: middle;"><rect width="5" height="1" fill="#000"/><rect y="1" width="5" height="1" fill="#D00"/><rect y="2" width="5" height="1" fill="#FFCE00"/></svg>
+                            Deutsch
+                        </button>
+                        <button class="onboard-lang-btn" id="onboard-speech-lang-fr" data-lang="fr">
+                            <svg viewBox="0 0 3 2" width="18" height="11" style="border-radius: 1px; border: 1px solid rgba(255,255,255,0.15); display: inline-block; vertical-align: middle;"><rect width="1" height="2" fill="#002395"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#ED2939"/></svg>
+                            Français
+                        </button>
+                        <button class="onboard-lang-btn" id="onboard-speech-lang-es" data-lang="es">
+                            <svg viewBox="0 0 3 2" width="18" height="11" style="border-radius: 1px; border: 1px solid rgba(255,255,255,0.15); display: inline-block; vertical-align: middle;"><rect width="3" height="2" fill="#C60B30"/><rect y="0.5" width="3" height="1" fill="#FFC72C"/></svg>
+                            Español
+                        </button>
+                        <button class="onboard-lang-btn" id="onboard-speech-lang-it" data-lang="it">
+                            <svg viewBox="0 0 3 2" width="18" height="11" style="border-radius: 1px; border: 1px solid rgba(255,255,255,0.15); display: inline-block; vertical-align: middle;"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#ce2b37"/></svg>
+                            Italiano
+                        </button>
+                        <button class="onboard-lang-btn" id="onboard-speech-lang-ru" data-lang="ru">
+                            <svg viewBox="0 0 3 2" width="18" height="11" style="border-radius: 1px; border: 1px solid rgba(255,255,255,0.15); display: inline-block; vertical-align: middle;"><rect width="3" height="2" fill="#fff"/><rect y="0.66" width="3" height="1.34" fill="#0039A6"/><rect y="1.33" width="3" height="0.67" fill="#D52B1E"/></svg>
+                            Русский
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Category (Offline vs Cloud) -->
+                <div class="onboarding-step" data-step="3">
+                    <h2 class="modal-title" style="font-size: 18px; font-family: 'Space Grotesk', sans-serif;" data-i18n="onboard.category.title">Wybierz tryb dyktowania</h2>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 12px 0;" data-i18n="onboard.category.subtitle">Wybierz, czy rozpoznawanie mowy ma działać lokalnie, czy przez API w chmurze.</p>
+                    
+                    <div class="onboard-options-grid">
+                        <div class="onboard-option-card active" id="onboard-category-offline" data-category="offline">
+                            <span class="onboard-option-card-title" data-i18n="onboard.category.offline">Silnik lokalny (Offline)</span>
+                            <span class="onboard-option-card-desc" data-i18n="onboard.category.offline_desc">Działa w 100% lokalnie na Twoim komputerze. Pełna prywatność i brak wymogu internetu.</span>
+                        </div>
+                        <div class="onboard-option-card" id="onboard-category-cloud" data-category="cloud">
+                            <span class="onboard-option-card-title" data-i18n="onboard.category.cloud">Silnik chmurowy (Cloud)</span>
+                            <span class="onboard-option-card-desc" data-i18n="onboard.category.cloud_desc">Korzysta z zewnętrznych API. Bardzo szybki, lekki i niezwykle dokładny.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 4: Setup (Cloud Keys OR Offline Profile Selection) -->
+                <div class="onboarding-step" data-step="4">
+                    <!-- Cloud Setup Panel -->
+                    <div id="onboard-cloud-setup-section" style="display: none; flex-direction: column; height: 100%;">
+                        <h2 class="modal-title" style="font-size: 18px; font-family: 'Space Grotesk', sans-serif;" data-i18n="onboard.cloud.title">Konfiguracja API w chmurze</h2>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 12px 0;" data-i18n="onboard.cloud.subtitle">Wybierz dostawcę, wprowadź klucz API i przetestuj połączenie.</p>
+                        
+                        <div class="cloud-setup-container" style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label class="input-label" data-i18n="onboard.cloud.select_provider">Wybierz dostawcę chmurowego</label>
+                                <select id="onboard-cloud-provider" class="input-field" style="width: 100%; padding: 10px 12px; border-radius: 8px; background: rgba(30, 41, 59, 0.5); color: var(--text-primary); border: 1px solid rgba(255, 255, 255, 0.15);">
+                                    <option value="deepgram">Deepgram (Nova-2)</option>
+                                    <option value="assemblyai">AssemblyAI</option>
+                                    <option value="openai">OpenAI Whisper</option>
+                                    <option value="google">Google Speech-to-Text</option>
+                                    <option value="azure">Azure Speech Services</option>
+                                </select>
+                            </div>
+                            
+                            <div id="onboard-cloud-api-key-container" style="display: flex; flex-direction: column; gap: 4px;">
+                                <label class="input-label" data-i18n="onboard.cloud.api_key">Klucz API</label>
+                                <input type="password" id="onboard-cloud-api-key-input" class="input-field" placeholder="Paste your API key here" style="width: 100%; padding: 10px 12px; border-radius: 8px;">
+                            </div>
+
+                            <div id="onboard-cloud-extra-container" style="display: none; flex-direction: column; gap: 4px;">
+                                <label class="input-label" id="onboard-cloud-extra-label">Extra Setting</label>
+                                <input type="text" id="onboard-cloud-extra-input" class="input-field" placeholder="Value" style="width: 100%; padding: 10px 12px; border-radius: 8px;">
+                            </div>
+
+                            <div style="margin-top: 8px;">
+                                <button type="button" class="btn-primary" id="btn-onboard-cloud-test" style="width: 100%; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--accent-green); font-weight: 600;">
+                                    <span data-i18n="onboard.cloud.btn_test">Testuj połączenie</span>
+                                </button>
+                                <div id="onboard-cloud-test-status" style="font-size: 11px; text-align: center; margin-top: 6px; font-weight: 600; display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Offline Setup Panel -->
+                    <div id="onboard-offline-setup-section" style="display: none; flex-direction: column; height: 100%;">
+                        <h2 class="modal-title" style="font-size: 18px; font-family: 'Space Grotesk', sans-serif;" data-i18n="onboard.offline.title">Wybór silnika lokalnego</h2>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 10px 0;" data-i18n="onboard.offline.subtitle">Wykryliśmy parametry komputera, aby polecić najlepszy profil.</p>
+                        
+                        <!-- GPU banner -->
+                        <div id="onboard-offline-gpu-status" class="gpu-status-banner" style="display: none; margin-bottom: 8px;"></div>
+                        
+                        <!-- Profile selection -->
+                        <div class="onboard-profile-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px;">
+                            <div class="onboard-profile-card" id="onboard-profile-low" data-profile="low">
+                                <span class="profile-card-title" data-i18n="onboard.offline.profile_low">Słaby PC</span>
+                                <span class="profile-card-badge">Vosk</span>
+                            </div>
+                            <div class="onboard-profile-card" id="onboard-profile-mid" data-profile="mid">
+                                <span class="profile-card-title" data-i18n="onboard.offline.profile_mid">Średni PC</span>
+                                <span class="profile-card-badge">Whisper.cpp</span>
+                            </div>
+                            <div class="onboard-profile-card" id="onboard-profile-high" data-profile="high">
+                                <span class="profile-card-title" data-i18n="onboard.offline.profile_high">Mocny PC</span>
+                                <span class="profile-card-badge">F-Whisper</span>
+                            </div>
+                        </div>
+
+                        <!-- Sub-select engine (optional/dynamic) -->
+                        <div id="onboard-profile-mid-engines" style="display: none; margin-bottom: 8px; align-items: center; justify-content: space-between; gap: 8px;">
+                            <span class="input-label" style="font-size: 11px;">Silnik mowy:</span>
+                            <select id="onboard-offline-engine-select" class="input-field" style="width: auto; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
+                                <option value="whisper">Whisper.cpp</option>
+                                <option value="sherpa_onnx">Sherpa-ONNX</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 5: Offline Model Search & Matching (Offline only) -->
+                <div class="onboarding-step" data-step="5">
+                    <h2 class="modal-title" style="font-size: 18px; font-family: 'Space Grotesk', sans-serif;" data-i18n="onboard.offline.title">Dobór modelu mowy</h2>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 10px 0;" data-i18n="onboard.offline.subtitle">Dobierzmy odpowiedni rozmiar modelu dla optymalnej jakości.</p>
+                    
+                    <!-- Free disk space banner -->
+                    <div class="gpu-status-banner" id="onboard-offline-disk-banner" style="margin-bottom: 12px; display: flex; align-items: center; gap: 6px; justify-content: space-between;">
+                        <span data-i18n="onboard.offline.free_space_label">Dostępne miejsce na dysku:</span>
+                        <span id="onboard-offline-free-space" style="font-family: 'JetBrains Mono', monospace; font-weight: 700;">-</span>
+                    </div>
+
+                    <!-- Auto-select checkbox -->
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; background: rgba(255,255,255,0.015); border: 1px solid var(--border-subtle); padding: 10px 14px; border-radius: 10px;">
+                        <input type="checkbox" id="onboard-offline-auto-space" checked style="width: 16px; height: 16px; accent-color: var(--accent-green); cursor: pointer;">
+                        <label for="onboard-offline-auto-space" style="font-size: 12px; font-weight: 600; cursor: pointer; user-select: none;" data-i18n="onboard.offline.auto_space_checkbox">Dobierz model automatycznie na podstawie wolnego miejsca (Zalecane)</label>
+                    </div>
+
+                    <!-- GB Limit selection (manually toggled) -->
+                    <div id="onboard-offline-manual-limit-container" style="display: none; flex-direction: column; gap: 6px; margin-bottom: 12px;">
+                        <label class="input-label" style="font-size: 11px;" data-i18n="onboard.offline.gb_limit_label">Maksymalny rozmiar modelu mowy:</label>
+                        <div class="gb-quick-select" style="display: flex; gap: 6px; justify-content: space-between;">
+                            <button type="button" class="gb-pill-btn" data-gb="0.1">0.1 GB</button>
+                            <button type="button" class="gb-pill-btn" data-gb="0.5">0.5 GB</button>
+                            <button type="button" class="gb-pill-btn active" data-gb="1.0">1.0 GB</button>
+                            <button type="button" class="gb-pill-btn" data-gb="1.5">1.5 GB</button>
+                            <button type="button" class="gb-pill-btn" data-gb="2.0">2.0 GB</button>
+                            <button type="button" class="gb-pill-btn" data-gb="3.0">3.0 GB</button>
+                        </div>
+                    </div>
+
+                    <!-- Matched Model Info -->
+                    <div class="onboard-matched-model-box" id="onboard-offline-matched-box">
+                        <div class="matched-model-header" style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700;" data-i18n="onboard.offline.matched_model">Dopasowany model mowy:</div>
+                        <div id="onboard-offline-matched-name" class="matched-model-name" style="font-size: 13px; font-weight: 700; color: var(--accent-green); margin-top: 2px;">-</div>
+                        <div id="onboard-offline-matched-size" class="matched-model-size" style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">-</div>
+                    </div>
+
+                    <!-- 10% Upgrade recommendation prompt -->
+                    <div class="onboard-upgrade-prompt" id="onboard-offline-upgrade-prompt" style="display: none; margin-top: 8px;">
+                        <div class="upgrade-prompt-icon">💡</div>
+                        <div class="upgrade-prompt-body">
+                            <span class="upgrade-prompt-title" data-i18n="onboard.offline.upgrade_title">Rekomendacja ulepszenia modelu</span>
+                            <span class="upgrade-prompt-text" id="onboard-offline-upgrade-text">-</span>
+                            <div style="display: flex; gap: 8px; margin-top: 6px;">
+                                <button type="button" class="btn-primary" id="onboard-offline-btn-upgrade" style="padding: 4px 10px; border-radius: 6px; font-size: 11px;" data-i18n="onboard.offline.btn_upgrade">Tak, wybierz lepszy</button>
+                                <button type="button" class="btn-secondary" id="onboard-offline-btn-stay" style="padding: 4px 10px; border-radius: 6px; font-size: 11px;" data-i18n="onboard.offline.btn_stay">Nie, zostań przy limicie</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 6: Download Speech Model -->
+                <div class="onboarding-step" data-step="6">
+                    <div id="onboard-model-download-section" style="display: flex; flex-direction: column; height: 100%;">
+                        <h2 class="modal-title" style="font-size: 18px; font-family: 'Space Grotesk', sans-serif;" data-i18n="onboard.model.title">Pobieranie modelu mowy</h2>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 12px 0;" data-i18n="onboard.model.desc">Pobieranie wybranego modelu offline. Może to zająć kilka minut w zależności od rozmiaru.</p>
+                        
+                        <div class="onboard-download-box">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span id="onboard-download-status-text" style="font-size: 13px; font-weight: 600;" data-i18n="onboard.model.btn_download">Rozpocznij pobieranie</span>
+                                <span id="onboard-download-percentage" style="font-size: 13px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-green); display: none;">0%</span>
+                            </div>
+                            <div class="onboard-progress-bar-container" id="onboard-download-progress-container" style="display: none; margin-bottom: 12px;">
+                                <div class="onboard-progress-bar-fill" id="onboard-download-progress-fill"></div>
+                            </div>
+                            <button class="btn-primary" id="btn-onboard-download-model" style="width: 100%; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;" data-i18n="onboard.model.btn_download">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                <span data-i18n="onboard.model.btn_download">Rozpocznij pobieranie</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 7: Preferences -->
+                <div class="onboarding-step" data-step="7">
+                    <h2 class="modal-title" style="font-size: 18px; font-family: 'Space Grotesk', sans-serif;" data-i18n="onboard.prefs.title">Preferencje startowe</h2>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 12px 0;" data-i18n="onboard.prefs.subtitle">Skonfiguruj sposób działania aplikacji.</p>
+                    
+                    <div class="onboard-prefs-list">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="onboard-pref-autostart" checked>
+                            <span class="checkbox-label" data-i18n="onboard.prefs.autostart">Uruchamiaj automatycznie przy starcie Windows</span>
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="onboard-pref-minimized" checked>
+                            <span class="checkbox-label" data-i18n="onboard.prefs.minimized">Uruchom zminiaturyzowany w zasobniku</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- STEP 8: Summary & Finish -->
+                <div class="onboarding-step" data-step="8">
+                    <h2 class="modal-title" style="font-size: 18px; font-family: 'Space Grotesk', sans-serif; text-align: center;" data-i18n="onboard.finish.title">Konfiguracja zakończona!</h2>
+                    <p style="font-size: 12px; color: var(--text-secondary); text-align: center; margin: 4px 0 12px 0;" data-i18n="onboard.finish.subtitle">VoiceType jest skonfigurowany i gotowy do zapisu Twojego głosu.</p>
+                    
+                    <div class="onboard-summary-box">
+                        <div class="onboard-summary-row">
+                            <span class="onboard-summary-label" data-i18n="onboard.finish.summary.lang">Język interfejsu:</span>
+                            <span class="onboard-summary-value" id="onboard-summary-lang">Polski</span>
+                        </div>
+                        <div class="onboard-summary-row">
+                            <span class="onboard-summary-label" data-i18n="onboard.finish.summary.speech_lang">Język dyktowania:</span>
+                            <span class="onboard-summary-value" id="onboard-summary-speech-lang">Polski</span>
+                        </div>
+                        <div class="onboard-summary-row">
+                            <span class="onboard-summary-label" data-i18n="onboard.finish.summary.engine">Silnik mowy:</span>
+                            <span class="onboard-summary-value" id="onboard-summary-engine">Vosk Offline</span>
+                        </div>
+                        <div class="onboard-summary-row" id="onboard-summary-model-row">
+                            <span class="onboard-summary-label" data-i18n="onboard.finish.summary.model">Model mowy:</span>
+                            <span class="onboard-summary-value" id="onboard-summary-model">-</span>
+                        </div>
+                        <div class="onboard-summary-row">
+                            <span class="onboard-summary-label" data-i18n="onboard.finish.summary.autostart">Autostart:</span>
+                            <span class="onboard-summary-value" id="onboard-summary-autostart">Włączony</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer (shared across steps) -->
+            <div class="onboarding-footer">
+                <button class="btn-secondary" id="btn-onboard-prev" style="visibility: hidden;" data-i18n="onboard.btn.prev">Wstecz</button>
+                <div class="onboard-dots">
+                    <span class="onboard-dot active" data-step-dot="1"></span>
+                    <span class="onboard-dot" data-step-dot="2"></span>
+                    <span class="onboard-dot" data-step-dot="3"></span>
+                    <span class="onboard-dot" data-step-dot="4"></span>
+                    <span class="onboard-dot" data-step-dot="5"></span>
+                    <span class="onboard-dot" data-step-dot="6"></span>
+                    <span class="onboard-dot" data-step-dot="7"></span>
+                    <span class="onboard-dot" data-step-dot="8"></span>
+                </div>
+                <button class="btn-primary" id="btn-onboard-next" data-i18n="onboard.btn.next">Dalej</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notifications Container -->
     <div class="toast-container" id="toast-container"></div>
 

@@ -305,9 +305,52 @@ pub fn check_model_downloaded(engine: String, model: String) -> bool {
     let models_dir = crate::downloader::model_registry::get_models_dir();
     let clean_model = model.split('/').next_back().unwrap_or(&model).split('\\').next_back().unwrap_or(&model);
     if engine == "vosk" {
-        models_dir.join("vosk").join(clean_model).is_dir()
+        let dir = models_dir.join("vosk").join(clean_model);
+        if !dir.is_dir() {
+            return false;
+        }
+        fn has_model_file(d: &std::path::Path) -> bool {
+            if let Ok(entries) = std::fs::read_dir(d) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        let name = path.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
+                        if name == "final.mdl" || name.ends_with(".mdl") || name.ends_with(".fst") || name == "final.ie" {
+                            return true;
+                        }
+                    } else if path.is_dir() {
+                        if has_model_file(&path) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            false
+        }
+        has_model_file(&dir)
     } else if engine == "sherpa_onnx" {
-        models_dir.join("sherpa").join(clean_model).is_dir()
+        let dir = models_dir.join("sherpa").join(clean_model);
+        if !dir.is_dir() {
+            return false;
+        }
+        fn has_onnx_file(d: &std::path::Path) -> bool {
+            if let Ok(entries) = std::fs::read_dir(d) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        if path.extension().map_or(false, |ext| ext == "onnx") {
+                            return true;
+                        }
+                    } else if path.is_dir() {
+                        if has_onnx_file(&path) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            false
+        }
+        has_onnx_file(&dir)
     } else {
         models_dir.join("whisper").join(format!("ggml-{}.bin", clean_model)).is_file()
     }
@@ -577,6 +620,33 @@ pub fn check_gpu_support() -> bool {
 }
 
 #[tauri::command]
+pub fn get_free_disk_space() -> u64 {
+    #[cfg(windows)]
+    {
+        let models_dir = crate::downloader::model_registry::get_models_dir();
+        let path_str = models_dir.to_string_lossy().to_string();
+        let mut cmd = std::process::Command::new("powershell");
+        let script = format!(
+            "$root = [System.IO.Path]::GetPathRoot('{}'); [System.IO.DriveInfo]::new($root).AvailableFreeSpace",
+            path_str.replace("'", "''")
+        );
+        cmd.args(["-NoProfile", "-Command", &script]);
+        crate::platform::suppress_console_in_release(&mut cmd);
+        if let Ok(out) = cmd.output() {
+            let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            if let Ok(val) = stdout.parse::<u64>() {
+                return val;
+            }
+        }
+        50 * 1024 * 1024 * 1024 // Fallback to 50 GB
+    }
+    #[cfg(not(windows))]
+    {
+        50 * 1024 * 1024 * 1024 // Fallback to 50 GB
+    }
+}
+
+#[tauri::command]
 pub async fn list_audio_devices() -> Result<Vec<AudioDevice>, String> {
     Ok(crate::audio::capture::list_audio_devices())
 }
@@ -744,6 +814,39 @@ pub async fn hard_reset_config(state: State<'_, Arc<AppState>>, app: tauri::AppH
     }
 
     std::process::exit(0);
+}
+
+#[tauri::command]
+pub async fn check_show_first_start(state: State<'_, Arc<AppState>>) -> Result<bool, String> {
+    #[cfg(debug_assertions)]
+    {
+        let paths = vec![
+            std::path::PathBuf::from("first_start_force.txt"),
+            std::path::PathBuf::from("../first_start_force.txt"),
+            std::env::current_exe()
+                .map(|p| p.parent().map(|parent| parent.join("first_start_force.txt")).unwrap_or_default())
+                .unwrap_or_default(),
+        ];
+        for force_file in paths {
+            if force_file.exists() && force_file.is_file() {
+                if let Ok(content) = std::fs::read_to_string(&force_file) {
+                    if let Some(first_line) = content.lines().next() {
+                        let trimmed = first_line.trim();
+                        if trimmed == "1" {
+                            println!("[DEBUG] first_start_force.txt found with '1' at {:?}. Forcing first start setup.", force_file);
+                            return Ok(true);
+                        } else if trimmed == "0" {
+                            println!("[DEBUG] first_start_force.txt found with '0' at {:?}. Suppressing first start setup.", force_file);
+                            return Ok(false);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let config = state.config.lock().await;
+    Ok(!config.general.first_start_completed)
 }
 
 
