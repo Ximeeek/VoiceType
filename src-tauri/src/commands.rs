@@ -20,6 +20,7 @@ pub async fn save_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle,
     let stop_words_changed = config.dictation.stop_words != config_lock.dictation.stop_words;
     let silence_changed = config.dictation.silence_timeout_ms != config_lock.dictation.silence_timeout_ms;
     let translate_changed = config.trigger.translate != config_lock.trigger.translate;
+    let no_wake_word_changed = config.trigger.no_wake_word != config_lock.trigger.no_wake_word;
     let lang_changed = config.general.language != config_lock.general.language;
     let engine_changed = config.engine.engine_type != config_lock.engine.engine_type;
     let active_engine_config_changed = match config.engine.engine_type.as_str() {
@@ -55,6 +56,9 @@ pub async fn save_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle,
     if translate_changed {
         state.control_tx.send(ControlCommand::SetTriggerTranslate(config.trigger.translate)).await.ok();
     }
+    if no_wake_word_changed {
+        state.control_tx.send(ControlCommand::SetNoWakeWord(config.trigger.no_wake_word)).await.ok();
+    }
     if lang_changed {
         state.control_tx.send(ControlCommand::SetLanguage(config.general.language.clone())).await.ok();
     }
@@ -76,6 +80,7 @@ pub async fn reset_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle
     state.control_tx.send(ControlCommand::SetTriggerWords(default.trigger.words.clone())).await.ok();
     state.control_tx.send(ControlCommand::SetStopWords(default.dictation.stop_words.clone())).await.ok();
     state.control_tx.send(ControlCommand::SetSilenceTimeout(default.dictation.silence_timeout_ms)).await.ok();
+    state.control_tx.send(ControlCommand::SetNoWakeWord(default.trigger.no_wake_word)).await.ok();
     state.control_tx.send(ControlCommand::SetLanguage(default.general.language.clone())).await.ok();
     state.control_tx.send(ControlCommand::SetEngine(default.engine.engine_type.clone())).await.ok();
     

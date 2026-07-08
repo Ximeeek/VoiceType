@@ -61,6 +61,7 @@ pub enum ControlCommand {
     SetEngine(String),
     SetTriggerTranslate(bool),
     SetLanguage(String),
+    SetNoWakeWord(bool),
     ForceDictate,
     Quit,
 }

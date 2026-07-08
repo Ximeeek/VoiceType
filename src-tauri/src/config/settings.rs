@@ -120,6 +120,8 @@ pub struct TriggerConfig {
     pub fuzzy_threshold: u32,
     #[serde(default)]
     pub translate: bool,
+    #[serde(default)]
+    pub no_wake_word: bool,
 }
 
 impl Default for TriggerConfig {
@@ -129,6 +131,7 @@ impl Default for TriggerConfig {
             fuzzy_match: true,
             fuzzy_threshold: 2,
             translate: false,
+            no_wake_word: false,
         }
     }
 }

@@ -234,6 +234,10 @@ pub async fn run_control_loop(
                     config.trigger.fuzzy_threshold = latest_cfg.trigger.fuzzy_threshold;
                     apply_detector_config(&mut detector, &config);
                 }
+                ControlCommand::SetNoWakeWord(val) => {
+                    println!("[CONTROL_COMMAND] SetNoWakeWord: {}", val);
+                    config.trigger.no_wake_word = val;
+                }
                 ControlCommand::ForceDictate => {
                     if !engine.has_active_engine() {
                         app_handle.emit("engine_error", "Speech engine unavailable. Please download the engine model file first.").ok();
@@ -285,7 +289,17 @@ pub async fn run_control_loop(
                             println!("[IDLE_STREAMING] [Engine: {}, Lang: {}] Transcript: '{}' (partial: {})", 
                                 engine.active_type, config.general.language, transcript.text, transcript.is_partial);
                             
-                            if let Some(remaining) = detector.check_trigger(&transcript.text) {
+                            let trigger_matched = if config.trigger.no_wake_word {
+                                if should_trigger_without_wake_word(&transcript.text) {
+                                    Some(transcript.text.clone())
+                                } else {
+                                    None
+                                }
+                            } else {
+                                detector.check_trigger(&transcript.text)
+                            };
+
+                            if let Some(remaining) = trigger_matched {
                                 println!("[STATE] Idle → Dictating (trigger matched, remaining: '{}')", remaining);
                                 let _ = engine.finalize().await;
                                 let _ = engine.start_stream().await;
@@ -324,7 +338,17 @@ pub async fn run_control_loop(
                             let _ = engine.start_stream().await;
                         } else if !final_idle_text.trim().is_empty() {
                             println!("[IDLE_BATCH_FINALIZE] Engine: {} | Finalized text: '{}'", engine.active_type, final_idle_text);
-                            if let Some(remaining) = detector.check_trigger(&final_idle_text) {
+                            let trigger_matched = if config.trigger.no_wake_word {
+                                if should_trigger_without_wake_word(&final_idle_text) {
+                                    Some(final_idle_text.clone())
+                                } else {
+                                    None
+                                }
+                            } else {
+                                detector.check_trigger(&final_idle_text)
+                            };
+
+                            if let Some(remaining) = trigger_matched {
                                 println!("[STATE] Idle → Dictating (batch trigger matched, remaining: '{}')", remaining);
                                 let _ = engine.start_stream().await;
                                 
@@ -368,7 +392,17 @@ pub async fn run_control_loop(
                                     let _ = engine.start_stream().await;
                                 } else if !final_idle_text.trim().is_empty() {
                                     println!("[IDLE_BATCH_PERIODIC] Engine: {} | Finalized text: '{}'", engine.active_type, final_idle_text);
-                                    if let Some(remaining) = detector.check_trigger(&final_idle_text) {
+                                    let trigger_matched = if config.trigger.no_wake_word {
+                                        if should_trigger_without_wake_word(&final_idle_text) {
+                                            Some(final_idle_text.clone())
+                                        } else {
+                                            None
+                                        }
+                                    } else {
+                                        detector.check_trigger(&final_idle_text)
+                                    };
+
+                                    if let Some(remaining) = trigger_matched {
                                         println!("[STATE] Idle → Dictating (periodic batch trigger matched, remaining: '{}')", remaining);
                                         let _ = engine.start_stream().await;
                                         
@@ -571,5 +605,45 @@ pub async fn run_control_loop(
             _ => {}
         }
     }
+}
+
+pub fn should_trigger_without_wake_word(text: &str) -> bool {
+    let clean_text = text.trim();
+    if clean_text.is_empty() {
+        return false;
+    }
+    
+    // Split into alphanumeric words, ignoring punctuation
+    let words: Vec<&str> = clean_text
+        .split(|c: char| !c.is_alphanumeric() && c != '\'')
+        .filter(|s| !s.is_empty())
+        .collect();
+        
+    if words.is_empty() {
+        return false;
+    }
+    
+    // Check if there is at least one non-filler, meaningful word
+    let mut has_meaningful_word = false;
+    for &word in &words {
+        let normalized = word.to_lowercase();
+        // A word is meaningful if it is not in the filler list and has length >= 2
+        let is_filler = matches!(
+            normalized.as_str(),
+            // English fillers/particles
+            "uh" | "um" | "ah" | "er" | "oh" | "ok" | "okay" | "hm" | "hmm" | "eh" | "hey" | "hi" | "ups" | "oops" | 
+            "so" | "the" | "a" | "an" | "of" | "in" | "on" | "at" | "by" | "for" | "with" | "to" | "and" | "or" | "but" |
+            // Polish fillers/particles (with "a" and "to" removed here since they are in the line above)
+            "yhm" | "yhy" | "uhm" | "aaa" | "eee" | "ym" | "hym" | "okej" | "ej" | "halo" | "no" | "co" | "ta" | 
+            "te" | "po" | "za" | "do" | "na" | "we" | "ze" | "od" | "w" | "z" | "o" | "i" | "u"
+        );
+        
+        if !is_filler && normalized.chars().count() >= 2 {
+            has_meaningful_word = true;
+            break;
+        }
+    }
+    
+    has_meaningful_word
 }
 

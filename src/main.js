@@ -1203,6 +1203,7 @@ function loadConfigGeneralUI(config) {
   // Trigger config
   document.getElementById('settings-trigger-fuzzy').checked = config.trigger.fuzzy_match;
   document.getElementById('settings-trigger-translate').checked = config.trigger.translate || false;
+  document.getElementById('settings-trigger-no-wake-word').checked = config.trigger.no_wake_word || false;
   
   // Stop config
   document.getElementById('settings-silence-timeout').value = config.dictation.silence_timeout_ms;
@@ -1319,6 +1320,23 @@ function loadConfigGeneralUI(config) {
     activeConfig.trigger.fuzzy_match = e.target.checked;
     if (pendingConfig) pendingConfig.trigger.fuzzy_match = e.target.checked;
     saveConfigState();
+  };
+
+  document.getElementById('settings-trigger-no-wake-word').onchange = (e) => {
+    try {
+      console.log(`[settings-trigger-no-wake-word] Changed: ${e.target.checked}`);
+      activeConfig.trigger.no_wake_word = e.target.checked;
+      if (pendingConfig) pendingConfig.trigger.no_wake_word = e.target.checked;
+      saveConfigState()
+        .then(() => console.log('[settings-trigger-no-wake-word] Config saved successfully'))
+        .catch(err => {
+          console.error('[settings-trigger-no-wake-word] Error saving config:', err);
+          throw err;
+        });
+    } catch (err) {
+      console.error('[settings-trigger-no-wake-word] Handler error:', err);
+      throw err;
+    }
   };
 
   document.getElementById('settings-trigger-translate').onchange = (e) => {
