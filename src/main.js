@@ -498,6 +498,10 @@ navButtons.forEach(btn => {
         checkActiveEngineAvailability();
         updateDashboardActiveEngineCard();
       }
+      if (targetPageId === 'settings') {
+        const activeEngineId = (activeConfig && activeConfig.engine && activeConfig.engine.type) || 'vosk';
+        updateActiveEnginePanel(activeEngineId);
+      }
       if (targetPageId === 'about') {
         console.log('[Navigation] Navigating to about section. Fetching changelog...');
         loadChangelog();
