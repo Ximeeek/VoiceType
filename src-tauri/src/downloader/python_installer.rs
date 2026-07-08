@@ -1,9 +1,26 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::Write;
 use tauri::{AppHandle, Emitter};
 use futures_util::StreamExt;
 use zip::ZipArchive;
+
+pub fn get_python_embed_dir() -> PathBuf {
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(parent) = exe_path.parent() {
+            // Check if we are running in development/workspace structure.
+            // Walk up parent folders to see if src-tauri or .git directory exists.
+            let mut current = parent.to_path_buf();
+            while current.pop() {
+                if current.join("src-tauri").exists() || current.join(".git").exists() {
+                    return current.join("python_embed");
+                }
+            }
+            return parent.join("python_embed");
+        }
+    }
+    PathBuf::from("python_embed")
+}
 
 #[derive(Clone, serde::Serialize)]
 pub struct InstallProgress {
@@ -15,9 +32,10 @@ pub struct InstallProgress {
 }
 
 pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
-    let target_dir = Path::new("..").join("python_embed");
-    let zip_path = Path::new("..").join("python_embed.zip");
-    let pip_script_path = Path::new("..").join("get-pip.py");
+    let target_dir = get_python_embed_dir();
+    let parent_dir = target_dir.parent().unwrap_or(Path::new("."));
+    let zip_path = parent_dir.join("python_embed.zip");
+    let pip_script_path = parent_dir.join("get-pip.py");
     
     let emit_progress = |step: &str, step_key: Option<&str>, percent: f64, done: bool, error: Option<String>| {
         app.emit("python_install_progress", InstallProgress {
@@ -152,12 +170,8 @@ pub async fn install_portable_python(app: AppHandle) -> Result<(), String> {
 
 pub fn is_python_available() -> bool {
     // 1. Check if we have our local python_embed
-    let local_python = Path::new("..").join("python_embed").join("python.exe");
+    let local_python = get_python_embed_dir().join("python.exe");
     if local_python.exists() {
-        return true;
-    }
-    let local_python_root = Path::new("python_embed").join("python.exe");
-    if local_python_root.exists() {
         return true;
     }
     

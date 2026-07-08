@@ -2,24 +2,19 @@ use crate::recognition::{SpeechEngine, Transcript};
 use std::io::{BufRead, Write};
 
 fn get_python_cmd() -> std::path::PathBuf {
-    let local = std::path::Path::new("..").join("python_embed").join("python.exe");
+    let local = crate::downloader::python_installer::get_python_embed_dir().join("python.exe");
     if local.is_file() {
         local
     } else {
-        let local_root = std::path::Path::new("python_embed").join("python.exe");
-        if local_root.is_file() {
-            local_root
+        // Check if python3 or python are available in the system
+        let mut cmd = std::process::Command::new("python3");
+        cmd.arg("--version");
+        crate::platform::suppress_console_in_release(&mut cmd);
+        let has_python3 = cmd.output().is_ok();
+        if has_python3 {
+            std::path::PathBuf::from("python3")
         } else {
-            // Check if python3 or python are available in the system
-            let mut cmd = std::process::Command::new("python3");
-            cmd.arg("--version");
-            crate::platform::suppress_console_in_release(&mut cmd);
-            let has_python3 = cmd.output().is_ok();
-            if has_python3 {
-                std::path::PathBuf::from("python3")
-            } else {
-                std::path::PathBuf::from("python")
-            }
+            std::path::PathBuf::from("python")
         }
     }
 }

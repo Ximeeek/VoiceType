@@ -423,7 +423,7 @@ pub async fn install_python_env(app: tauri::AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
-    let python_exe = std::path::Path::new("..").join("python_embed").join("python.exe");
+    let python_exe = crate::downloader::python_installer::get_python_embed_dir().join("python.exe");
     if !python_exe.exists() {
         return Err("Python environment not installed. Install Whisper first.".into());
     }
@@ -481,20 +481,9 @@ pub async fn install_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 pub fn check_cuda_installed() -> bool {
-    let dev_site_packages = std::path::Path::new("..")
-        .join("python_embed")
+    let site_packages = crate::downloader::python_installer::get_python_embed_dir()
         .join("Lib")
         .join("site-packages");
-    
-    let rel_site_packages = std::path::Path::new("python_embed")
-        .join("Lib")
-        .join("site-packages");
-
-    let site_packages = if dev_site_packages.exists() {
-        dev_site_packages
-    } else {
-        rel_site_packages
-    };
 
     if !site_packages.exists() {
         return false;
@@ -524,13 +513,7 @@ pub fn check_cuda_installed() -> bool {
 
 #[tauri::command]
 pub async fn uninstall_cuda_libs(app: tauri::AppHandle) -> Result<(), String> {
-    let dev_python = std::path::Path::new("..").join("python_embed").join("python.exe");
-    let rel_python = std::path::Path::new("python_embed").join("python.exe");
-    let python_exe = if dev_python.exists() {
-        dev_python
-    } else {
-        rel_python
-    };
+    let python_exe = crate::downloader::python_installer::get_python_embed_dir().join("python.exe");
 
     if !python_exe.exists() {
         return Err("Python environment not installed.".into());

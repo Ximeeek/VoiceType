@@ -2,16 +2,11 @@ use crate::recognition::{SpeechEngine, Transcript};
 use std::io::{BufRead, Write};
 
 fn get_python_cmd() -> std::path::PathBuf {
-    let local = std::path::Path::new("..").join("python_embed").join("python.exe");
+    let local = crate::downloader::python_installer::get_python_embed_dir().join("python.exe");
     if local.is_file() {
         local
     } else {
-        let local_root = std::path::Path::new("python_embed").join("python.exe");
-        if local_root.is_file() {
-            local_root
-        } else {
-            std::path::PathBuf::from("python")
-        }
+        std::path::PathBuf::from("python")
     }
 }
 
