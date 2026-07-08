@@ -74,7 +74,7 @@ cargo tauri dev
 *(Alternatively, run `npx tauri dev` if you do not have the Tauri CLI installed globally).*
 
 > [!TIP]
-> You can force the onboarding setup wizard to launch during development by creating a file named `first_start_force.txt` in the project root containing `1`. Setting it to `0` disables forcing it. This override file is completely ignored in production release builds.
+> You can force or suppress startup wizards and dialogs during development using the unified `dev_force.txt` override file in the project root. See the commented template for configurations like `first_start` (forces/suppresses onboarding setup) and `changelog` (forces/suppresses the version update changelog). This file is completely ignored in production release builds.
 
 ### 3. Compiling the Production Release
 To build an optimized production executable and package it into an NSIS installer:

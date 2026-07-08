@@ -214,7 +214,8 @@ fn main() {
             commands::get_app_version_info,
             commands::open_config_directory,
             commands::hard_reset_config,
-            commands::check_show_first_start
+            commands::check_show_first_start,
+            commands::check_show_changelog
         ])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {

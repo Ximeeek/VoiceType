@@ -816,37 +816,78 @@ pub async fn hard_reset_config(state: State<'_, Arc<AppState>>, app: tauri::AppH
     std::process::exit(0);
 }
 
-#[tauri::command]
-pub async fn check_show_first_start(state: State<'_, Arc<AppState>>) -> Result<bool, String> {
-    #[cfg(debug_assertions)]
-    {
-        let paths = vec![
-            std::path::PathBuf::from("first_start_force.txt"),
-            std::path::PathBuf::from("../first_start_force.txt"),
-            std::env::current_exe()
-                .map(|p| p.parent().map(|parent| parent.join("first_start_force.txt")).unwrap_or_default())
-                .unwrap_or_default(),
-        ];
-        for force_file in paths {
-            if force_file.exists() && force_file.is_file() {
-                if let Ok(content) = std::fs::read_to_string(&force_file) {
-                    if let Some(first_line) = content.lines().next() {
-                        let trimmed = first_line.trim();
-                        if trimmed == "1" {
-                            println!("[DEBUG] first_start_force.txt found with '1' at {:?}. Forcing first start setup.", force_file);
-                            return Ok(true);
-                        } else if trimmed == "0" {
-                            println!("[DEBUG] first_start_force.txt found with '0' at {:?}. Suppressing first start setup.", force_file);
-                            return Ok(false);
+#[cfg(debug_assertions)]
+fn get_dev_override(key: &str) -> Option<String> {
+    let paths = vec![
+        std::path::PathBuf::from("dev_force.txt"),
+        std::path::PathBuf::from("../dev_force.txt"),
+        std::env::current_exe()
+            .map(|p| p.parent().map(|parent| parent.join("dev_force.txt")).unwrap_or_default())
+            .unwrap_or_default(),
+    ];
+    for force_file in paths {
+        if force_file.exists() && force_file.is_file() {
+            if let Ok(content) = std::fs::read_to_string(&force_file) {
+                for line in content.lines() {
+                    let trimmed = line.trim();
+                    if trimmed.starts_with('#') || trimmed.is_empty() {
+                        continue;
+                    }
+                    if let Some((k, v)) = trimmed.split_once('=') {
+                        if k.trim() == key {
+                            return Some(v.trim().to_string());
                         }
                     }
                 }
             }
         }
     }
+    None
+}
+
+#[tauri::command]
+pub async fn check_show_first_start(state: State<'_, Arc<AppState>>) -> Result<bool, String> {
+    #[cfg(debug_assertions)]
+    {
+        if let Some(val) = get_dev_override("first_start") {
+            if val == "1" {
+                println!("[DEBUG] dev_force.txt: first_start forced (1)");
+                return Ok(true);
+            } else if val == "0" {
+                println!("[DEBUG] dev_force.txt: first_start suppressed (0)");
+                return Ok(false);
+            }
+        }
+    }
 
     let config = state.config.lock().await;
     Ok(!config.general.first_start_completed)
+}
+
+#[tauri::command]
+pub async fn check_show_changelog(app: tauri::AppHandle, state: State<'_, Arc<AppState>>) -> Result<bool, String> {
+    #[cfg(debug_assertions)]
+    {
+        if let Some(val) = get_dev_override("changelog") {
+            if val == "1" {
+                println!("[DEBUG] dev_force.txt: changelog forced (1)");
+                return Ok(true);
+            } else if val == "0" {
+                println!("[DEBUG] dev_force.txt: changelog suppressed (0)");
+                return Ok(false);
+            }
+        }
+    }
+
+    let config = state.config.lock().await;
+    
+    // If onboarding is not completed, don't show the changelog yet
+    if !config.general.first_start_completed {
+        return Ok(false);
+    }
+
+    let current_version = app.package_info().version.to_string();
+    Ok(config.general.last_seen_version != current_version)
 }
 
 

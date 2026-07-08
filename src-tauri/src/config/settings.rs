@@ -40,6 +40,10 @@ fn default_first_start_completed() -> bool {
     false
 }
 
+fn default_last_seen_version() -> String {
+    String::new()
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(default)]
 pub struct GeneralConfig {
@@ -50,6 +54,8 @@ pub struct GeneralConfig {
     pub notification_duration_ms: u64,
     #[serde(default = "default_first_start_completed")]
     pub first_start_completed: bool,
+    #[serde(default = "default_last_seen_version")]
+    pub last_seen_version: String,
 }
 
 #[cfg(target_os = "windows")]
@@ -80,6 +86,7 @@ impl Default for GeneralConfig {
             show_notifications: true,
             notification_duration_ms: 4000,
             first_start_completed: false,
+            last_seen_version: default_last_seen_version(),
         }
     }
 }

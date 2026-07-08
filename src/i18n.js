@@ -268,6 +268,9 @@ export const translations = {
     "about.changelog.stable": "Stable",
     "about.changelog.prerelease": "Pre-release",
     "about.changelog.no_releases": "No releases found matching the filter criteria.",
+    "about.changelog.startup_title": "What's New in VoiceType",
+    "about.changelog.startup_subtitle": "You have updated to version {version}. Here is what has changed:",
+    "about.changelog.startup_btn_close": "Got it!",
 
     // Modals & General Elements
     "engines.python.modal_title": "Python Environment Required",
@@ -848,6 +851,9 @@ export const translations = {
     "about.changelog.stable": "Stabilna",
     "about.changelog.prerelease": "Rozwojowa",
     "about.changelog.no_releases": "Brak wersji spełniających kryteria filtrowania.",
+    "about.changelog.startup_title": "Co nowego w VoiceType",
+    "about.changelog.startup_subtitle": "Zaktualizowano aplikację do wersji {version}. Oto lista zmian:",
+    "about.changelog.startup_btn_close": "Rozumiem!",
 
     // Modals & General Elements
     "engines.python.modal_title": "Wymagana instalacja środowiska Python",

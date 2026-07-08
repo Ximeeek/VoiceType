@@ -1265,6 +1265,30 @@
         </div>
     </div>
 
+    <!-- Startup Changelog Modal -->
+    <div class="modal-backdrop" id="startup-changelog-modal" style="display: none; z-index: 100000;">
+        <div class="modal-card" style="max-width: 600px; width: 90%; border: 1px solid var(--border-subtle); background: var(--bg-elevated); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5Z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/></svg>
+                    <div class="modal-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 800; color: var(--text-primary);" data-i18n="about.changelog.startup_title">Co nowego w VoiceType</div>
+                </div>
+                <button id="btn-startup-changelog-close-x" style="background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 0 4px; line-height: 1;" data-i18n="btn.close" data-i18n-attr="title" title="Zamknij">×</button>
+            </div>
+            <div id="startup-changelog-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px; font-weight: 500;">
+                Zaktualizowano aplikację do wersji v0.1.5-beta.0. Oto lista zmian:
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; max-height: 380px; overflow-y: auto; padding-right: 6px; border-radius: 6px; background: rgba(0,0,0,0.15); padding: 12px; border: 1px solid var(--border-subtle);">
+                <div id="startup-changelog-content" style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                    <!-- Changelog body parsed markdown will go here -->
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+                <button class="btn-primary" id="btn-startup-changelog-close" style="padding: 10px 24px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; border-radius: 8px; cursor: pointer;" data-i18n="about.changelog.startup_btn_close">Rozumiem!</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Onboarding Setup Wizard Modal -->
     <div class="onboarding-backdrop" id="onboarding-modal" style="display: none;">
         <div class="onboarding-card">

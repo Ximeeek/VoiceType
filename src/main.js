@@ -4808,6 +4808,8 @@ const OnboardingController = {
       modal.style.opacity = '0';
       setTimeout(() => {
         modal.remove();
+        // Show changelog immediately after onboarding finishes
+        checkAndShowChangelogOnStartup();
       }, 400);
     }
   },
@@ -4900,6 +4902,9 @@ async function init() {
 
       // Run onboarding if needed
       await OnboardingController.init();
+
+      // Check and show changelog modal if updated
+      await checkAndShowChangelogOnStartup();
 
       // 2. Render UI lists
       renderTriggerWords(config.trigger.words);
@@ -6237,7 +6242,7 @@ function renderReleaseDetails(release) {
     </div>
     <hr style="border: 0; border-top: 1px solid var(--border-subtle); margin: 6px 0;">
     <div style="flex: 1; font-size: 12px; color: var(--text-secondary); line-height: 1.6; padding-right: 4px;">
-      ${parseMarkdown(release.body)}
+      ${parseChangelogToStructuredHtml(release.body)}
     </div>
   `;
 }
@@ -6254,3 +6259,249 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+async function checkAndShowChangelogOnStartup() {
+  if (!window.__TAURI__) return;
+
+  // If onboarding is active/running, don't show the changelog modal
+  const onboardingModal = document.getElementById('onboarding-modal');
+  if (onboardingModal && onboardingModal.style.display !== 'none') {
+    console.log('[Changelog Startup] Onboarding is active, skipping changelog check.');
+    return;
+  }
+
+  try {
+    const showChangelog = await window.__TAURI__.core.invoke('check_show_changelog');
+    if (!showChangelog) return;
+
+    console.log('[Changelog Startup] Showing startup changelog modal...');
+
+    // Load releases if not cached yet
+    if (!cachedReleases) {
+      try {
+        console.log('[Changelog Startup] Fetching releases from GitHub API...');
+        const response = await fetch('https://api.github.com/repos/Ximeeek/VoiceType/releases');
+        if (response.ok) {
+          cachedReleases = await response.json();
+          console.log(`[Changelog Startup] Loaded ${cachedReleases.length} releases successfully.`);
+        }
+      } catch (err) {
+        console.error('[Changelog Startup] Failed to fetch releases from GitHub:', err);
+      }
+    }
+
+    const currentVer = (cachedVersionInfo?.version || '').replace(/^v/, '');
+    let release = null;
+    if (cachedReleases && cachedReleases.length > 0) {
+      release = cachedReleases.find(r => r.tag_name.replace(/^v/, '') === currentVer);
+      if (!release && (cachedVersionInfo?.is_dev || currentVer === 'DEV')) {
+        // Fallback to the latest release for testing/dev purposes
+        release = cachedReleases[0];
+      }
+    }
+
+    if (release) {
+      showStartupChangelogModal(release);
+    } else {
+      console.warn('[Changelog Startup] No release found matching version:', currentVer);
+    }
+  } catch (err) {
+    console.error('[Changelog Startup] Error checking/showing changelog on startup:', err);
+  }
+}
+
+function showStartupChangelogModal(release) {
+  const modal = document.getElementById('startup-changelog-modal');
+  const subtitleEl = document.getElementById('startup-changelog-subtitle');
+  const contentEl = document.getElementById('startup-changelog-content');
+  const closeBtnX = document.getElementById('btn-startup-changelog-close-x');
+  const closeBtn = document.getElementById('btn-startup-changelog-close');
+
+  if (!modal || !contentEl) return;
+
+  // Set subtitle with translated version string
+  const versionStr = release.tag_name;
+  if (subtitleEl) {
+    subtitleEl.textContent = t('about.changelog.startup_subtitle', { version: versionStr });
+  }
+
+  // Parse and display release body
+  contentEl.innerHTML = parseChangelogToStructuredHtml(release.body);
+
+  // Show modal
+  modal.style.display = 'flex';
+
+  // Helper to close and save
+  const closeModalAndSave = async () => {
+    modal.style.display = 'none';
+    
+    // Save version in config so it won't show again
+    if (activeConfig && activeConfig.general) {
+      activeConfig.general.last_seen_version = cachedVersionInfo?.version || '';
+      pendingConfig = JSON.parse(JSON.stringify(activeConfig));
+      try {
+        if (window.__TAURI__) {
+          await window.__TAURI__.core.invoke('save_config', { config: activeConfig });
+          console.log('[Changelog Startup] Saved last_seen_version to config:', activeConfig.general.last_seen_version);
+        }
+      } catch (err) {
+        console.error('[Changelog Startup] Failed to save config after changelog view:', err);
+      }
+    }
+  };
+
+  closeBtnX.onclick = closeModalAndSave;
+  closeBtn.onclick = closeModalAndSave;
+}
+
+function parseChangelogToStructuredHtml(body) {
+  if (!body) return '';
+
+  // Clean lines
+  const lines = body.split('\n').map(line => line.trim());
+
+  let html = '';
+  let currentCategory = null;
+  let currentItems = [];
+  let introLines = [];
+  let footerLines = [];
+  
+  let inKeyChanges = false;
+  let finishedCategories = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line === '') continue;
+
+    // Check for "## Key Changes" or similar headings to start parsing categories
+    if (line.startsWith('## ') || line.startsWith('# ')) {
+      if (line.toLowerCase().includes('changes') || line.toLowerCase().includes('zmian')) {
+        inKeyChanges = true;
+        continue;
+      }
+    }
+
+    // Check for footer / licensing
+    if (line.startsWith('**Licensing**') || line.toLowerCase().includes('license') || line.toLowerCase().includes('licencja')) {
+      finishedCategories = true;
+    }
+
+    if (finishedCategories) {
+      footerLines.push(line);
+      continue;
+    }
+
+    if (!inKeyChanges) {
+      // Intro lines before categories start
+      introLines.push(line);
+      continue;
+    }
+
+    // Check if line is a category header
+    const isHeading = line.startsWith('###');
+    const isBoldHeader = line.startsWith('**') && line.endsWith('**');
+
+    if (isHeading || isBoldHeader) {
+      // Save previous category if any
+      if (currentCategory && currentItems.length > 0) {
+        html += renderCategoryCard(currentCategory, currentItems);
+      }
+      // Set new category
+      currentCategory = line.replace(/^###\s+/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
+      currentItems = [];
+    } else if (line.startsWith('-') || line.startsWith('*')) {
+      // It's a list item
+      currentItems.push(line);
+    } else {
+      // If we don't have list item but we are under categories, it could be an inline text or part of a category
+      if (currentCategory) {
+        currentItems.push(line);
+      } else {
+        introLines.push(line);
+      }
+    }
+  }
+
+  // Render the last category
+  if (currentCategory && currentItems.length > 0) {
+    html += renderCategoryCard(currentCategory, currentItems);
+  }
+
+  // Render intro block
+  let introHtml = '';
+  if (introLines.length > 0) {
+    const processedIntro = parseMarkdownFormatting(introLines.join('<br>'));
+    introHtml = `
+      <div style="font-size: 12.5px; line-height: 1.55; color: var(--text-secondary); margin-bottom: 14px; padding: 10px 12px; background: rgba(57, 255, 80, 0.04); border-left: 3px solid var(--accent-green); border-radius: 6px;">
+        ${processedIntro}
+      </div>
+    `;
+  }
+
+  // Render footer block
+  let footerHtml = '';
+  if (footerLines.length > 0) {
+    const cleanedFooterLines = footerLines.map(line => line.replace(/^[-\*\u2022]\s+/, '').trim());
+    const processedFooter = parseMarkdownFormatting(cleanedFooterLines.join('<br>'));
+    footerHtml = `
+      <div style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 16px; border-top: 1px solid var(--border-subtle); padding-top: 10px; line-height: 1.4;">
+        ${processedFooter}
+      </div>
+    `;
+  }
+
+  return introHtml + html + footerHtml;
+}
+
+function renderCategoryCard(categoryName, items) {
+  let listItemsHtml = '';
+  items.forEach(item => {
+    let cleanItem = item.replace(/^[-\*\u2022]\s+/, '').trim();
+    
+    let title = '';
+    let desc = cleanItem;
+    
+    // Match bold text at the beginning
+    const boldMatch = cleanItem.match(/^\*\*(.*?)\*\*[:\s]*/);
+    if (boldMatch) {
+      title = boldMatch[1];
+      desc = cleanItem.substring(boldMatch[0].length);
+    }
+    
+    desc = parseMarkdownFormatting(desc);
+
+    listItemsHtml += `
+      <li style="font-size: 12px; line-height: 1.5; color: var(--text-secondary); display: flex; align-items: flex-start; gap: 8px;">
+        <span style="color: var(--accent-green); margin-top: 2px; font-size: 10px;">✦</span>
+        <div style="flex: 1;">
+          ${title ? `<strong style="color: var(--text-primary); font-weight: 700;">${title}:</strong> ` : ''}${desc}
+        </div>
+      </li>
+    `;
+  });
+
+  return `
+    <div style="background: rgba(255, 255, 255, 0.015); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s ease;">
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); padding-bottom: 6px;">
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green);"></span>
+        ${categoryName}
+      </div>
+      <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px;">
+        ${listItemsHtml}
+      </ul>
+    </div>
+  `;
+}
+
+function parseMarkdownFormatting(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/&lt;br&gt;/g, '<br>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color: var(--text-primary); font-weight: 600;">$1</strong>')
+    .replace(/`(.*?)`/g, '<code style="background: rgba(255, 255, 255, 0.08); color: var(--accent-green); padding: 1px 4px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid var(--border-subtle);">$1</code>')
+    .replace(/\[(.*?)\]\((.*?)\)/g, (match, linkText, url) => {
+      return `<a href="#" onclick="window.openChangelogUrl('${url}'); return false;" style="color: var(--accent-green); text-decoration: none; border-bottom: 1px dashed var(--accent-green);" onmouseover="this.style.borderBottomStyle='solid'" onmouseout="this.style.borderBottomStyle='dashed'">${linkText}</a>`;
+    });
+}
