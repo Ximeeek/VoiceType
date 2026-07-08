@@ -34,22 +34,85 @@ impl LiveTypingState {
         Ok(())
     }
 
-    pub async fn finalize(&mut self, final_text: &str, focus: &FocusResult, delay_ms: u64) -> anyhow::Result<()> {
+    pub async fn finalize(&mut self, final_text: &str, focus: &FocusResult, delay_ms: u64, instant_paste: bool) -> anyhow::Result<()> {
         let final_with_space = format!("{} ", final_text);
         #[cfg(windows)]
         {
-            let (backspace_count, suffix) = compute_diff(&self.injected_partial, &final_with_space);
+            if instant_paste {
+                // Save current clipboard content if possible
+                let prev_clipboard = match arboard::Clipboard::new() {
+                    Ok(mut cb) => cb.get_text().ok(),
+                    Err(_) => None,
+                };
+                
+                // Put final_with_space onto the clipboard
+                if let Ok(mut cb) = arboard::Clipboard::new() {
+                    let _ = cb.set_text(final_with_space.clone());
+                }
+                
+                // Simulate Ctrl + V
+                let _ = simulate_paste().await;
+                
+                // Restore clipboard content
+                if let Some(prev) = prev_clipboard {
+                    // Wait a tiny bit before restoring so the target app has time to read the paste
+                    tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
+                    if let Ok(mut cb) = arboard::Clipboard::new() {
+                        let _ = cb.set_text(prev);
+                    }
+                }
+            } else {
+                let (backspace_count, suffix) = compute_diff(&self.injected_partial, &final_with_space);
 
-            if backspace_count > 0 {
-                send_backspaces(backspace_count, focus).await?;
-            }
-            if !suffix.is_empty() {
-                inject_text_raw(&suffix, focus, delay_ms).await?;
+                if backspace_count > 0 {
+                    send_backspaces(backspace_count, focus).await?;
+                }
+                if !suffix.is_empty() {
+                    inject_text_raw(&suffix, focus, delay_ms).await?;
+                }
             }
         }
         self.injected_partial = String::new();
         Ok(())
     }
+}
+
+#[cfg(windows)]
+async fn simulate_paste() -> anyhow::Result<()> {
+    use windows::Win32::UI::Input::KeyboardAndMouse::*;
+    
+    let mut ctrl_down = INPUT::default();
+    ctrl_down.r#type = INPUT_KEYBOARD;
+    ctrl_down.Anonymous.ki.wVk = VK_CONTROL;
+    ctrl_down.Anonymous.ki.dwFlags = KEYBD_EVENT_FLAGS(0);
+    
+    let mut v_down = INPUT::default();
+    v_down.r#type = INPUT_KEYBOARD;
+    v_down.Anonymous.ki.wVk = VIRTUAL_KEY(0x56);
+    v_down.Anonymous.ki.dwFlags = KEYBD_EVENT_FLAGS(0);
+    
+    unsafe {
+        SendInput(&[ctrl_down, v_down], std::mem::size_of::<INPUT>() as i32);
+    }
+    
+    tokio::time::sleep(tokio::time::Duration::from_millis(15)).await;
+    
+    let mut v_up = INPUT::default();
+    v_up.r#type = INPUT_KEYBOARD;
+    v_up.Anonymous.ki.wVk = VIRTUAL_KEY(0x56);
+    v_up.Anonymous.ki.dwFlags = KEYEVENTF_KEYUP;
+    
+    let mut ctrl_up = INPUT::default();
+    ctrl_up.r#type = INPUT_KEYBOARD;
+    ctrl_up.Anonymous.ki.wVk = VK_CONTROL;
+    ctrl_up.Anonymous.ki.dwFlags = KEYEVENTF_KEYUP;
+    
+    unsafe {
+        SendInput(&[v_up, ctrl_up], std::mem::size_of::<INPUT>() as i32);
+    }
+    
+    tokio::time::sleep(tokio::time::Duration::from_millis(15)).await;
+    Ok(())
 }
 
 async fn inject_text_raw(text: &str, _focus: &FocusResult, delay_ms: u64) -> anyhow::Result<()> {

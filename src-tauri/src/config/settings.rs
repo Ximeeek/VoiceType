@@ -14,6 +14,9 @@ pub struct Config {
 
 impl Config {
     pub fn is_live_typing_enabled(&self) -> bool {
+        if self.input.instant_paste {
+            return false;
+        }
         if let Some(enabled) = self.dictation.engine_live_typing.get(&self.engine.engine_type) {
             *enabled
         } else {
@@ -352,6 +355,7 @@ pub struct InputConfig {
     pub clipboard_toast: bool,
     pub auto_enter: bool,
     pub key_delay_ms: u64,
+    pub instant_paste: bool,
 }
 
 impl Default for InputConfig {
@@ -362,6 +366,7 @@ impl Default for InputConfig {
             clipboard_toast: true,
             auto_enter: false,
             key_delay_ms: 0,
+            instant_paste: false,
         }
     }
 }

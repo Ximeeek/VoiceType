@@ -1217,6 +1217,10 @@ function loadConfigGeneralUI(config) {
   if (autoEnterCheck) {
     autoEnterCheck.checked = config.input ? !!config.input.auto_enter : false;
   }
+  const instantPasteCheck = document.getElementById('settings-instant-paste');
+  if (instantPasteCheck) {
+    instantPasteCheck.checked = config.input ? !!config.input.instant_paste : false;
+  }
   document.getElementById('settings-start-delay').value = config.dictation.start_delay_ms;
   document.getElementById('start-delay-val').textContent = `${config.dictation.start_delay_ms} ms`;
   
@@ -1371,6 +1375,19 @@ function loadConfigGeneralUI(config) {
       }
       if (pendingConfig && pendingConfig.input) {
         pendingConfig.input.auto_enter = e.target.checked;
+      }
+      saveConfigState();
+    };
+  }
+
+  const instantPasteCheckEl = document.getElementById('settings-instant-paste');
+  if (instantPasteCheckEl) {
+    instantPasteCheckEl.onchange = (e) => {
+      if (activeConfig && activeConfig.input) {
+        activeConfig.input.instant_paste = e.target.checked;
+      }
+      if (pendingConfig && pendingConfig.input) {
+        pendingConfig.input.instant_paste = e.target.checked;
       }
       saveConfigState();
     };

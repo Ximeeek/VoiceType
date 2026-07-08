@@ -440,7 +440,7 @@ pub async fn run_control_loop(
                         }
                         focus = detect_focused_text_field();
                         if !matches!(focus, FocusResult::NoTextField) {
-                            let _ = live_typing.finalize(&final_text, &focus, config.input.key_delay_ms).await;
+                            let _ = live_typing.finalize(&final_text, &focus, config.input.key_delay_ms, config.input.instant_paste).await;
                             let latest_cfg = state.config.lock().await;
                             if latest_cfg.input.auto_enter {
                                 println!("[AUTO_ENTER] Sending Enter key after silence timeout flush.");
@@ -504,7 +504,7 @@ pub async fn run_control_loop(
                                 
                                 focus = detect_focused_text_field();
                                 if !matches!(focus, FocusResult::NoTextField) {
-                                    let _ = live_typing.finalize(&final_text, &focus, config.input.key_delay_ms).await;
+                                    let _ = live_typing.finalize(&final_text, &focus, config.input.key_delay_ms, config.input.instant_paste).await;
                                 } else if !final_text.trim().is_empty() {
                                     println!("[CLIPBOARD] No text field focused - Copied text to clipboard: {}", final_text);
                                     let _ = copy_to_clipboard(&final_text);
