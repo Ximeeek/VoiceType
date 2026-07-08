@@ -142,7 +142,9 @@ fn main() {
                     .build()
             )?;
 
-            app.global_shortcut().register("Ctrl+Shift+V")?;
+            if let Err(e) = app.global_shortcut().register("Ctrl+Shift+V") {
+                eprintln!("[MAIN ERROR] Failed to register global shortcut Ctrl+Shift+V: {}. It may be already in use by another instance of VoiceType or another application.", e);
+            }
 
             let args: Vec<String> = std::env::args().collect();
             if args.iter().any(|arg| arg == "--minimized") {
