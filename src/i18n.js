@@ -43,6 +43,7 @@ export const translations = {
     "dash.stat.words_simple": "Words",
     "dash.recent_history": "Recent Transcripts",
     "dash.view_all": "View All",
+    "dash.full_stats": "Full Stats",
     "dash.no_history": "No history yet",
     "dash.overlay.downloading_model": "Dictation is unavailable until the model is downloaded.",
     "dash.overlay.missing_model": "Selected speech engine is unavailable. You need to download the speech model file first.",
@@ -129,6 +130,7 @@ export const translations = {
     // Statistics Page
     "nav.stats": "Statistics",
     "stats.title": "Statistics",
+    "stats.general_summary": "Overall Statistics",
     "stats.no_data": "Not enough dictation history to generate statistics.",
     "stats.tab.activity": "Speech Activity",
     "stats.card.total_dictations": "Total Dictations",
@@ -145,6 +147,15 @@ export const translations = {
     "stats.day.mon": "Mon",
     "stats.day.wed": "Wed",
     "stats.day.fri": "Fri",
+    "stats.day_stats_title": "Statistics for {date}",
+    "stats.day_dictations_list": "Dictations on this day",
+    "stats.day_no_dictations": "No dictations on this day.",
+    "stats.hourly.total_dictations": "Total dictations",
+    "stats.hourly.total_words": "Total words",
+    "stats.hourly.avg_words": "Avg. words/dictation",
+    "stats.hourly.activity_share": "Activity share",
+    "stats.words.show_more": "... Show more",
+    "stats.words.show_less": "Show less",
 
     // Settings Navigation Tabs
     "settings.tab.general": "General",
@@ -648,6 +659,7 @@ export const translations = {
     "dash.stat.words_simple": "Słowa",
     "dash.recent_history": "Ostatnie transkrypcje",
     "dash.view_all": "Zobacz wszystkie",
+    "dash.full_stats": "Pełne statystyki",
     "dash.no_history": "Brak historii",
     "dash.overlay.downloading_model": "Nie można używać dyktowania, dopóki model się nie pobierze.",
     "dash.overlay.missing_model": "Wybrany silnik mowy jest niedostępny. Musisz pobrać plik mowy silnikowej (model), aby dyktować.",
@@ -734,6 +746,7 @@ export const translations = {
     // Statistics Page
     "nav.stats": "Statystyki",
     "stats.title": "Statystyki",
+    "stats.general_summary": "Wszystkie statystyki",
     "stats.no_data": "Brak historii dyktowania do wygenerowania statystyk.",
     "stats.tab.activity": "Aktywność mowy",
     "stats.card.total_dictations": "Liczba dyktowań",
@@ -750,6 +763,15 @@ export const translations = {
     "stats.day.mon": "Pon",
     "stats.day.wed": "Śr",
     "stats.day.fri": "Pią",
+    "stats.day_stats_title": "Statystyki z dnia {date}",
+    "stats.day_dictations_list": "Lista dyktowań z tego dnia",
+    "stats.day_no_dictations": "Brak dyktowań w tym dniu.",
+    "stats.hourly.total_dictations": "Suma dyktowań",
+    "stats.hourly.total_words": "Suma słów",
+    "stats.hourly.avg_words": "Śr. słów/wypowiedź",
+    "stats.hourly.activity_share": "Udział w aktywności",
+    "stats.words.show_more": "... Pokaż więcej",
+    "stats.words.show_less": "Pokaż mniej",
 
     // Settings Navigation Tabs
     "settings.tab.general": "Ogólne",

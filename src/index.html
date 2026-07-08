@@ -263,7 +263,10 @@
 
                         <!-- Session Statistics Card -->
                         <div class="card">
-                            <div class="card-title" data-i18n="dash.session_stats">Session Statistics</div>
+                            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <span data-i18n="dash.session_stats">Session Statistics</span>
+                                <button class="btn-text-accent" id="dashboard-view-stats-btn" style="font-size: 12px; background: none; border: none; cursor: pointer; color: var(--accent-green);" data-i18n="dash.full_stats">Go to full stats</button>
+                            </div>
                             <div class="stats-grid">
                                 <div class="stat-item">
                                     <div class="stat-val" id="stat-dictations">0</div>
@@ -877,42 +880,23 @@
                     </div>
                     
                     <div id="stats-dashboard" style="display: flex; flex-direction: column; gap: 24px;">
-                        <!-- KPI Cards Grid -->
-                        <div class="stats-cards-grid">
-                            <div class="stats-card">
-                                <span class="stats-card-title" data-i18n="stats.card.total_dictations">Liczba dyktowań</span>
-                                <span class="stats-card-value" id="stats-val-dictations">-</span>
-                            </div>
-                            <div class="stats-card">
-                                <span class="stats-card-title" data-i18n="stats.card.total_words">Liczba słów</span>
-                                <span class="stats-card-value" id="stats-val-words">-</span>
-                            </div>
-                            <div class="stats-card">
-                                <span class="stats-card-title" data-i18n="stats.card.total_sessions">Liczba sesji</span>
-                                <span class="stats-card-value" id="stats-val-sessions">-</span>
-                            </div>
-                            <div class="stats-card">
-                                <span class="stats-card-title" data-i18n="stats.card.avg_length">Śr. słów na wypowiedź</span>
-                                <span class="stats-card-value" id="stats-val-avg-length">-</span>
-                            </div>
-                            <div class="stats-card">
-                                <span class="stats-card-title" data-i18n="stats.card.time_saved">Zaoszczędzony czas</span>
-                                <span class="stats-card-value" id="stats-val-time-saved">-</span>
-                            </div>
-                        </div>
-
-                        <!-- Heatmap Card -->
+                        <!-- Heatmap Card (Now at the top and redesigned) -->
                         <div class="stats-section-card">
                             <h3 class="stats-section-title" data-i18n="stats.tab.activity">Aktywność mowy</h3>
                             <div class="heatmap-wrapper">
-                                <div class="heatmap-months" id="heatmap-months-labels"></div>
-                                <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;">
-                                    <div class="heatmap-days" id="heatmap-days-labels">
-                                        <span data-i18n="stats.day.mon">Mon</span>
-                                        <span data-i18n="stats.day.wed">Wed</span>
-                                        <span data-i18n="stats.day.fri">Fri</span>
+                                <div class="heatmap-container">
+                                    <div class="heatmap-days-col">
+                                        <div class="heatmap-days-empty-spacer"></div>
+                                        <div class="heatmap-days-labels" id="heatmap-days-labels">
+                                            <span data-i18n="stats.day.mon">Mon</span>
+                                            <span data-i18n="stats.day.wed">Wed</span>
+                                            <span data-i18n="stats.day.fri">Fri</span>
+                                        </div>
                                     </div>
-                                    <div class="heatmap-grid" id="stats-heatmap-grid"></div>
+                                    <div class="heatmap-scrollable-area">
+                                        <div class="heatmap-months" id="heatmap-months-labels"></div>
+                                        <div class="heatmap-grid" id="stats-heatmap-grid"></div>
+                                    </div>
                                 </div>
                                 <div class="heatmap-legend">
                                     <span style="font-size: 11px; color: var(--text-muted);">Less</span>
@@ -926,15 +910,43 @@
                             </div>
                         </div>
 
+                        <!-- KPI Cards Grid (Moved below Heatmap) -->
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <h3 class="stats-section-title" data-i18n="stats.general_summary">Wszystkie statystyki</h3>
+                            <div class="stats-cards-grid">
+                                <div class="stats-card">
+                                    <span class="stats-card-title" data-i18n="stats.card.total_dictations">Liczba dyktowań</span>
+                                    <span class="stats-card-value" id="stats-val-dictations">-</span>
+                                </div>
+                                <div class="stats-card">
+                                    <span class="stats-card-title" data-i18n="stats.card.total_words">Liczba słów</span>
+                                    <span class="stats-card-value" id="stats-val-words">-</span>
+                                </div>
+                                <div class="stats-card">
+                                    <span class="stats-card-title" data-i18n="stats.card.total_sessions">Liczba sesji</span>
+                                    <span class="stats-card-value" id="stats-val-sessions">-</span>
+                                </div>
+                                <div class="stats-card">
+                                    <span class="stats-card-title" data-i18n="stats.card.avg_length">Śr. słów na wypowiedź</span>
+                                    <span class="stats-card-value" id="stats-val-avg-length">-</span>
+                                </div>
+                                <div class="stats-card">
+                                    <span class="stats-card-title" data-i18n="stats.card.time_saved">Zaoszczędzony czas</span>
+                                    <span class="stats-card-value" id="stats-val-time-saved">-</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Charts Row -->
                         <div class="stats-charts-row">
                             <div class="stats-section-card" style="flex: 1; min-width: 300px;">
                                 <h3 class="stats-section-title" data-i18n="stats.chart.daily_words">Słowa dyktowane dziennie (Ostatnie 7 dni)</h3>
                                 <div id="chart-daily-words" class="svg-chart-container"></div>
                             </div>
-                            <div class="stats-section-card" style="flex: 1; min-width: 300px;">
+                            <div class="stats-section-card" style="flex: 1; min-width: 300px; position: relative;">
                                 <h3 class="stats-section-title" data-i18n="stats.chart.hourly_activity">Aktywność według godzin</h3>
-                                <div id="chart-hourly-activity" class="svg-chart-container"></div>
+                                <div id="chart-hourly-activity" class="svg-chart-container" style="position: relative;"></div>
+                                <div id="hourly-chart-tooltip" class="chart-custom-tooltip" style="display: none; position: absolute; pointer-events: none; z-index: 1000; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 8px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-size: 11px; line-height: 1.4; color: var(--text-primary); min-width: 140px;"></div>
                             </div>
                         </div>
 
@@ -1265,6 +1277,49 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Day Stats Modal -->
+    <div class="modal-backdrop" id="day-stats-modal" style="display: none; z-index: 100000;">
+        <div class="modal-card" style="max-width: 500px; width: 90%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-bottom: 16px;">
+                <div class="modal-title" id="day-stats-modal-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 800; color: var(--text-primary);" data-i18n="stats.day_stats_title">Statystyki dnia</div>
+                <button id="btn-day-stats-modal-close-x" style="background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 0 4px; line-height: 1;">×</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- KPI values for the day -->
+                <div class="stats-cards-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <div class="stats-card" style="padding: 10px 12px;">
+                        <span class="stats-card-title" style="font-size: 10px;" data-i18n="stats.card.total_dictations">Liczba dyktowań</span>
+                        <span class="stats-card-value" id="day-stats-val-dictations" style="font-size: 18px;">-</span>
+                    </div>
+                    <div class="stats-card" style="padding: 10px 12px;">
+                        <span class="stats-card-title" style="font-size: 10px;" data-i18n="stats.card.total_words">Liczba słów</span>
+                        <span class="stats-card-value" id="day-stats-val-words" style="font-size: 18px;">-</span>
+                    </div>
+                    <div class="stats-card" style="padding: 10px 12px;">
+                        <span class="stats-card-title" style="font-size: 10px;" data-i18n="stats.card.total_sessions">Liczba sesji</span>
+                        <span class="stats-card-value" id="day-stats-val-sessions" style="font-size: 18px;">-</span>
+                    </div>
+                    <div class="stats-card" style="padding: 10px 12px;">
+                        <span class="stats-card-title" style="font-size: 10px;" data-i18n="stats.card.avg_length">Śr. słów na wypowiedź</span>
+                        <span class="stats-card-value" id="day-stats-val-avg-length" style="font-size: 18px;">-</span>
+                    </div>
+                    <div class="stats-card" style="grid-column: span 2; padding: 10px 12px;">
+                        <span class="stats-card-title" style="font-size: 10px;" data-i18n="stats.card.time_saved">Zaoszczędzony czas</span>
+                        <span class="stats-card-value" id="day-stats-val-time-saved" style="font-size: 18px;">-</span>
+                    </div>
+                </div>
+                <!-- List of dictations for the day -->
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <span style="font-size: 12px; font-weight: 700; color: var(--text-secondary);" data-i18n="stats.day_dictations_list">Lista dyktowań z tego dnia</span>
+                    <div id="day-stats-dictations-list" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border-subtle); padding: 10px; border-radius: var(--radius-sm); background: rgba(0,0,0,0.15);"></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+                <button id="btn-day-stats-modal-close" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;" data-i18n="btn.close">Zamknij</button>
             </div>
         </div>
     </div>
