@@ -9,6 +9,7 @@ use tauri::Emitter;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
+use tokio::io::AsyncWriteExt;
 
 static ABORT_FLAGS: Mutex<Option<HashMap<String, Arc<AtomicBool>>>> = Mutex::new(None);
 
@@ -69,7 +70,11 @@ pub async fn download_model(
         std::fs::create_dir_all(parent)?; 
     }
     
-    let start_byte = if tmp.exists() { std::fs::metadata(&tmp)?.len() } else { 0 };
+    let start_byte = if tokio::fs::try_exists(&tmp).await.unwrap_or(false) {
+        tokio::fs::metadata(&tmp).await?.len()
+    } else {
+        0
+    };
     println!("[DOWNLOAD_RUST] Target path: {:?}, start_byte={}", tmp, start_byte);
     
     let client = Client::new();
@@ -95,11 +100,12 @@ pub async fn download_model(
     };
     println!("[DOWNLOAD_RUST] File size: total_bytes={}, is_partial={}", total, is_partial);
     
-    let mut file = std::fs::OpenOptions::new()
+    let mut file = tokio::fs::OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(!is_partial)
-        .open(&tmp)?;
+        .open(&tmp)
+        .await?;
     
     let mut downloaded = actual_start;
     let mut hasher = Sha256::new();
@@ -113,14 +119,13 @@ pub async fn download_model(
         if abort_flag.load(Ordering::SeqCst) {
             println!("[DOWNLOAD_RUST] Abort flag = true detected. Removing temp file {:?} and aborting.", tmp);
             drop(file);
-            std::fs::remove_file(&tmp).ok();
+            tokio::fs::remove_file(&tmp).await.ok();
             remove_abort_flag(&key);
             return Err(anyhow::anyhow!("Download was cancelled."));
         }
 
         let chunk = chunk?;
-        use std::io::Write;
-        file.write_all(&chunk)?;
+        file.write_all(&chunk).await?;
         hasher.update(&chunk);
         downloaded += chunk.len() as u64;
         let percent = if total > 0 { (downloaded as f64 / total as f64) * 100.0 } else { 0.0 };
@@ -140,6 +145,7 @@ pub async fn download_model(
         }
     }
     
+    file.flush().await?;
     drop(file);
     remove_abort_flag(&key);
     println!("[DOWNLOAD_RUST] File download completed successfully for key: {}", key);
@@ -156,7 +162,7 @@ pub async fn download_model(
         "status_key": if is_archive { "unpacking" } else { "finalizing" }
     })).ok();
 
-    // Move heavy SHA256 verification and archive unpacking (tar) to blocking thread to avoid blocking Tokio runtime
+    // Move heavy SHA256 verification and archive unpacking (tar/zip) to blocking thread to avoid blocking Tokio runtime
     let sha_expected = info.sha256.clone();
     let computed_hash = format!("{:x}", hasher.finalize());
     let tmp_clone = tmp.clone();
@@ -172,21 +178,52 @@ pub async fn download_model(
         
         if is_archive {
             let parent_dir = dest_clone.parent().ok_or_else(|| anyhow::anyhow!("No parent folder"))?;
-            let mut cmd = std::process::Command::new("tar");
-            cmd.arg("-xf")
-                .arg(&tmp_clone)
-                .arg("-C")
-                .arg(parent_dir);
-            crate::platform::suppress_console_in_release(&mut cmd);
-            let status = cmd.status();
-                
-            match status {
-                Ok(s) if s.success() => {
-                    std::fs::remove_file(&tmp_clone).ok();
+            
+            let is_zip = tmp_clone.extension().and_then(|s| s.to_str()).map(|s| s.to_lowercase()) == Some("zip".to_string()) 
+                || info.url.to_lowercase().ends_with(".zip");
+
+            if is_zip {
+                println!("[DOWNLOAD_RUST] Extracting ZIP model archive natively: {:?}", tmp_clone);
+                let zip_file = std::fs::File::open(&tmp_clone)?;
+                let mut archive = zip::ZipArchive::new(zip_file)?;
+                for i in 0..archive.len() {
+                    let mut file = archive.by_index(i)?;
+                    let outpath = match file.enclosed_name() {
+                        Some(path) => parent_dir.join(path),
+                        None => continue,
+                    };
+
+                    if (*file.name()).ends_with('/') {
+                        std::fs::create_dir_all(&outpath)?;
+                    } else {
+                        if let Some(p) = outpath.parent() {
+                            if !p.exists() {
+                                std::fs::create_dir_all(p)?;
+                            }
+                        }
+                        let mut outfile = std::fs::File::create(&outpath)?;
+                        std::io::copy(&mut file, &mut outfile)?;
+                    }
                 }
-                _ => {
-                    std::fs::remove_file(&tmp_clone).ok();
-                    return Err(anyhow::anyhow!("Error unpacking model archive. Temporary file was deleted - try downloading again."));
+                std::fs::remove_file(&tmp_clone).ok();
+            } else {
+                println!("[DOWNLOAD_RUST] Extracting model archive using tar command: {:?}", tmp_clone);
+                let mut cmd = std::process::Command::new("tar");
+                cmd.arg("-xf")
+                    .arg(&tmp_clone)
+                    .arg("-C")
+                    .arg(parent_dir);
+                crate::platform::suppress_console_in_release(&mut cmd);
+                let status = cmd.status();
+                    
+                match status {
+                    Ok(s) if s.success() => {
+                        std::fs::remove_file(&tmp_clone).ok();
+                    }
+                    _ => {
+                        std::fs::remove_file(&tmp_clone).ok();
+                        return Err(anyhow::anyhow!("Error unpacking model archive. Temporary file was deleted - try downloading again."));
+                    }
                 }
             }
         } else {
