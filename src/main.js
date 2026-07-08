@@ -506,6 +506,9 @@ navButtons.forEach(btn => {
         console.log('[Navigation] Navigating to about section. Fetching changelog...');
         loadChangelog();
       }
+      if (targetPageId === 'stats') {
+        renderStatsPage();
+      }
       if (targetPageId === 'downloads') {
         console.log('[Navigation] Navigating to downloads section.');
         if (window.pendingModelHighlight) {
@@ -5758,6 +5761,457 @@ function renderHistoryUI() {
   }
 }
 
+// ==========================================================================
+// Statistics Page Rendering Functions
+// ==========================================================================
+
+function renderStatsPage() {
+  const currentLanguage = getLanguage();
+  let historyList = [];
+  try {
+    historyList = JSON.parse(localStorage.getItem('transcript_history') || '[]');
+  } catch (e) {
+    console.error('Failed to parse transcript history for stats:', e);
+  }
+
+  const noDataEl = document.getElementById('stats-no-data');
+  const dashboardEl = document.getElementById('stats-dashboard');
+
+  if (!noDataEl || !dashboardEl) return;
+
+  if (historyList.length === 0) {
+    noDataEl.style.display = 'block';
+    dashboardEl.style.display = 'none';
+    return;
+  }
+
+  noDataEl.style.display = 'none';
+  dashboardEl.style.display = 'flex';
+
+  // 1. Calculations
+  let totalWords = 0;
+  historyList.forEach(entry => {
+    const text = entry.text || '';
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+    totalWords += words.length;
+  });
+
+  // Calculate sessions (30-minute threshold)
+  const sortedHistory = [...historyList].sort((a, b) => a.timestamp - b.timestamp);
+  let sessionsCount = 0;
+  let lastTimestamp = 0;
+  const SESSION_GAP_MS = 30 * 60 * 1000; // 30 minutes
+
+  sortedHistory.forEach(entry => {
+    if (lastTimestamp === 0 || (entry.timestamp - lastTimestamp) >= SESSION_GAP_MS) {
+      sessionsCount++;
+    }
+    lastTimestamp = entry.timestamp;
+  });
+
+  const totalDictations = historyList.length;
+  const avgWordsPerUtterance = totalDictations > 0 ? Math.round(totalWords / totalDictations) : 0;
+
+  // Time Saved calculation:
+  // typing speed = 40 wpm -> time (mins) = words / 40
+  // speaking speed = 150 wpm -> time (mins) = words / 150
+  // saved time (mins) = words / 40 - words / 150 = words * (11 / 600)
+  const savedTimeSec = totalWords * (11 / 600) * 60; // convert to seconds
+  let timeSavedStr = '-';
+  if (savedTimeSec < 60) {
+    timeSavedStr = `${Math.round(savedTimeSec)}s`;
+  } else if (savedTimeSec < 3600) {
+    const mins = Math.floor(savedTimeSec / 60);
+    const secs = Math.round(savedTimeSec % 60);
+    timeSavedStr = `${mins}m ${secs}s`;
+  } else {
+    const hrs = Math.floor(savedTimeSec / 3600);
+    const mins = Math.floor((savedTimeSec % 3600) / 60);
+    timeSavedStr = `${hrs}h ${mins}m`;
+  }
+
+  // Populate KPIs
+  document.getElementById('stats-val-dictations').textContent = totalDictations;
+  document.getElementById('stats-val-words').textContent = totalWords;
+  document.getElementById('stats-val-sessions').textContent = sessionsCount;
+  document.getElementById('stats-val-avg-length').textContent = avgWordsPerUtterance;
+  document.getElementById('stats-val-time-saved').textContent = timeSavedStr;
+
+  // 2. Render Heatmap (GitHub contribution calendar)
+  renderHeatmap(historyList, currentLanguage);
+
+  // 3. Render SVG charts
+  renderDailyWordsChart(historyList, currentLanguage);
+  renderHourlyActivityChart(historyList, currentLanguage);
+
+  // 4. Word Frequency list
+  renderWordFrequency(historyList, currentLanguage);
+}
+
+function renderHeatmap(historyList, currentLanguage) {
+  const gridContainer = document.getElementById('stats-heatmap-grid');
+  const monthsContainer = document.getElementById('heatmap-months-labels');
+  if (!gridContainer || !monthsContainer) return;
+
+  gridContainer.innerHTML = '';
+  monthsContainer.innerHTML = '';
+
+  const today = new Date();
+  const todayDay = today.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  // Align grid to end on the Sunday of the current week (Europe style, Mon-Sun columns)
+  const daysToSunday = todayDay === 0 ? 0 : 7 - todayDay;
+  const endDate = new Date(today);
+  endDate.setDate(today.getDate() + daysToSunday);
+
+  const startDate = new Date(endDate);
+  startDate.setDate(endDate.getDate() - 370); // 371 days (53 weeks * 7 days)
+
+  // Map of activity by YYYY-MM-DD
+  const dateMap = new Map();
+  historyList.forEach(entry => {
+    const d = new Date(entry.timestamp);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+    dateMap.set(dateStr, (dateMap.get(dateStr) || 0) + 1);
+  });
+
+  // Generate cells
+  let current = new Date(startDate);
+  const cells = [];
+  while (current <= endDate) {
+    const yyyy = current.getFullYear();
+    const mm = String(current.getMonth() + 1).padStart(2, '0');
+    const dd = String(current.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+    const count = dateMap.get(dateStr) || 0;
+    cells.push({
+      date: new Date(current),
+      dateStr,
+      count
+    });
+    current.setDate(current.getDate() + 1);
+  }
+
+  // Populate month labels
+  let lastMonth = -1;
+  for (let w = 0; w < 53; w++) {
+    const weekMonday = new Date(startDate.getTime() + w * 7 * 24 * 60 * 60 * 1000);
+    const month = weekMonday.getMonth();
+    if (month !== lastMonth) {
+      const span = document.createElement('span');
+      span.textContent = weekMonday.toLocaleDateString(currentLanguage, { month: 'short' });
+      span.style.gridColumnStart = w + 1;
+      monthsContainer.appendChild(span);
+      lastMonth = month;
+    }
+  }
+
+  // Append cells to grid
+  cells.forEach(cell => {
+    const div = document.createElement('div');
+    div.className = 'contrib-cell';
+
+    // Levels
+    let lvl = 0;
+    if (cell.count === 1) lvl = 1;
+    else if (cell.count >= 2 && cell.count <= 3) lvl = 2;
+    else if (cell.count >= 4 && cell.count <= 5) lvl = 3;
+    else if (cell.count >= 6) lvl = 4;
+    div.classList.add(`lvl-${lvl}`);
+
+    // Tooltip string
+    const formattedDate = cell.date.toLocaleDateString(currentLanguage, { month: 'short', day: 'numeric', year: 'numeric' });
+    let tooltipText = '';
+    if (cell.count === 0) {
+      tooltipText = currentLanguage === 'pl' ? `Brak aktywności w dniu ${formattedDate}` : `No activity on ${formattedDate}`;
+    } else {
+      let countLabel = '';
+      if (currentLanguage === 'pl') {
+        if (cell.count === 1) countLabel = '1 dyktowanie';
+        else {
+          const mod10 = cell.count % 10;
+          const mod100 = cell.count % 100;
+          let suffix = 'dyktowań';
+          if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+            suffix = 'dyktowania';
+          }
+          countLabel = `${cell.count} ${suffix}`;
+        }
+        tooltipText = `${countLabel} w dniu ${formattedDate}`;
+      } else {
+        countLabel = cell.count === 1 ? '1 dictation' : `${cell.count} dictations`;
+        tooltipText = `${countLabel} on ${formattedDate}`;
+      }
+    }
+    div.setAttribute('data-tooltip', tooltipText);
+    gridContainer.appendChild(div);
+  });
+}
+
+function renderDailyWordsChart(historyList, currentLanguage) {
+  const container = document.getElementById('chart-daily-words');
+  if (!container) return;
+
+  const today = new Date();
+  const dailyWords = [];
+  const dayNames = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(today.getDate() - i);
+    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).getTime();
+    const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).getTime();
+
+    const dayEntries = historyList.filter(e => e.timestamp >= start && e.timestamp <= end);
+    let wordCount = 0;
+    dayEntries.forEach(e => {
+      const text = e.text || '';
+      wordCount += text.trim().split(/\s+/).filter(w => w.length > 0).length;
+    });
+
+    dailyWords.push(wordCount);
+    dayNames.push(d.toLocaleDateString(currentLanguage, { weekday: 'short' }));
+  }
+
+  const maxVal = Math.max(...dailyWords, 50); // min scale of 50 words
+  const svgWidth = 400;
+  const svgHeight = 200;
+  const topMargin = 20;
+  const bottomMargin = 30;
+  const leftMargin = 40;
+  const rightMargin = 15;
+
+  const chartWidth = svgWidth - leftMargin - rightMargin;
+  const chartHeight = svgHeight - topMargin - bottomMargin;
+
+  const numDays = dailyWords.length;
+  const barWidth = 24;
+  const gap = (chartWidth - (numDays * barWidth)) / (numDays - 1);
+
+  // Generate grid lines
+  let gridHTML = '';
+  [0, 0.5, 1].forEach(ratio => {
+    const y = topMargin + chartHeight * (1 - ratio);
+    const val = Math.round(ratio * maxVal);
+    gridHTML += `
+      <line x1="${leftMargin}" y1="${y}" x2="${svgWidth - rightMargin}" y2="${y}" stroke="var(--border-subtle)" stroke-width="1" stroke-dasharray="3,3" />
+      <text x="${leftMargin - 8}" y="${y + 4}" fill="var(--text-muted)" font-size="9" text-anchor="end">${val}</text>
+    `;
+  });
+
+  let barsHTML = '';
+  for (let i = 0; i < numDays; i++) {
+    const x = leftMargin + i * (barWidth + gap);
+    const val = dailyWords[i];
+    const barHeight = (val / maxVal) * chartHeight;
+    const y = topMargin + chartHeight - barHeight;
+
+    let path = '';
+    if (barHeight > 0) {
+      const r = Math.min(6, barHeight);
+      path = `
+        <path d="
+          M ${x},${y + barHeight} 
+          L ${x},${y + r} 
+          A ${r},${r} 0 0,1 ${x + r},${y} 
+          L ${x + barWidth - r},${y} 
+          A ${r},${r} 0 0,1 ${x + barWidth},${y + r} 
+          L ${x + barWidth},${y + barHeight} 
+          Z" 
+          fill="url(#statsBarGrad)"
+          class="chart-bar"
+        >
+          <title>${getWordLabel(val, currentLanguage)}</title>
+        </path>
+      `;
+    }
+
+    const valLabel = val > 0 ? `<text x="${x + barWidth/2}" y="${y - 4}" fill="var(--text-secondary)" font-size="9" text-anchor="middle">${val}</text>` : '';
+    const dayLabel = `<text x="${x + barWidth/2}" y="${topMargin + chartHeight + 18}" fill="var(--text-muted)" font-size="10" text-anchor="middle">${dayNames[i]}</text>`;
+
+    barsHTML += path + valLabel + dayLabel;
+  }
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${svgWidth} ${svgHeight}" style="width: 100%; height: 100%; overflow: visible;">
+      <defs>
+        <linearGradient id="statsBarGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent-green)" stop-opacity="0.8" />
+          <stop offset="100%" stop-color="var(--accent-green)" stop-opacity="0.1" />
+        </linearGradient>
+      </defs>
+      ${gridHTML}
+      ${barsHTML}
+    </svg>
+  `;
+}
+
+function getWordLabel(val, lang) {
+  if (lang !== 'pl') {
+    return `${val} ${val === 1 ? 'word' : 'words'}`;
+  }
+  if (val === 1) return '1 słowo';
+  const mod10 = val % 10;
+  const mod100 = val % 100;
+  let suffix = 'słów';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+    suffix = 'słowa';
+  }
+  return `${val} ${suffix}`;
+}
+
+function renderHourlyActivityChart(historyList, currentLanguage) {
+  const container = document.getElementById('chart-hourly-activity');
+  if (!container) return;
+
+  const hourlyActivity = Array(24).fill(0);
+  historyList.forEach(e => {
+    const d = new Date(e.timestamp);
+    hourlyActivity[d.getHours()]++;
+  });
+
+  const maxVal = Math.max(...hourlyActivity, 5); // min scale of 5
+  const svgWidth = 400;
+  const svgHeight = 200;
+  const topMargin = 20;
+  const bottomMargin = 30;
+  const leftMargin = 30;
+  const rightMargin = 15;
+
+  const chartWidth = svgWidth - leftMargin - rightMargin;
+  const chartHeight = svgHeight - topMargin - bottomMargin;
+
+  let points = [];
+  for (let h = 0; h < 24; h++) {
+    const x = leftMargin + (h / 23) * chartWidth;
+    const y = topMargin + chartHeight - (hourlyActivity[h] / maxVal) * chartHeight;
+    points.push({ x, y, val: hourlyActivity[h], hour: h });
+  }
+
+  const lineD = 'M ' + points.map(p => `${p.x},${p.y}`).join(' L ');
+  const fillD = lineD + ` L ${points[23].x},${topMargin + chartHeight} L ${points[0].x},${topMargin + chartHeight} Z`;
+
+  let dotsHTML = '';
+  points.forEach(p => {
+    if (p.val > 0) {
+      const tooltip = currentLanguage === 'pl' 
+        ? `${p.hour}:00 - ${getPolishPluralDictations(p.val)}` 
+        : `${p.hour}:00 - ${p.val} ${p.val === 1 ? 'dictation' : 'dictations'}`;
+      dotsHTML += `
+        <circle cx="${p.x}" cy="${p.y}" r="3.5" fill="var(--accent-green)" class="chart-dot">
+          <title>${tooltip}</title>
+        </circle>
+      `;
+    }
+  });
+
+  let gridHTML = '';
+  [0, 0.5, 1].forEach(ratio => {
+    const y = topMargin + chartHeight * (1 - ratio);
+    const val = Math.round(ratio * maxVal);
+    gridHTML += `
+      <line x1="${leftMargin}" y1="${y}" x2="${svgWidth - rightMargin}" y2="${y}" stroke="var(--border-subtle)" stroke-width="1" stroke-dasharray="3,3" />
+      <text x="${leftMargin - 8}" y="${y + 4}" fill="var(--text-muted)" font-size="9" text-anchor="end">${val}</text>
+    `;
+  });
+
+  let xLabelsHTML = '';
+  const keyHours = [0, 6, 12, 18, 23];
+  keyHours.forEach(h => {
+    const x = leftMargin + (h / 23) * chartWidth;
+    xLabelsHTML += `
+      <text x="${x}" y="${topMargin + chartHeight + 18}" fill="var(--text-muted)" font-size="9" text-anchor="middle">${h}:00</text>
+    `;
+  });
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${svgWidth} ${svgHeight}" style="width: 100%; height: 100%; overflow: visible;">
+      <defs>
+        <linearGradient id="statsAreaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent-green)" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="var(--accent-green)" stop-opacity="0.0" />
+        </linearGradient>
+      </defs>
+      ${gridHTML}
+      <path d="${fillD}" fill="url(#statsAreaGrad)" />
+      <path d="${lineD}" fill="none" stroke="var(--accent-green)" stroke-width="2" />
+      ${dotsHTML}
+      ${xLabelsHTML}
+    </svg>
+  `;
+}
+
+function getPolishPluralDictations(val) {
+  if (val === 1) return '1 dyktowanie';
+  const mod10 = val % 10;
+  const mod100 = val % 100;
+  let suffix = 'dyktowań';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+    suffix = 'dyktowania';
+  }
+  return `${val} ${suffix}`;
+}
+
+function renderWordFrequency(historyList, currentLanguage) {
+  const container = document.getElementById('stats-top-words-list');
+  if (!container) return;
+
+  const stopWords = new Set([
+    // English
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'is', 'are', 'was', 'were', 'it', 'this', 'that', 'i', 'you', 'he', 'she', 'we', 'they', 'my', 'your', 'his', 'her', 'their', 'our', 'me', 'him', 'them', 'us', 'be', 'have', 'do', 'will', 'would', 'should', 'can', 'could', 'about', 'as', 'by', 'if', 'then', 'else', 'no', 'not', 'so', 'up', 'down', 'out', 'has', 'had', 'been',
+    // Polish
+    'i', 'w', 'z', 'na', 'do', 'o', 'po', 'za', 'ze', 'a', 'ale', 'lecz', 'iż', 'że', 'bo', 'gdy', 'jak', 'tak', 'nie', 'także', 'też', 'jest', 'są', 'był', 'była', 'było', 'będzie', 'będą', 'się', 'go', 'ją', 'mu', 'jej', 'ich', 'nas', 'was', 'to', 'ten', 'ta', 'to', 'te', 'ci', 'dla', 'od', 'przez', 'pod', 'nad', 'przy', 'o', 'dla', 'ze', 'przed', 'ich', 'tylko', 'jestem', 'jesteś', 'mamy', 'macie', 'lub', 'czy', 'co', 'coś', 'kto', 'którzy', 'który', 'która', 'które', 'tam', 'tu', 'mój', 'twój', 'jego', 'jej', 'nasz', 'wasz'
+  ]);
+
+  const wordCounts = {};
+  historyList.forEach(entry => {
+    const text = entry.text || '';
+    const clean = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").replace(/\s+/g, " ");
+    const words = clean.split(' ').filter(w => w.length > 1);
+    words.forEach(w => {
+      if (!stopWords.has(w)) {
+        wordCounts[w] = (wordCounts[w] || 0) + 1;
+      }
+    });
+  });
+
+  const sortedWords = Object.entries(wordCounts)
+    .map(([word, count]) => ({ word, count }))
+    .sort((a, b) => b.count - a.count);
+
+  container.innerHTML = '';
+  const topWords = sortedWords.slice(0, 12);
+
+  if (topWords.length === 0) {
+    container.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">${
+      currentLanguage === 'pl' ? 'Brak częstych słów.' : 'No frequent words found.'
+    }</div>`;
+    return;
+  }
+
+  topWords.forEach(item => {
+    const badge = document.createElement('div');
+    badge.className = 'word-badge';
+    badge.innerHTML = `
+      <span class="word-text">${escapeHtml(item.word)}</span>
+      <span class="word-count">${item.count}x</span>
+    `;
+    container.appendChild(badge);
+  });
+}
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // Bind Clear History Button
 const clearHistoryBtn = document.getElementById('btn-clear-history');
 if (clearHistoryBtn) {
@@ -5770,6 +6224,9 @@ if (clearHistoryBtn) {
       onConfirm: () => {
         localStorage.removeItem('transcript_history');
         renderHistoryUI();
+        if (typeof renderStatsPage === 'function') {
+          renderStatsPage();
+        }
         ToastManager.show({ type: 'success', title: t('toast.history_cleared') });
       }
     });
@@ -6087,6 +6544,13 @@ onLanguageChange(() => {
     renderAddonsManagerUI();
     updateEngineCardsLockUI();
     updateDOMTranslations();
+
+    // Refresh statistics if active
+    const statsPage = document.getElementById('page-stats');
+    if (statsPage && statsPage.classList.contains('active')) {
+      renderStatsPage();
+    }
+
     if (cachedVersionInfo) renderAppVersionBadge(cachedVersionInfo);
     if (cachedReleases) renderChangelog();
   } catch (err) {

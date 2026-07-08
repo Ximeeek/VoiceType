@@ -154,6 +154,9 @@
             <button class="sidebar-btn" id="nav-history" data-page="history" data-i18n="nav.history" data-i18n-attr="data-tooltip" data-tooltip="History">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </button>
+            <button class="sidebar-btn" id="nav-stats" data-page="stats" data-i18n="nav.stats" data-i18n-attr="data-tooltip" data-tooltip="Statistics">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </button>
             <button class="sidebar-btn" id="nav-settings" data-page="settings" data-i18n="nav.settings" data-i18n-attr="data-tooltip" data-tooltip="Settings">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
@@ -858,6 +861,88 @@
                     </div>
                     <div id="history-container" style="display: flex; flex-direction: column; gap: 24px; margin-top: 10px;">
                         <div style="color: var(--text-muted); font-size: 14px; font-style: italic;" data-i18n="history.empty">Brak zarejestrowanej historii w tej sesji.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATISTICS PAGE -->
+            <div class="page" id="page-stats">
+                <div style="display: flex; flex-direction: column; gap: 24px; max-width: 900px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-primary);" data-i18n="stats.title">Statystyki</h1>
+                    </div>
+                    
+                    <div id="stats-no-data" style="display: none; color: var(--text-muted); font-size: 14px; font-style: italic;" data-i18n="stats.no_data">
+                        Brak historii dyktowania do wygenerowania statystyk.
+                    </div>
+                    
+                    <div id="stats-dashboard" style="display: flex; flex-direction: column; gap: 24px;">
+                        <!-- KPI Cards Grid -->
+                        <div class="stats-cards-grid">
+                            <div class="stats-card">
+                                <span class="stats-card-title" data-i18n="stats.card.total_dictations">Liczba dyktowań</span>
+                                <span class="stats-card-value" id="stats-val-dictations">-</span>
+                            </div>
+                            <div class="stats-card">
+                                <span class="stats-card-title" data-i18n="stats.card.total_words">Liczba słów</span>
+                                <span class="stats-card-value" id="stats-val-words">-</span>
+                            </div>
+                            <div class="stats-card">
+                                <span class="stats-card-title" data-i18n="stats.card.total_sessions">Liczba sesji</span>
+                                <span class="stats-card-value" id="stats-val-sessions">-</span>
+                            </div>
+                            <div class="stats-card">
+                                <span class="stats-card-title" data-i18n="stats.card.avg_length">Śr. słów na wypowiedź</span>
+                                <span class="stats-card-value" id="stats-val-avg-length">-</span>
+                            </div>
+                            <div class="stats-card">
+                                <span class="stats-card-title" data-i18n="stats.card.time_saved">Zaoszczędzony czas</span>
+                                <span class="stats-card-value" id="stats-val-time-saved">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Heatmap Card -->
+                        <div class="stats-section-card">
+                            <h3 class="stats-section-title" data-i18n="stats.tab.activity">Aktywność mowy</h3>
+                            <div class="heatmap-wrapper">
+                                <div class="heatmap-months" id="heatmap-months-labels"></div>
+                                <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;">
+                                    <div class="heatmap-days" id="heatmap-days-labels">
+                                        <span data-i18n="stats.day.mon">Mon</span>
+                                        <span data-i18n="stats.day.wed">Wed</span>
+                                        <span data-i18n="stats.day.fri">Fri</span>
+                                    </div>
+                                    <div class="heatmap-grid" id="stats-heatmap-grid"></div>
+                                </div>
+                                <div class="heatmap-legend">
+                                    <span style="font-size: 11px; color: var(--text-muted);">Less</span>
+                                    <div class="contrib-cell lvl-0"></div>
+                                    <div class="contrib-cell lvl-1"></div>
+                                    <div class="contrib-cell lvl-2"></div>
+                                    <div class="contrib-cell lvl-3"></div>
+                                    <div class="contrib-cell lvl-4"></div>
+                                    <span style="font-size: 11px; color: var(--text-muted);">More</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charts Row -->
+                        <div class="stats-charts-row">
+                            <div class="stats-section-card" style="flex: 1; min-width: 300px;">
+                                <h3 class="stats-section-title" data-i18n="stats.chart.daily_words">Słowa dyktowane dziennie (Ostatnie 7 dni)</h3>
+                                <div id="chart-daily-words" class="svg-chart-container"></div>
+                            </div>
+                            <div class="stats-section-card" style="flex: 1; min-width: 300px;">
+                                <h3 class="stats-section-title" data-i18n="stats.chart.hourly_activity">Aktywność według godzin</h3>
+                                <div id="chart-hourly-activity" class="svg-chart-container"></div>
+                            </div>
+                        </div>
+
+                        <!-- Word Frequency -->
+                        <div class="stats-section-card">
+                            <h3 class="stats-section-title" data-i18n="stats.top_words">Najczęstsze słowa</h3>
+                            <div id="stats-top-words-list" class="stats-words-list"></div>
+                        </div>
                     </div>
                 </div>
             </div>

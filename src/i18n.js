@@ -126,6 +126,26 @@ export const translations = {
     "history.btn.clear": "Clear History",
     "history.btn.copy": "Copy All",
 
+    // Statistics Page
+    "nav.stats": "Statistics",
+    "stats.title": "Statistics",
+    "stats.no_data": "Not enough dictation history to generate statistics.",
+    "stats.tab.activity": "Speech Activity",
+    "stats.card.total_dictations": "Total Dictations",
+    "stats.card.total_words": "Total Words",
+    "stats.card.total_sessions": "Total Sessions",
+    "stats.card.avg_length": "Avg Words / Utterance",
+    "stats.card.time_saved": "Time Saved",
+    "stats.chart.daily_words": "Daily Words Dictated (Last 7 Days)",
+    "stats.chart.hourly_activity": "Activity by Hour of Day",
+    "stats.top_words": "Most Frequent Words",
+    "stats.contribution.tooltip": "{count} dictations on {date}",
+    "stats.contribution.tooltip_singular": "1 dictation on {date}",
+    "stats.contribution.tooltip_none": "No activity on {date}",
+    "stats.day.mon": "Mon",
+    "stats.day.wed": "Wed",
+    "stats.day.fri": "Fri",
+
     // Settings Navigation Tabs
     "settings.tab.general": "General",
     "settings.tab.engine": "Speech Engine",
@@ -710,6 +730,26 @@ export const translations = {
     "history.empty": "Brak zarejestrowanej historii w tej sesji.",
     "history.btn.clear": "Wyczyść historię",
     "history.btn.copy": "Kopiuj wszystko",
+
+    // Statistics Page
+    "nav.stats": "Statystyki",
+    "stats.title": "Statystyki",
+    "stats.no_data": "Brak historii dyktowania do wygenerowania statystyk.",
+    "stats.tab.activity": "Aktywność mowy",
+    "stats.card.total_dictations": "Liczba dyktowań",
+    "stats.card.total_words": "Liczba słów",
+    "stats.card.total_sessions": "Liczba sesji",
+    "stats.card.avg_length": "Śr. słów na wypowiedź",
+    "stats.card.time_saved": "Zaoszczędzony czas",
+    "stats.chart.daily_words": "Słowa dyktowane dziennie (Ostatnie 7 dni)",
+    "stats.chart.hourly_activity": "Aktywność według godzin",
+    "stats.top_words": "Najczęstsze słowa",
+    "stats.contribution.tooltip": "{count} dyktowań w dniu {date}",
+    "stats.contribution.tooltip_singular": "1 dyktowanie w dniu {date}",
+    "stats.contribution.tooltip_none": "Brak aktywności w dniu {date}",
+    "stats.day.mon": "Pon",
+    "stats.day.wed": "Śr",
+    "stats.day.fri": "Pią",
 
     // Settings Navigation Tabs
     "settings.tab.general": "Ogólne",
