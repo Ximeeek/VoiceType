@@ -62,6 +62,7 @@ pub enum ControlCommand {
     SetTriggerTranslate(bool),
     SetLanguage(String),
     SetNoWakeWord(bool),
+    UpdateConfig(config::Config),
     ForceDictate,
     Quit,
 }

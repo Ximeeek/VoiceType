@@ -44,6 +44,8 @@ pub async fn save_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle,
         let _ = crate::platform::windows::set_autostart(config.general.autostart, &exe_path.to_string_lossy());
     }
 
+    state.control_tx.send(ControlCommand::UpdateConfig(config.clone())).await.ok();
+
     if trigger_changed {
         state.control_tx.send(ControlCommand::SetTriggerWords(config.trigger.words)).await.ok();
     }
@@ -76,6 +78,8 @@ pub async fn reset_config(state: State<'_, Arc<AppState>>, app: tauri::AppHandle
     let default = crate::config::default_config();
     crate::config::save_config(&default).map_err(|e| e.to_string())?;
     *state.config.lock().await = default.clone();
+    
+    state.control_tx.send(ControlCommand::UpdateConfig(default.clone())).await.ok();
     
     state.control_tx.send(ControlCommand::SetTriggerWords(default.trigger.words.clone())).await.ok();
     state.control_tx.send(ControlCommand::SetStopWords(default.dictation.stop_words.clone())).await.ok();

@@ -238,6 +238,11 @@ pub async fn run_control_loop(
                     println!("[CONTROL_COMMAND] SetNoWakeWord: {}", val);
                     config.trigger.no_wake_word = val;
                 }
+                ControlCommand::UpdateConfig(new_config) => {
+                    println!("[CONTROL_COMMAND] UpdateConfig");
+                    config = new_config;
+                    apply_detector_config(&mut detector, &config);
+                }
                 ControlCommand::ForceDictate => {
                     if !engine.has_active_engine() {
                         app_handle.emit("engine_error", "Speech engine unavailable. Please download the engine model file first.").ok();
