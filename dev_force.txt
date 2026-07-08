@@ -1,24 +1,24 @@
-# VoiceType Developer Overrides / Opcje Wymuszania dla Deweloperów
+# VoiceType Developer Overrides / Force Settings
 #
-# Plik konfiguracyjny pozwalający deweloperom na wymuszanie zachowań aplikacji w trybie debug.
-# Ten plik jest całkowicie ignorowany w wersjach produkcyjnych (release).
+# Configuration file to force or suppress application behaviors in debug mode.
+# This file is completely ignored in production release builds.
 #
-# Użycie / Usage:
-# Klucz=Wartość (np. first_start=1)
-# 1 = Włączone / Wymuszone (Enabled / Forced)
-# 0 = Wyłączone / Stłumione (Disabled / Suppressed)
-# Zakomentowane linią z '#' = Zachowanie domyślne (Default behavior)
+# Usage:
+# Key=Value (e.g., first_start=1)
+# 1 = Enabled / Forced
+# 0 = Disabled / Suppressed
+# Commented out with '#' = Default behavior
 
 # 1. first_start
-# Wymusza uruchomienie kreatora konfiguracji początkowej (onboarding).
-# 1 = Wymuś otwarcie kreatora (Force open)
-# 0 = Zablokuj otwarcie kreatora (Block open)
-# Domyślnie: Wczytywane z konfiguracji użytkownika (config.toml).
-first_start=1
+# Forces the onboarding setup wizard to run on application launch.
+# 1 = Force wizard open
+# 0 = Suppress wizard open (even if first start is not completed in config)
+# Default: Loaded from user configuration (config.toml).
+first_start=0
 
 # 2. changelog
-# Wymusza pokazanie okna "Co Nowego" z historią zmian pobraną z GitHub.
-# 1 = Wymuś otwarcie okna ze zmianami (Force open changelog)
-# 0 = Zablokuj otwarcie okna ze zmianami (Block open changelog)
-# Domyślnie: Pokazywane tylko raz przy pierwszym uruchomieniu po aktualizacji wersji.
+# Forces the version update changelog modal to display on launch.
+# 1 = Force open changelog modal
+# 0 = Suppress open changelog modal
+# Default: Shown once on launch when first starting a newly updated version.
 changelog=1
