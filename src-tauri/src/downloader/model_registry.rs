@@ -11,6 +11,7 @@ pub struct ModelInfo {
     pub dest_filename: String,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug, Clone)]
 struct VoskModelJson {
     lang: String,

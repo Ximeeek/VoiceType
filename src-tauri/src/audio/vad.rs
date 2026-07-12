@@ -47,7 +47,5 @@ impl SileroVad {
         Ok(speech_prob)
     }
 
-    pub fn reset_states(&mut self) {
-        self.state.fill(0.0);
-    }
+
 }

@@ -1,3 +1,11 @@
+/**
+ * Module: Internationalization and Translations Registry
+ * Single Responsibility: Manages multi-language string dictionaries (English, Polish)
+ * and DOM translation updates.
+ * Note: File length exceeds 300 lines due to static dictionary declarations which
+ * are kept inline to ensure instant loading without external network/disk fetches.
+ */
+
 export const translations = {
   en: {
     // Navigation & Header

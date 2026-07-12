@@ -18,24 +18,6 @@ pub fn check_api_key(key: &str, engine: &str) -> anyhow::Result<()> {
     }
 }
 
-pub async fn with_retry<F, Fut, T>(f: F, max_retries: u32) -> anyhow::Result<T>
-where
-    F: Fn() -> Fut,
-    Fut: std::future::Future<Output = anyhow::Result<T>>,
-{
-    let delays = [1000u64, 2000, 4000];
-    for attempt in 0..=max_retries {
-        match f().await {
-            Ok(v) => return Ok(v),
-            Err(_e) if attempt < max_retries => {
-                let delay = delays.get(attempt as usize).copied().unwrap_or(4000);
-                tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
-            }
-            Err(e) => return Err(e),
-        }
-    }
-    unreachable!()
-}
 
 pub fn samples_f32_to_i16_pcm(samples: &[f32]) -> Vec<u8> {
     let mut bytes = Vec::with_capacity(samples.len() * 2);

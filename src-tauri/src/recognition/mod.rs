@@ -8,6 +8,7 @@ use async_trait::async_trait;
 pub struct Transcript {
     pub text: String,
     pub is_partial: bool,
+    #[allow(dead_code)]
     pub confidence: f32,
 }
 
@@ -18,5 +19,7 @@ pub trait SpeechEngine: Send + Sync {
     async fn finalize(&mut self) -> anyhow::Result<String>;
     async fn get_interim_transcript(&mut self) -> anyhow::Result<Option<String>> { Ok(None) }
     fn supports_streaming(&self) -> bool;
+    #[allow(dead_code)]
     fn engine_name(&self) -> &str;
 }
+

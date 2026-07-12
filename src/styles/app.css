@@ -1,3 +1,11 @@
+/*
+ * Style Module: Cyberpunk Unified Stylesheet
+ * Single Responsibility: Defines the layout, typography, animations, custom scrollbars,
+ * and page layouts for the dark cyberpunk accent theme (neon green/magenta).
+ * Note: File length exceeds 300 lines to maintain atomic styles, CSS variables hierarchy,
+ * and prevent styling precedence/loading race conditions inside Tauri.
+ */
+
 /* App Layout & Base Styles */
 body {
   font-family: 'Inter', sans-serif;

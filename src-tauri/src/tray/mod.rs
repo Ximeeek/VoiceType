@@ -108,12 +108,3 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn update_tray_status(app: &AppHandle, _text: &str) {
-    if let Some(window) = app.get_webview_window("main") {
-        if let Some(_menu) = window.menu() {
-
-            // Note: properly updating menu item text in Tauri 2 tray requires retaining the MenuItem reference 
-            // or searching through items. As a simplified placeholder we would update it here.
-        }
-    }
-}

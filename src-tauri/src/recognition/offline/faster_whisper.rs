@@ -19,6 +19,7 @@ fn get_python_cmd() -> std::path::PathBuf {
     }
 }
 
+#[allow(dead_code)]
 pub struct FasterWhisperEngine {
     model: String,
     device: String,

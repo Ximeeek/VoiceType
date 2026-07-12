@@ -10,6 +10,7 @@ fn get_python_cmd() -> std::path::PathBuf {
     }
 }
 
+#[allow(dead_code)]
 pub struct SherpaOnnxEngine {
     model_path: String,
     language: String,

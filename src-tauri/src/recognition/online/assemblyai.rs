@@ -9,6 +9,7 @@ use super::{check_api_key, samples_f32_to_i16_pcm};
 use crate::config::settings::AssemblyAiEngineConfig;
 use crate::recognition::{SpeechEngine, Transcript};
 
+#[allow(dead_code)]
 pub struct AssemblyAiEngine {
     config: AssemblyAiEngineConfig,
     language: String,
