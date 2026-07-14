@@ -1,6 +1,6 @@
 {
   "productName": "VoiceType",
-  "version": "0.1.5-beta.1",
+  "version": "0.1.6-nightly.20260714",
   "identifier": "com.voicetype.app",
   "build": {
     "frontendDist": "../src"

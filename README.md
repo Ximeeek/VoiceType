@@ -183,6 +183,22 @@ This disables all network calls related to update checks.
 
 ---
 
+## Recent Changes
+
+Here are the key improvements and features introduced in the latest pre-release versions:
+
+- **Monolithic Codebase Modularization**: Large single-file implementations on both frontend and backend were refactored into structured, single-responsibility files, improving overall stability, code navigation, and project maintainability.
+- **Voice Dictation Statistics**: Added a new voice dictation statistics panel tracking speech activity metrics, along with an interactive daily stats popup and visual UX improvements.
+- **Hands-Free Dictation**: Integrated an experimental hands-free dictation mode allowing transcription to run continuously without wake words or manual shortcut triggers.
+- **Instant Paste Option**: Added an option to automatically paste voice transcriptions directly into the active window.
+- **Stability & Platform Fixes**:
+  - Fixed Vosk model download lag and resolved Windows installer crashes.
+  - Dynamically synchronized configuration changes with the active hotword listening loop.
+  - Gracefully handles global shortcut registrations to prevent crashes on startup.
+  - Resolved dynamic `python_embed` path resolution relative to the application's executable directory.
+
+---
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
